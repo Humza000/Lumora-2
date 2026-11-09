@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { ActionForm, SubmitButton } from "@/components/forms";
 import { getCurrentUser } from "@/lib/dal";
+import { emailProvider } from "@/lib/email";
 import { logout, resendVerification } from "../actions";
 
 export const metadata: Metadata = { title: "Check your email" };
@@ -18,6 +19,13 @@ export default async function CheckEmailPage({ searchParams }: PageProps<"/check
       {error === "invalid" && (
         <p role="alert" className="mt-4 rounded-xl border border-danger/25 bg-danger/10 px-3.5 py-2.5 text-sm text-danger">
           That verification link is invalid or has expired. Request a new one below.
+        </p>
+      )}
+      {process.env.NODE_ENV !== "production" && emailProvider() === "console" && (
+        <p className="mt-4 rounded-xl border border-warning/30 bg-warning/10 px-3.5 py-2.5 text-sm text-warning">
+          <strong>Dev notice:</strong> email sending isn&apos;t configured, so this email was <strong>not sent</strong>.
+          Set <code>SMTP_PASS</code> (Gmail App Password) in <code>.env</code> and restart the server. For now, the
+          verification link is printed in the dev server terminal.
         </p>
       )}
       <p className="mt-2 text-sm text-ink-muted">

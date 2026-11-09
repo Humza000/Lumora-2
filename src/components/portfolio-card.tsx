@@ -22,12 +22,11 @@ export function PortfolioCard({ item }: { item: Item }) {
             />
           ) : (
             <div className="absolute inset-0 transition-transform duration-700 ease-out group-hover:scale-[1.08]">
-              <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,#a577ff_0%,transparent_55%),radial-gradient(circle_at_85%_80%,#6b46d9_0%,transparent_50%),linear-gradient(135deg,#2a1a66,#150a35)]" />
-              <div className="bg-grid absolute inset-0 opacity-60" />
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,#cbb5ff_0%,transparent_60%),radial-gradient(circle_at_85%_85%,#a577ff_0%,transparent_55%),linear-gradient(135deg,#f4f0ff,#ddd0ff)]" />
             </div>
           )}
-          <div className="absolute inset-0 bg-gradient-to-t from-surface via-surface/10 to-transparent" />
-          <span className="absolute bottom-5 left-6 font-display text-3xl font-semibold text-accent drop-shadow-lg">{item.title}</span>
+          <div className="absolute inset-0 bg-gradient-to-t from-surface/90 via-surface/20 to-transparent" />
+          <span className="absolute bottom-5 left-6 font-display text-3xl font-semibold text-ink">{item.title}</span>
         </div>
         <div className="flex flex-1 flex-col p-6">
           <p className="text-[11px] font-medium tracking-[0.18em] text-brand-light uppercase">{item.sector}</p>
@@ -35,7 +34,7 @@ export function PortfolioCard({ item }: { item: Item }) {
           <p className="mt-2 text-sm leading-relaxed text-ink-muted">{item.summary}</p>
           <ul className="mt-4 flex flex-wrap gap-2">
             {item.features.slice(0, 3).map((f) => (
-              <li key={f} className="rounded-full border border-line/70 bg-white/[0.03] px-2.5 py-1 text-xs text-ink-muted">
+              <li key={f} className="rounded-full border border-line/70 bg-ink/[0.025] px-2.5 py-1 text-xs text-ink-muted">
                 {f}
               </li>
             ))}

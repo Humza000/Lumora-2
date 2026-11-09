@@ -37,9 +37,8 @@ export default async function CaseStudyPage({ params }: PageProps<"/portfolio/[s
             <Image src={item.imageUrl} alt={item.title} fill className="object-cover transition-transform duration-1000 group-hover:scale-[1.03]" unoptimized />
           ) : (
             <div className="absolute inset-0 transition-transform duration-1000 group-hover:scale-[1.04]">
-              <div className="absolute inset-0 bg-[radial-gradient(circle_at_25%_25%,#a577ff_0%,transparent_50%),radial-gradient(circle_at_80%_75%,#6b46d9_0%,transparent_45%),linear-gradient(135deg,#2a1a66,#150a35)]" />
-              <div className="bg-grid absolute inset-0 opacity-60" />
-              <span className="absolute inset-0 flex items-center justify-center font-display text-5xl text-accent/80 md:text-7xl">{item.title}</span>
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,#cbb5ff_0%,transparent_60%),radial-gradient(circle_at_85%_85%,#a577ff_0%,transparent_55%),linear-gradient(135deg,#f4f0ff,#ddd0ff)]" />
+              <span className="absolute inset-0 flex items-center justify-center font-display text-5xl text-ink/70 md:text-7xl">{item.title}</span>
             </div>
           )}
         </div>

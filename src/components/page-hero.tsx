@@ -7,7 +7,6 @@ export function PageHero({ eyebrow, title, children }: { eyebrow: string; title:
   return (
     <section className="relative isolate">
       <div className="absolute -top-40 left-1/4 -z-10 h-96 w-96 rounded-full bg-brand/30 blur-[120px]" aria-hidden />
-      <div className="bg-grid absolute inset-x-0 -top-24 -z-10 h-96 opacity-50" aria-hidden />
       <Reveal>
         <Eyebrow>{eyebrow}</Eyebrow>
       </Reveal>

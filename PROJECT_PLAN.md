@@ -74,9 +74,9 @@ Decisions: self-signup is required before submitting a quote (with email verific
 
 ## 4. Launch checklist (blockers in **bold**)
 
-- [x] Brand colours: dark lavender palette (Cetacean Blue `#150A35`, Lavender `#A577FF`, Ghost White `#F8F8FF`) in `src/app/globals.css`
+- [x] Brand colours: light lavender palette (Ghost White `#F8F8FF`, Cetacean Blue `#150A35`, Lavender `#A577FF`) in `src/app/globals.css`
 - [x] Logo: LUMORA wordmark recreated as SVG; PNG used as favicon/app icon
-- [x] Premium dark UI + interactivity (scroll reveals, cursor spotlight, hover glow, animated hero)
+- [x] Premium light lavender UI + interactivity (flowing gradient backgrounds, scroll reveals, cursor spotlight, hover glow)
 - [ ] **Portfolio images** for the 6 case studies (+ case-study write-ups)
 - [ ] Final copy for About / Services / Contact (current text is a solid draft); confirm contact email in `src/lib/site.ts`
 - [ ] **Production Postgres** (Neon/Supabase) + Vercel project, env vars, `npm run db:deploy`, seed with `SEED_DEMO=false`

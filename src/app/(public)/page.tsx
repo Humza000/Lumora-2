@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { connection } from "next/server";
+import { FaqSection } from "@/components/faq";
+import { FlowBackground } from "@/components/flow-background";
 import { Reveal, Spotlight } from "@/components/motion";
 import { PortfolioCard } from "@/components/portfolio-card";
 import { ButtonLink, Eyebrow } from "@/components/ui";
@@ -21,14 +23,7 @@ export default async function HomePage() {
     <>
       {/* Hero */}
       <section className="relative isolate -mt-[76px] overflow-hidden pt-[76px]">
-        <div className="absolute inset-0 -z-10" aria-hidden>
-          <div className="animate-aurora absolute top-[-10%] left-[-10%] h-[38rem] w-[38rem] rounded-full bg-brand/40 blur-[120px]" />
-          <div className="animate-aurora absolute top-[5%] right-[-15%] h-[34rem] w-[34rem] rounded-full bg-brand-strong/30 blur-[130px] [animation-delay:-6s]" />
-          <div className="animate-aurora absolute bottom-[-20%] left-[30%] h-[28rem] w-[28rem] rounded-full bg-[#cbb5ff]/15 blur-[120px] [animation-delay:-12s]" />
-          <div className="bg-grid absolute inset-0" />
-          <div className="grain absolute inset-0" />
-          <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-b from-transparent to-canvas" />
-        </div>
+        <FlowBackground />
 
         <div className="mx-auto max-w-6xl px-4 pt-24 pb-28 sm:px-6 md:pt-32 md:pb-36">
           <Reveal>
@@ -141,7 +136,7 @@ export default async function HomePage() {
             />
             {process.map((p, i) => (
               <Reveal key={p.step} delay={i * 150} className="group relative">
-                <span className="relative flex h-10 w-10 items-center justify-center rounded-full border border-brand-light/40 bg-canvas font-mono text-xs text-brand-light shadow-[0_0_20px_rgba(165,119,255,0.45)] transition-all duration-500 group-hover:scale-110 group-hover:bg-brand group-hover:text-canvas">
+                <span className="relative flex h-10 w-10 items-center justify-center rounded-full border border-brand-light/40 bg-canvas font-mono text-xs text-brand-light shadow-[0_0_20px_rgba(165,119,255,0.45)] transition-all duration-500 group-hover:scale-110 group-hover:bg-brand group-hover:text-ink">
                   {p.step}
                 </span>
                 <h3 className="mt-6 text-lg font-semibold">{p.title}</h3>
@@ -152,16 +147,17 @@ export default async function HomePage() {
         </div>
       </section>
 
+      <FaqSection />
+
       {/* CTA */}
       <section className="mx-auto mt-32 max-w-6xl px-4 sm:px-6">
         <Reveal>
           <div className="group relative isolate overflow-hidden rounded-[2rem] border border-brand-light/20 px-8 py-20 text-center md:px-16">
-            <div className="absolute inset-0 -z-10 bg-gradient-to-br from-[#7d4dff] via-[#4b2a9e] to-canvas" aria-hidden />
+            <div className="absolute inset-0 -z-10 bg-gradient-to-br from-[#8b5cff] via-[#4b2a9e] to-[#1c1042]" aria-hidden />
             <div
               className="absolute -top-32 left-1/2 -z-10 h-80 w-80 -translate-x-1/2 rounded-full bg-[#cbb5ff]/30 blur-[100px] transition-transform duration-1000 group-hover:scale-125"
               aria-hidden
             />
-            <div className="bg-grid absolute inset-0 -z-10 opacity-40" aria-hidden />
             <h2 className="font-display text-4xl font-semibold tracking-tight text-white md:text-6xl">
               Ready to build something exceptional?
             </h2>
@@ -170,7 +166,7 @@ export default async function HomePage() {
             </p>
             <Link
               href="/quote"
-              className="shine mt-10 inline-flex items-center gap-2 rounded-xl bg-accent px-7 py-3.5 font-medium text-canvas shadow-[0_10px_40px_-10px_rgba(248,248,255,0.6)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_16px_50px_-10px_rgba(248,248,255,0.8)] active:scale-[0.97]"
+              className="shine mt-10 inline-flex items-center gap-2 rounded-xl bg-accent px-7 py-3.5 font-medium text-ink shadow-[0_10px_40px_-10px_rgba(248,248,255,0.6)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_16px_50px_-10px_rgba(248,248,255,0.8)] active:scale-[0.97]"
             >
               Start your quote <span aria-hidden>→</span>
             </Link>

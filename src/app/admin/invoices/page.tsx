@@ -51,7 +51,7 @@ export default async function AdminInvoices({ searchParams }: PageProps<"/admin/
           <Link
             key={f.key}
             href={`/admin/invoices?filter=${f.key}`}
-            className={cn("rounded-full px-3 py-1.5 text-sm", f.key === active.key ? "bg-brand text-canvas font-medium shadow-[0_0_20px_-4px_var(--brand-strong)]" : "border border-line bg-surface text-ink-muted hover:border-brand-strong/50 hover:text-ink")}
+            className={cn("rounded-full px-3 py-1.5 text-sm", f.key === active.key ? "bg-brand text-ink font-medium shadow-[0_0_20px_-4px_var(--brand-strong)]" : "border border-line bg-surface text-ink-muted hover:border-brand-strong/50 hover:text-ink")}
           >
             {f.label}
           </Link>

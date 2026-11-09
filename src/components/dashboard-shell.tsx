@@ -39,8 +39,8 @@ export function DashboardShell({
         </div>
         <SideNav items={nav} />
         <div className="hidden border-t border-line/60 p-4 md:mt-auto md:block">
-          <div className="flex items-center gap-3 rounded-xl p-2 transition-colors hover:bg-white/[0.04]">
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-brand-light to-brand text-xs font-semibold text-canvas shadow-[0_0_16px_rgba(165,119,255,0.5)]">
+          <div className="flex items-center gap-3 rounded-xl p-2 transition-colors hover:bg-ink/[0.035]">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-brand-tint to-brand text-xs font-semibold text-ink shadow-[0_0_16px_rgba(165,119,255,0.5)]">
               {initials}
             </span>
             <div className="min-w-0">

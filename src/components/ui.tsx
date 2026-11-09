@@ -9,10 +9,10 @@ export function cn(...classes: (string | false | null | undefined)[]) {
 type Variant = "primary" | "secondary" | "ghost" | "danger";
 const variants: Record<Variant, string> = {
   primary:
-    "shine bg-gradient-to-br from-brand-light to-brand text-canvas shadow-[0_8px_30px_-8px_rgba(165,119,255,0.65),inset_0_1px_0_rgba(255,255,255,0.18)] hover:shadow-[0_12px_40px_-8px_rgba(165,119,255,0.9),inset_0_1px_0_rgba(255,255,255,0.25)] hover:brightness-110",
+    "shine bg-gradient-to-br from-brand-tint to-brand text-ink shadow-[0_8px_30px_-8px_rgba(165,119,255,0.65),inset_0_1px_0_rgba(255,255,255,0.18)] hover:shadow-[0_12px_40px_-8px_rgba(165,119,255,0.9),inset_0_1px_0_rgba(255,255,255,0.25)] hover:brightness-110",
   secondary:
     "border border-line bg-surface-2/60 text-ink backdrop-blur hover:border-brand-light/40 hover:bg-surface-2 hover:shadow-[0_0_24px_-8px_rgba(203,181,255,0.5)]",
-  ghost: "text-ink hover:bg-brand-soft hover:text-white",
+  ghost: "text-ink hover:bg-brand-soft hover:text-ink",
   danger: "bg-danger/90 text-white hover:bg-danger",
 };
 
@@ -43,7 +43,7 @@ export function ButtonLink({
   return <Link className={cn(buttonClass(variant, size), className)} {...props} />;
 }
 
-const cardBase = "ring-gradient rounded-2xl border border-line/60 bg-surface/80 p-6 shadow-[0_1px_0_rgba(255,255,255,0.03)_inset]";
+const cardBase = "ring-gradient rounded-2xl border border-line/60 bg-surface/80 p-6 shadow-[0_1px_2px_rgba(21,10,53,0.04),0_8px_30px_-18px_rgba(106,59,224,0.25)]";
 
 /** Card. `interactive` adds hover lift, glow and a cursor spotlight (use for clickable cards). */
 export function Card({ className, interactive, ...props }: ComponentProps<"div"> & { interactive?: boolean }) {
@@ -94,7 +94,7 @@ export function Label({ className, ...props }: ComponentProps<"label">) {
 }
 
 const tones = {
-  neutral: "bg-white/5 text-ink-muted border-line",
+  neutral: "bg-ink/5 text-ink-muted border-line",
   brand: "bg-brand-strong/15 text-brand-light border-brand-strong/30",
   success: "bg-success/10 text-success border-success/25",
   warning: "bg-warning/10 text-warning border-warning/25",
@@ -149,7 +149,7 @@ export function ProgressBar({ value, label }: { value: number; label?: string })
         </div>
       )}
       <div
-        className="h-2 overflow-hidden rounded-full bg-white/[0.06]"
+        className="h-2 overflow-hidden rounded-full bg-ink/[0.05]"
         role="progressbar"
         aria-valuenow={value}
         aria-valuemin={0}
@@ -178,7 +178,7 @@ export function EmptyState({ title, description, action }: { title: string; desc
 export function Table({ children }: { children: ReactNode }) {
   return (
     <div className="overflow-x-auto rounded-2xl border border-line/70 bg-surface/80">
-      <table className="w-full text-left text-sm [&_tbody_tr]:transition-colors [&_tbody_tr:hover]:bg-brand-strong/[0.06] [&_thead]:bg-white/[0.02]">
+      <table className="w-full text-left text-sm [&_tbody_tr]:transition-colors [&_tbody_tr:hover]:bg-brand-strong/[0.06] [&_thead]:bg-ink/[0.015]">
         {children}
       </table>
     </div>

@@ -93,9 +93,9 @@ export function QuoteWizard({ initialDraft, initialQuoteId, prices }: Props) {
                 className={cn(
                   "rounded-full border px-3.5 py-1.5 text-xs font-medium transition-all duration-300",
                   i === step &&
-                    "border-transparent bg-gradient-to-r from-brand-light to-brand text-canvas shadow-[0_0_20px_-2px_rgba(165,119,255,0.7)]",
+                    "border-transparent bg-gradient-to-r from-brand-tint to-brand text-ink shadow-[0_0_20px_-2px_rgba(165,119,255,0.7)]",
                   i < step && "border-brand-light/30 bg-brand-strong/15 text-brand-light hover:bg-brand-strong/25",
-                  i > step && "border-line/70 bg-white/[0.02] text-ink-muted",
+                  i > step && "border-line/70 bg-ink/[0.015] text-ink-muted",
                 )}
               >
                 {i + 1}. {label}
@@ -196,7 +196,7 @@ export function QuoteWizard({ initialDraft, initialQuoteId, prices }: Props) {
                   ))}
                 </ChoiceGrid>
               </fieldset>
-              <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-line/70 bg-white/[0.02] p-4 transition-all duration-300 hover:border-brand-light/30 has-[:checked]:border-brand-light/50 has-[:checked]:bg-brand-strong/10">
+              <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-line/70 bg-ink/[0.015] p-4 transition-all duration-300 hover:border-brand-light/30 has-[:checked]:border-brand-light/50 has-[:checked]:bg-brand-strong/10">
                 <input
                   type="checkbox"
                   className="mt-1 accent-[var(--brand-strong)]"
@@ -321,9 +321,9 @@ export function QuoteWizard({ initialDraft, initialQuoteId, prices }: Props) {
 
       {/* Live estimate */}
       <aside className="lg:sticky lg:top-24 lg:self-start">
-        <div className="ring-gradient relative isolate overflow-hidden rounded-3xl border border-brand-light/20 bg-gradient-to-br from-[#2a1a66] via-surface to-surface p-7 text-white shadow-[0_30px_80px_-30px_rgba(165,119,255,0.75)]">
+        <div className="ring-gradient relative isolate overflow-hidden rounded-3xl border border-brand-light/20 bg-gradient-to-br from-[#3b2590] via-[#231552] to-[#150a35] p-7 text-white shadow-[0_30px_80px_-30px_rgba(165,119,255,0.75)]">
           <div className="absolute -top-20 -right-20 -z-10 h-56 w-56 rounded-full bg-brand-strong/40 blur-[80px]" aria-hidden />
-          <p className="text-xs tracking-[0.2em] text-brand-light uppercase">Indicative estimate</p>
+          <p className="text-xs tracking-[0.2em] text-[#cbb5ff] uppercase">Indicative estimate</p>
           <p key={estimate.total} className="mt-3 animate-[fade-in_0.5s_ease] font-display text-4xl font-semibold tracking-tight">
             {estimate.total > 0
               ? `${formatGBP(estimate.min, { whole: true })} – ${formatGBP(estimate.max, { whole: true })}`
@@ -384,7 +384,7 @@ function Choice({
         "group relative flex cursor-pointer items-start gap-3 rounded-2xl border p-4 transition-all duration-300 has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-brand-light",
         checked
           ? "border-brand-light/60 bg-brand-strong/15 shadow-[0_0_0_1px_rgba(203,181,255,0.35),0_12px_40px_-12px_rgba(165,119,255,0.7)]"
-          : "border-line/70 bg-white/[0.02] hover:-translate-y-0.5 hover:border-brand-light/30 hover:bg-white/[0.04] hover:shadow-[0_12px_30px_-15px_rgba(165,119,255,0.6)]",
+          : "border-line/70 bg-ink/[0.015] hover:-translate-y-0.5 hover:border-brand-light/30 hover:bg-ink/[0.035] hover:shadow-[0_12px_30px_-15px_rgba(165,119,255,0.6)]",
       )}
     >
       <input type={type} name={name} checked={checked} onChange={onChange} className="mt-1 accent-[var(--brand-strong)]" />

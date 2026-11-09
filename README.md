@@ -18,7 +18,7 @@ See [PROJECT_PLAN.md](PROJECT_PLAN.md) for the roadmap and [CLAUDE.md](CLAUDE.md
 | Database | PostgreSQL + Prisma 7 |
 | Auth | Email + password, signed JWT session cookie (jose), bcrypt, role-based (ADMIN / CLIENT) |
 | Payments | Stripe Checkout + webhook |
-| Email | Resend (logs to console in dev) |
+| Email | Gmail SMTP via Nodemailer, or Resend (printed to console, not sent, if neither is configured) |
 | PDFs | @react-pdf/renderer |
 | Tests | Vitest (unit), Playwright (end-to-end) |
 
@@ -54,10 +54,18 @@ npx prisma dev --name lumora --detach   # prints a postgres://… TCP URL, put i
 
 | Role | Login |
 | --- | --- |
-| Admin | `ADMIN_EMAIL` / `ADMIN_PASSWORD` from `.env` → `/admin` |
+| Admin | `hello.lumoradesign@gmail.com` (`ADMIN_EMAIL`) / `ADMIN_PASSWORD` from `.env` → `/admin`. Re-run `npm run db:seed` after changing either. |
 | Demo client | `demo.client@example.com` / `DemoClient123` → `/portal` (set `SEED_DEMO=false` in production) |
 
-In development without `RESEND_API_KEY`, emails such as verification links and invites are printed to the terminal running `npm run dev`.
+### Email (verification, invites, invoices)
+
+Sign-up needs working email, because customers must click a verification link. The easiest setup is the Lumora Gmail account:
+
+1. Turn on 2-Step Verification for `hello.lumoradesign@gmail.com`.
+2. Create an App Password at https://myaccount.google.com/apppasswords.
+3. Put it in `.env` as `SMTP_PASS` (`SMTP_HOST`, `SMTP_PORT` and `SMTP_USER` are already set for Gmail), then restart `npm run dev`.
+
+If neither SMTP nor `RESEND_API_KEY` is configured, emails are **not sent**: they are printed to the terminal running `npm run dev`, and the "Check your email" page shows a dev notice saying so. Replies to any Lumora email go to `hello.lumoradesign@gmail.com`.
 
 ## Scripts
 
@@ -85,7 +93,7 @@ The end-to-end suite covers: sign-up → email verification → quote wizard →
 
 ## Branding
 
-- **Colours**: a dark lavender theme: Cetacean Blue `#150A35`, Lavender `#A577FF`, Ghost White `#F8F8FF`. Edit the CSS variables at the top of [src/app/globals.css](src/app/globals.css); everything uses these tokens. Emails and invoice PDFs stay light and keep their own copies in `src/lib/email.ts` and `src/lib/invoice-pdf.tsx`.
+- **Colours**: a light lavender theme: Ghost White `#F8F8FF` backgrounds, Cetacean Blue `#150A35` text, Lavender `#A577FF` accents, with soft flowing gradients. Edit the CSS variables at the top of [src/app/globals.css](src/app/globals.css); everything uses these tokens. Emails and invoice PDFs keep their own copies in `src/lib/email.ts` and `src/lib/invoice-pdf.tsx`.
 - **Logo**: the LUMORA wordmark is rendered by [src/components/logo.tsx](src/components/logo.tsx) (static copy: [public/logo.svg](public/logo.svg)); the favicon/app icon comes from `src/app/icon.png` / `apple-icon.png`.
 - **Business details** (contact email, tagline): [src/lib/site.ts](src/lib/site.ts). Marketing copy: [src/lib/content.ts](src/lib/content.ts) and the pages in `src/app/(public)`.
 
@@ -103,7 +111,7 @@ Designed for **Vercel** + a managed Postgres (e.g. Neon or Supabase):
 
 1. Create the database and set all variables from `.env.example` in the hosting provider (`APP_URL` = your public URL, `SEED_DEMO=false`).
 2. Build command: `npm run build`. Run `npm run db:deploy` (and `npm run db:seed` once) against the production database.
-3. Configure the Stripe webhook and Resend domain (`EMAIL_FROM`).
+3. Configure the Stripe webhook and email (`SMTP_*` for Gmail, or `RESEND_API_KEY` + `EMAIL_FROM` on a verified domain).
 
 ## Project structure
 

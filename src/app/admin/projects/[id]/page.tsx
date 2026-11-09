@@ -107,7 +107,7 @@ export default async function AdminProject({ params }: PageProps<"/admin/project
                 </li>
               ))}
             </ul>
-            <details className="mt-4 rounded-xl border border-line/70 bg-white/[0.02] p-4 transition-colors open:border-brand-light/30">
+            <details className="mt-4 rounded-xl border border-line/70 bg-ink/[0.015] p-4 transition-colors open:border-brand-light/30">
               <summary className="cursor-pointer text-sm font-medium">Add milestone</summary>
               <ActionForm action={addMilestone.bind(null, project.id)} className="mt-4" resetOnSuccess>
                 <TextField label="Title" name="title" required />
@@ -126,7 +126,7 @@ export default async function AdminProject({ params }: PageProps<"/admin/project
             </ActionForm>
             <ul className="mt-6 space-y-3">
               {project.updates.map((u) => (
-                <li key={u.id} className="rounded-xl border border-line/50 bg-white/[0.03] p-4">
+                <li key={u.id} className="rounded-xl border border-line/50 bg-ink/[0.025] p-4">
                   <div className="flex justify-between text-xs text-ink-muted">
                     <span>{formatDate(u.createdAt)}</span>
                     <form action={deleteUpdate.bind(null, u.id)}>

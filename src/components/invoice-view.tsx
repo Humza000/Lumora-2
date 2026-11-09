@@ -74,7 +74,7 @@ export function InvoiceView({ invoice }: { invoice: InvoiceForView }) {
         </thead>
         <tbody>
           {invoice.lines.map((l) => (
-            <tr key={l.id} className="border-b border-line/60 transition-colors hover:bg-white/[0.02]">
+            <tr key={l.id} className="border-b border-line/60 transition-colors hover:bg-ink/[0.015]">
               <td className="py-3">{l.description}</td>
               <td className="py-3 text-right">{l.quantity}</td>
               <td className="py-3 text-right">{formatGBP(l.unitPrice)}</td>

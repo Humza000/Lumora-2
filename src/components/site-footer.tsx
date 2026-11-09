@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { site } from "@/lib/site";
+import { InstagramLink } from "./instagram";
 import { Logo, Wordmark } from "./logo";
 
 const linkClass = "text-ink-muted transition-colors duration-300 hover:text-brand-light";
@@ -13,6 +14,10 @@ export function SiteFooter() {
         <div className="md:col-span-2">
           <Logo />
           <p className="mt-5 max-w-sm text-sm leading-relaxed text-ink-muted">{site.description}</p>
+          <div className="mt-6 flex items-center gap-3">
+            <InstagramLink />
+            <span className="text-sm text-ink-muted">Follow us <a href={site.instagram.url} target="_blank" rel="noopener noreferrer" className="text-brand-light hover:text-ink">@{site.instagram.handle}</a></span>
+          </div>
         </div>
         <div>
           <p className="text-xs font-medium tracking-[0.2em] text-ink uppercase">Studio</p>
@@ -21,6 +26,7 @@ export function SiteFooter() {
             <li><Link href="/portfolio" className={linkClass}>Our work</Link></li>
             <li><Link href="/about" className={linkClass}>About</Link></li>
             <li><Link href="/contact" className={linkClass}>Contact</Link></li>
+            <li><Link href="/#faq" className={linkClass}>FAQ</Link></li>
           </ul>
         </div>
         <div>
@@ -34,7 +40,7 @@ export function SiteFooter() {
       </div>
       {/* Oversized faint wordmark */}
       <div className="pointer-events-none relative mx-auto max-w-6xl px-4 sm:px-6" aria-hidden>
-        <Wordmark className="h-auto w-full text-white/[0.035] [&_g]:hidden" />
+        <Wordmark className="h-auto w-full text-ink/[0.045] [&_g]:hidden" />
       </div>
       <div className="relative border-t border-line/50 py-6 text-center text-xs text-ink-muted">
         © {new Date().getFullYear()} {site.name}. All rights reserved.

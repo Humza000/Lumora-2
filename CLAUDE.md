@@ -16,7 +16,7 @@ Lumora's website and client platform: a public marketing site + portfolio, an ac
   - `next lint` is gone. Use `npm run lint` (ESLint CLI).
 - **Tailwind CSS v4** (CSS-first config in `src/app/globals.css`, no `tailwind.config`).
 - **Prisma 7** with the `prisma-client` generator → `src/generated/prisma` (git-ignored, generated on `postinstall`/`build`). Config in `prisma.config.ts`; uses the `@prisma/adapter-pg` driver adapter. Import types from `@/generated/prisma/client`.
-- **Zod 4** (`z.email()`, `{ error }` messages), **jose** (session JWT), **bcryptjs**, **Stripe**, **Resend**, **@react-pdf/renderer**.
+- **Zod 4** (`z.email()`, `{ error }` messages), **jose** (session JWT), **bcryptjs**, **Stripe**, **Nodemailer** (Gmail SMTP) / **Resend**, **@react-pdf/renderer**.
 - Tests: **Vitest** (unit, `src/**/*.test.ts`) and **Playwright** (e2e, `e2e/`, runs in local Google Chrome).
 
 ## Commands
@@ -65,7 +65,7 @@ e2e/                        Playwright journeys
 - **Money is integer pence** everywhere (DB, maths, Stripe). Convert at the edges with `poundsToPence` / `formatGBP` (`src/lib/money.ts`).
 - **Never trust client-side prices**: the quote estimate is recomputed on the server (`calculateEstimate` + `getPriceMap`).
 - **Invoice numbers** (`LUM-YYYY-NNNN`) are allocated only when an invoice is **sent** (`sendInvoice` → `nextInvoiceNumber` in a transaction), so deleted drafts never leave gaps. Issued invoices are voided, never deleted.
-- **Theme (dark lavender)**: all UI colours are CSS variables in `src/app/globals.css` exposed as Tailwind tokens (`bg-canvas`, `bg-surface`, `bg-surface-2`, `text-ink`, `text-ink-muted`, `border-line`, `bg-brand`, `text-brand-light`, `text-accent`). **Never hard-code hex colours in components.** Palette: Cetacean Blue `#150A35` (canvas), Lavender `#A577FF` (`brand`), Ghost White `#F8F8FF` (`ink`/`accent`). `brand` is for **fills** only and takes dark text (`text-canvas`), because white on lavender fails contrast; for lavender **text** on dark use `text-brand-light`. Headings use `font-display` (Cormorant Garamond). Custom utilities in globals.css: `glass`, `glow`, `ring-gradient`, `text-gradient`, `bg-grid`, `grain`, `spotlight`, `shine`. Emails (`src/lib/email.ts`) and the invoice PDF (`src/lib/invoice-pdf.tsx`) intentionally stay light (inbox/print) with their own brand hex copies.
+- **Theme (light lavender)**: all UI colours are CSS variables in `src/app/globals.css` exposed as Tailwind tokens (`bg-canvas`, `bg-surface`, `bg-surface-2`, `text-ink`, `text-ink-muted`, `border-line`, `bg-brand`, `text-brand-light`, `bg-brand-tint`, `bg-brand-soft`). **Never hard-code hex colours in components.** Palette: Ghost White `#F8F8FF` (canvas), Cetacean Blue `#150A35` (`ink` text), Lavender `#A577FF` (`brand`). `brand` is for **fills** and takes `text-ink`; for lavender **text**/links use `text-brand-light` (deeper lavender, AA on white); `brand-tint` is the pale lavender used in gradients. A few deliberate dark accents (home CTA band, quote estimate card) use explicit cetacean gradients with white text. Backgrounds are smooth: `<FlowBackground>` (mesh + drifting blobs + wave ribbons) and the `bg-mesh` utility; no grid/grain patterns. Headings use `font-display` (Cormorant Garamond). Other utilities: `glass`, `glow`, `ring-gradient`, `text-gradient`, `spotlight`, `shine`. Emails and the invoice PDF stay light with their own brand hex copies.
 - **Motion**: use `<Reveal>` (scroll fade-up, optional `delay`) and `<Spotlight>` / `<Card interactive>` (cursor glow + hover lift) from `src/components/motion.tsx` / `ui.tsx`. Keep animations CSS-only; globals.css disables them under `prefers-reduced-motion`. Client components (Spotlight, Reveal) cannot receive components/functions as props from server components (e.g. don't pass `as={Link}`; wrap instead).
 - **Logo**: the LUMORA wordmark is an inline SVG (`Wordmark`/`Logo` in `src/components/logo.tsx`); a static copy is `public/logo.svg`. The original square brand tile (`public/lumora_profile_pic_*.png`) is used as the favicon/app icon via `src/app/icon.png` and `src/app/apple-icon.png`.
 - Pure, testable logic goes in `src/lib/*.ts` without `server-only` (pricing, invoice, hosting, progress, money). Server-only modules import `"server-only"`.
@@ -73,7 +73,7 @@ e2e/                        Playwright journeys
 
 ## Environment
 
-See `.env.example`. Without `RESEND_API_KEY`, emails (including verification links) print to the dev server console. Without Stripe keys, "Pay now" shows a friendly error. `DISABLE_RATE_LIMIT=true` relaxes the in-memory rate limiter in dev only (used by Playwright).
+See `.env.example`. Email goes via SMTP (`SMTP_*`, e.g. Gmail App Password) if set, else Resend (`RESEND_API_KEY`); with neither, emails are NOT sent and are printed to the dev server log (the check-email page shows a dev-only notice). `emailProvider()` in `src/lib/email.ts` reports which is active. Business contact details (email, Instagram) live in `src/lib/site.ts`; FAQs in `src/lib/content.ts`. Without Stripe keys, "Pay now" shows a friendly error. `DISABLE_RATE_LIMIT=true` relaxes the in-memory rate limiter in dev only (used by Playwright).
 
 ## Gotchas
 

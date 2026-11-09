@@ -26,7 +26,7 @@ export function ProjectTimeline({ milestones }: { milestones: Milestone[] }) {
                 className={cn(
                   "absolute top-7 left-[13px] h-[calc(100%-1.5rem)] w-0.5 rounded-full",
                   m.status === "DONE"
-                    ? "bg-gradient-to-b from-brand-light to-brand-strong shadow-[0_0_10px_rgba(203,181,255,0.6)]"
+                    ? "bg-gradient-to-b from-brand-tint to-brand-strong shadow-[0_0_10px_rgba(203,181,255,0.6)]"
                     : "bg-line",
                 )}
               />
@@ -36,7 +36,7 @@ export function ProjectTimeline({ milestones }: { milestones: Milestone[] }) {
               className={cn(
                 "relative z-10 mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full border-2 text-xs font-semibold transition-transform duration-300 group-hover:scale-110",
                 m.status === "DONE" &&
-                  "border-brand-light/70 bg-gradient-to-br from-brand-light to-brand text-canvas shadow-[0_0_16px_rgba(165,119,255,0.7)]",
+                  "border-brand-light/70 bg-gradient-to-br from-brand-tint to-brand text-ink shadow-[0_0_16px_rgba(165,119,255,0.7)]",
                 m.status === "IN_PROGRESS" && "animate-pulse-ring border-brand-light bg-surface text-brand-light",
                 m.status === "PENDING" && "border-line bg-surface text-ink-muted",
               )}
@@ -69,7 +69,7 @@ export function UpdatesFeed({ updates }: { updates: { id: string; body: string; 
   return (
     <ul className="space-y-4">
       {updates.map((u) => (
-        <li key={u.id} className="rounded-xl border border-line/50 bg-white/[0.03] p-4 transition-colors hover:border-brand-light/25">
+        <li key={u.id} className="rounded-xl border border-line/50 bg-ink/[0.025] p-4 transition-colors hover:border-brand-light/25">
           <p className="text-xs text-ink-muted">{formatDate(u.createdAt)}</p>
           <p className="mt-1 text-sm whitespace-pre-line">{u.body}</p>
         </li>
