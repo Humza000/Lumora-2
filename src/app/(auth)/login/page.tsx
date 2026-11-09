@@ -9,7 +9,7 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
   const { next } = await searchParams;
   return (
     <>
-      <h1 className="text-xl font-semibold">Log in</h1>
+      <h1 className="font-display text-4xl font-semibold">Log in</h1>
       <p className="mt-1 mb-6 text-sm text-ink-muted">Clients and the Lumora team sign in here.</p>
       <ActionForm action={login}>
         <input type="hidden" name="next" value={typeof next === "string" ? next : ""} />
@@ -21,7 +21,7 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
       </ActionForm>
       <p className="mt-6 text-center text-sm text-ink-muted">
         New to Lumora?{" "}
-        <Link href="/signup" className="font-medium text-brand hover:underline">
+        <Link href="/signup" className="font-medium text-brand-light hover:underline">
           Create an account
         </Link>
       </p>

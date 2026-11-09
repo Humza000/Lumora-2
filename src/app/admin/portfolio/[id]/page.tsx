@@ -22,7 +22,7 @@ export default async function EditPortfolioItem({ params }: PageProps<"/admin/po
           title={item.title}
           actions={
             <>
-              <Link href={`/portfolio/${item.slug}`} target="_blank" className="text-sm text-brand hover:underline">
+              <Link href={`/portfolio/${item.slug}`} target="_blank" className="text-sm text-brand-light hover:underline">
                 View live ↗
               </Link>
               <form action={deletePortfolioItem.bind(null, item.id)}>

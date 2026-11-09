@@ -37,12 +37,12 @@ export function ActionForm({
   return (
     <form ref={formRef} action={formAction} className={cn("space-y-4", className)}>
       {state?.error && (
-        <p role="alert" className="rounded-lg bg-danger/10 px-3 py-2 text-sm text-danger">
+        <p role="alert" className="rounded-xl border border-danger/25 bg-danger/10 px-3.5 py-2.5 text-sm text-danger">
           {state.error}
         </p>
       )}
       {state?.message && (
-        <p role="status" className="rounded-lg bg-success/10 px-3 py-2 text-sm text-success">
+        <p role="status" className="rounded-xl border border-success/25 bg-success/10 px-3.5 py-2.5 text-sm text-success">
           {state.message}
         </p>
       )}

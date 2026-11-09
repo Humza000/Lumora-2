@@ -48,13 +48,13 @@ export default async function AdminProject({ params }: PageProps<"/admin/project
           description={
             <>
               Client:{" "}
-              <Link href={`/admin/clients/${project.client.id}`} className="text-brand hover:underline">
+              <Link href={`/admin/clients/${project.client.id}`} className="text-brand-light hover:underline">
                 {project.client.name}
               </Link>
               {project.quote && (
                 <>
                   {" · "}
-                  <Link href={`/admin/quotes/${project.quote.id}`} className="text-brand hover:underline">
+                  <Link href={`/admin/quotes/${project.quote.id}`} className="text-brand-light hover:underline">
                     Original quote
                   </Link>
                 </>
@@ -107,7 +107,7 @@ export default async function AdminProject({ params }: PageProps<"/admin/project
                 </li>
               ))}
             </ul>
-            <details className="mt-4 rounded-lg border border-line p-4">
+            <details className="mt-4 rounded-xl border border-line/70 bg-white/[0.02] p-4 transition-colors open:border-brand-light/30">
               <summary className="cursor-pointer text-sm font-medium">Add milestone</summary>
               <ActionForm action={addMilestone.bind(null, project.id)} className="mt-4" resetOnSuccess>
                 <TextField label="Title" name="title" required />
@@ -126,7 +126,7 @@ export default async function AdminProject({ params }: PageProps<"/admin/project
             </ActionForm>
             <ul className="mt-6 space-y-3">
               {project.updates.map((u) => (
-                <li key={u.id} className="rounded-lg bg-canvas p-4">
+                <li key={u.id} className="rounded-xl border border-line/50 bg-white/[0.03] p-4">
                   <div className="flex justify-between text-xs text-ink-muted">
                     <span>{formatDate(u.createdAt)}</span>
                     <form action={deleteUpdate.bind(null, u.id)}>
@@ -161,7 +161,7 @@ export default async function AdminProject({ params }: PageProps<"/admin/project
               <ul className="space-y-2 text-sm">
                 {project.invoices.map((inv) => (
                   <li key={inv.id} className="flex items-center justify-between gap-2">
-                    <Link href={`/admin/invoices/${inv.id}`} className="text-brand hover:underline">
+                    <Link href={`/admin/invoices/${inv.id}`} className="text-brand-light hover:underline">
                       {inv.number ?? "Draft"}
                     </Link>
                     <span>{formatGBP(inv.total)}</span>
@@ -184,7 +184,7 @@ export default async function AdminProject({ params }: PageProps<"/admin/project
               <ul className="space-y-2 text-sm">
                 {project.hostingPlans.map((h) => (
                   <li key={h.id} className="flex justify-between">
-                    <Link href={`/admin/hosting/${h.id}`} className="text-brand hover:underline">
+                    <Link href={`/admin/hosting/${h.id}`} className="text-brand-light hover:underline">
                       {h.domain}
                     </Link>
                     <StatusBadge status={h.status} />

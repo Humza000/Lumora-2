@@ -15,10 +15,10 @@ export default async function QuoteThanksPage({ searchParams }: PageProps<"/quot
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-24 text-center sm:px-6">
-      <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-success/10 text-2xl text-success" aria-hidden>
+      <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-brand-light to-brand text-2xl text-canvas shadow-[0_0_40px_rgba(165,119,255,0.7)]" aria-hidden>
         ✓
       </div>
-      <h1 className="mt-6 text-3xl font-semibold tracking-tight">Thanks, we&apos;ve got your request</h1>
+      <h1 className="mt-8 font-display text-5xl font-semibold tracking-tight">Thanks, we&apos;ve got your request</h1>
       <p className="mt-4 text-ink-muted">
         Your indicative estimate is{" "}
         <strong className="text-ink">

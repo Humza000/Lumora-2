@@ -19,7 +19,7 @@ export default async function NewProject({ searchParams }: PageProps<"/admin/pro
         <ActionForm action={createProject}>
           <ProjectFields clients={clients} d={{ clientId: typeof client === "string" ? client : undefined }} />
           <label className="flex items-center gap-2 text-sm">
-            <input type="checkbox" name="defaultMilestones" defaultChecked className="accent-[var(--brand)]" />
+            <input type="checkbox" name="defaultMilestones" defaultChecked className="accent-[var(--brand-strong)]" />
             Add the standard 5-stage milestone plan
           </label>
           <SubmitButton>Create project</SubmitButton>

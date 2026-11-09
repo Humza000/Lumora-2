@@ -13,11 +13,11 @@ export default async function AcceptInvitePage({ searchParams }: PageProps<"/acc
   if (!invite) {
     return (
       <>
-        <h1 className="text-xl font-semibold">Invitation expired</h1>
+        <h1 className="font-display text-4xl font-semibold">Invitation expired</h1>
         <p className="mt-2 text-sm text-ink-muted">
           This link is invalid or has expired. Please contact us and we&apos;ll send a new one.
         </p>
-        <Link href="/login" className="mt-6 inline-block text-sm font-medium text-brand hover:underline">
+        <Link href="/login" className="mt-6 inline-block text-sm font-medium text-brand-light hover:underline">
           Go to login
         </Link>
       </>
@@ -26,7 +26,7 @@ export default async function AcceptInvitePage({ searchParams }: PageProps<"/acc
 
   return (
     <>
-      <h1 className="text-xl font-semibold">Welcome, {invite.user.name}</h1>
+      <h1 className="font-display text-4xl font-semibold">Welcome, {invite.user.name}</h1>
       <p className="mt-1 mb-6 text-sm text-ink-muted">
         Set a password for <strong className="text-ink">{invite.user.email}</strong> to access your client portal.
       </p>

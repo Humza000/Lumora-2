@@ -8,7 +8,7 @@ export const metadata: Metadata = { title: "Create an account" };
 export default function SignupPage() {
   return (
     <>
-      <h1 className="text-xl font-semibold">Create your account</h1>
+      <h1 className="font-display text-4xl font-semibold">Create your account</h1>
       <p className="mt-1 mb-6 text-sm text-ink-muted">
         You&apos;ll need an account to get a quote. It lets you save your answers and track your project once we start.
       </p>
@@ -31,7 +31,7 @@ export default function SignupPage() {
       </ActionForm>
       <p className="mt-6 text-center text-sm text-ink-muted">
         Already have an account?{" "}
-        <Link href="/login" className="font-medium text-brand hover:underline">
+        <Link href="/login" className="font-medium text-brand-light hover:underline">
           Log in
         </Link>
       </p>

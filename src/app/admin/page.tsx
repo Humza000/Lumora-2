@@ -48,7 +48,7 @@ export default async function AdminOverview() {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {stats.map((s) => (
           <Link key={s.label} href={s.href}>
-            <Card className="h-full transition-shadow hover:shadow-md">
+            <Card interactive className="h-full">
               <p className="text-sm text-ink-muted">{s.label}</p>
               <p className="mt-2 text-2xl font-semibold">{s.value}</p>
               {s.sub && <p className="mt-1 text-xs text-danger">{s.sub}</p>}
@@ -66,7 +66,7 @@ export default async function AdminOverview() {
             <ul className="divide-y divide-line">
               {newQuotes.map((q) => (
                 <li key={q.id} className="flex items-center justify-between gap-2 py-3 text-sm">
-                  <Link href={`/admin/quotes/${q.id}`} className="font-medium text-brand hover:underline">
+                  <Link href={`/admin/quotes/${q.id}`} className="font-medium text-brand-light hover:underline">
                     {q.user.name}
                   </Link>
                   <span className="text-ink-muted">
@@ -89,7 +89,7 @@ export default async function AdminOverview() {
                 const days = daysUntil(p.renewalDate);
                 return (
                   <li key={p.id} className="flex items-center justify-between gap-2 py-3 text-sm">
-                    <Link href={`/admin/hosting/${p.id}`} className="font-medium text-brand hover:underline">
+                    <Link href={`/admin/hosting/${p.id}`} className="font-medium text-brand-light hover:underline">
                       {p.domain}
                     </Link>
                     <span className="text-ink-muted">{p.client.name}</span>
@@ -111,7 +111,7 @@ export default async function AdminOverview() {
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {activeProjects.map((p) => (
             <Link key={p.id} href={`/admin/projects/${p.id}`}>
-              <Card className="h-full transition-shadow hover:shadow-md">
+              <Card interactive className="h-full">
                 <div className="flex items-start justify-between gap-2">
                   <div>
                     <p className="font-medium">{p.title}</p>

@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { connection } from "next/server";
+import { Reveal } from "@/components/motion";
+import { PageHero } from "@/components/page-hero";
 import { PortfolioCard } from "@/components/portfolio-card";
 import { EmptyState } from "@/components/ui";
 import { db } from "@/lib/db";
@@ -17,15 +19,15 @@ export default async function PortfolioPage() {
   });
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6">
-      <p className="text-sm font-medium text-brand">Portfolio</p>
-      <h1 className="mt-2 text-4xl font-semibold tracking-tight md:text-5xl">Our work</h1>
-      <p className="mt-4 max-w-2xl text-lg text-ink-muted">
+    <div className="mx-auto max-w-6xl px-4 py-24 sm:px-6">
+      <PageHero eyebrow="Portfolio" title="Our work">
         Fitness, e-commerce, legal, hospitality, healthcare and trades: websites that turn visitors into customers.
-      </p>
-      <div className="mt-14 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {items.map((item) => (
-          <PortfolioCard key={item.id} item={item} />
+      </PageHero>
+      <div className="mt-16 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        {items.map((item, i) => (
+          <Reveal key={item.id} delay={(i % 3) * 120} className="flex">
+            <PortfolioCard item={item} />
+          </Reveal>
         ))}
       </div>
       {items.length === 0 && <EmptyState title="Projects coming soon" />}

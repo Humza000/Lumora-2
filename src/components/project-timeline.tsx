@@ -19,19 +19,25 @@ export function ProjectTimeline({ milestones }: { milestones: Milestone[] }) {
       {milestones.map((m, i) => {
         const last = i === milestones.length - 1;
         return (
-          <li key={m.id} className="relative flex gap-4 pb-8 last:pb-0">
+          <li key={m.id} className="group relative flex gap-4 rounded-xl pb-8 last:pb-0">
             {!last && (
               <span
                 aria-hidden
-                className={cn("absolute top-7 left-[13px] h-[calc(100%-1.5rem)] w-0.5", m.status === "DONE" ? "bg-brand" : "bg-line")}
+                className={cn(
+                  "absolute top-7 left-[13px] h-[calc(100%-1.5rem)] w-0.5 rounded-full",
+                  m.status === "DONE"
+                    ? "bg-gradient-to-b from-brand-light to-brand-strong shadow-[0_0_10px_rgba(203,181,255,0.6)]"
+                    : "bg-line",
+                )}
               />
             )}
             <span
               aria-hidden
               className={cn(
-                "relative z-10 mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full border-2 text-xs font-semibold",
-                m.status === "DONE" && "border-brand bg-brand text-white",
-                m.status === "IN_PROGRESS" && "border-brand bg-surface text-brand",
+                "relative z-10 mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full border-2 text-xs font-semibold transition-transform duration-300 group-hover:scale-110",
+                m.status === "DONE" &&
+                  "border-brand-light/70 bg-gradient-to-br from-brand-light to-brand text-canvas shadow-[0_0_16px_rgba(165,119,255,0.7)]",
+                m.status === "IN_PROGRESS" && "animate-pulse-ring border-brand-light bg-surface text-brand-light",
                 m.status === "PENDING" && "border-line bg-surface text-ink-muted",
               )}
             >
@@ -63,7 +69,7 @@ export function UpdatesFeed({ updates }: { updates: { id: string; body: string; 
   return (
     <ul className="space-y-4">
       {updates.map((u) => (
-        <li key={u.id} className="rounded-lg bg-canvas p-4">
+        <li key={u.id} className="rounded-xl border border-line/50 bg-white/[0.03] p-4 transition-colors hover:border-brand-light/25">
           <p className="text-xs text-ink-muted">{formatDate(u.createdAt)}</p>
           <p className="mt-1 text-sm whitespace-pre-line">{u.body}</p>
         </li>

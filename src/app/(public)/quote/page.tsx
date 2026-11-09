@@ -4,6 +4,7 @@ import { requireVerifiedClient } from "@/lib/dal";
 import { getPriceMap } from "@/lib/prices";
 import { EMPTY_DRAFT, quoteDraftSchema } from "@/lib/pricing";
 import { QuoteWizard } from "./quote-wizard";
+import { Eyebrow } from "@/components/ui";
 
 export const metadata: Metadata = { title: "Get a quote" };
 
@@ -23,10 +24,11 @@ export default async function QuotePage() {
   };
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-14 sm:px-6">
-      <p className="text-sm font-medium text-brand">Quote wizard</p>
-      <h1 className="mt-2 text-3xl font-semibold tracking-tight md:text-4xl">Let&apos;s scope your project</h1>
-      <p className="mt-2 text-ink-muted">
+    <div className="relative isolate mx-auto max-w-6xl px-4 py-16 sm:px-6">
+      <div className="absolute -top-32 left-0 -z-10 h-96 w-96 rounded-full bg-brand/30 blur-[120px]" aria-hidden />
+      <Eyebrow>Quote wizard</Eyebrow>
+      <h1 className="mt-4 font-display text-5xl font-semibold tracking-tight md:text-6xl">Let&apos;s scope your project</h1>
+      <p className="mt-4 text-lg text-ink-muted">
         Answer a few questions and see your estimate update live. Your progress is saved automatically.
       </p>
       <QuoteWizard initialDraft={initial} initialQuoteId={draft?.id ?? null} prices={prices} />

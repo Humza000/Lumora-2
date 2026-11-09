@@ -33,7 +33,7 @@ export default async function AdminProjects() {
             {projects.map((p) => (
               <tr key={p.id}>
                 <Td>
-                  <Link href={`/admin/projects/${p.id}`} className="font-medium text-brand hover:underline">
+                  <Link href={`/admin/projects/${p.id}`} className="font-medium text-brand-light hover:underline">
                     {p.title}
                   </Link>
                 </Td>

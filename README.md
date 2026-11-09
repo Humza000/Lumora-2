@@ -85,8 +85,8 @@ The end-to-end suite covers: sign-up → email verification → quote wizard →
 
 ## Branding
 
-- **Colours**: edit the CSS variables at the top of [src/app/globals.css](src/app/globals.css). Everything uses these tokens. Also update the matching hex values in `src/lib/invoice-pdf.tsx` and `src/lib/email.ts`.
-- **Logo**: replace [public/logo.svg](public/logo.svg) (or change `site.logo` in [src/lib/site.ts](src/lib/site.ts)).
+- **Colours**: a dark lavender theme: Cetacean Blue `#150A35`, Lavender `#A577FF`, Ghost White `#F8F8FF`. Edit the CSS variables at the top of [src/app/globals.css](src/app/globals.css); everything uses these tokens. Emails and invoice PDFs stay light and keep their own copies in `src/lib/email.ts` and `src/lib/invoice-pdf.tsx`.
+- **Logo**: the LUMORA wordmark is rendered by [src/components/logo.tsx](src/components/logo.tsx) (static copy: [public/logo.svg](public/logo.svg)); the favicon/app icon comes from `src/app/icon.png` / `apple-icon.png`.
 - **Business details** (contact email, tagline): [src/lib/site.ts](src/lib/site.ts). Marketing copy: [src/lib/content.ts](src/lib/content.ts) and the pages in `src/app/(public)`.
 
 ## Payments (Stripe)

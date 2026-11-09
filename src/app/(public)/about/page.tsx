@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
-import { ButtonLink } from "@/components/ui";
+import { Reveal } from "@/components/motion";
+import { PageHero } from "@/components/page-hero";
+import { ButtonLink, Card } from "@/components/ui";
 
 export const metadata: Metadata = {
   title: "About",
@@ -14,30 +16,29 @@ const values = [
 
 export default function AboutPage() {
   return (
-    <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6">
-      <p className="text-sm font-medium text-brand">About Lumora</p>
-      <h1 className="mt-2 max-w-3xl text-4xl font-semibold tracking-tight md:text-5xl">
-        A boutique studio for brands that refuse to settle for ordinary
-      </h1>
+    <div className="mx-auto max-w-6xl px-4 py-24 sm:px-6">
       {/* TODO: replace with Lumora's own story */}
-      <p className="mt-6 max-w-2xl text-lg text-ink-muted">
+      <PageHero eyebrow="About Lumora" title="A boutique studio for brands that refuse to settle for ordinary">
         Lumora designs and builds premium, high-performance websites for ambitious businesses, from local trades and
         independent cafés to e-commerce brands and professional firms. We combine considered design with modern
         engineering to create sites that look exceptional and deliver measurable results.
-      </p>
-      <div className="mt-14 grid gap-6 md:grid-cols-3">
-        {values.map((v) => (
-          <div key={v.title} className="rounded-2xl border border-line bg-surface p-6">
-            <h2 className="font-semibold">{v.title}</h2>
-            <p className="mt-2 text-sm text-ink-muted">{v.description}</p>
-          </div>
+      </PageHero>
+      <div className="mt-16 grid gap-6 md:grid-cols-3">
+        {values.map((v, i) => (
+          <Reveal key={v.title} delay={i * 120} className="flex">
+            <Card interactive className="w-full p-8">
+              <span className="font-display text-5xl text-brand-light/40">0{i + 1}</span>
+              <h2 className="mt-4 text-lg font-semibold">{v.title}</h2>
+              <p className="mt-2 text-sm leading-relaxed text-ink-muted">{v.description}</p>
+            </Card>
+          </Reveal>
         ))}
       </div>
-      <div className="mt-16">
+      <Reveal className="mt-20">
         <ButtonLink href="/quote" size="lg">
-          Work with us
+          Work with us <span aria-hidden>→</span>
         </ButtonLink>
-      </div>
+      </Reveal>
     </div>
   );
 }

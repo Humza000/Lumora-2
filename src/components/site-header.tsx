@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { Logo } from "./logo";
+import { useScrolled } from "./motion";
 import { buttonClass, cn } from "./ui";
 
 const NAV = [
@@ -16,27 +17,44 @@ const NAV = [
 export function SiteHeader() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const scrolled = useScrolled();
 
   return (
-    <header className="sticky top-0 z-40 border-b border-line/70 bg-canvas/85 backdrop-blur">
-      <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 sm:px-6">
+    <header
+      className={cn(
+        "sticky top-0 z-40 transition-all duration-500",
+        scrolled || open ? "glass border-x-0 border-t-0 shadow-[0_10px_40px_-20px_rgba(0,0,0,0.8)]" : "border-b border-transparent",
+      )}
+    >
+      <div className={cn("mx-auto flex max-w-6xl items-center justify-between px-4 transition-all duration-500 sm:px-6", scrolled ? "py-3" : "py-5")}>
         <Logo />
-        <nav className="hidden items-center gap-8 md:flex" aria-label="Main">
-          {NAV.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={cn(
-                "text-sm transition-colors hover:text-ink",
-                pathname.startsWith(item.href) ? "font-medium text-ink" : "text-ink-muted",
-              )}
-            >
-              {item.label}
-            </Link>
-          ))}
+        <nav className="hidden items-center gap-1 md:flex" aria-label="Main">
+          {NAV.map((item) => {
+            const active = pathname.startsWith(item.href);
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={cn(
+                  "group relative rounded-full px-4 py-2 text-sm transition-colors duration-300",
+                  active ? "text-ink" : "text-ink-muted hover:text-ink",
+                )}
+              >
+                <span className="absolute inset-0 rounded-full bg-white/[0.06] opacity-0 transition-opacity duration-300 group-hover:opacity-100" aria-hidden />
+                <span className="relative">{item.label}</span>
+                <span
+                  aria-hidden
+                  className={cn(
+                    "absolute inset-x-4 -bottom-px h-px origin-left bg-gradient-to-r from-transparent via-brand-light to-transparent transition-transform duration-500",
+                    active ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100",
+                  )}
+                />
+              </Link>
+            );
+          })}
         </nav>
-        <div className="hidden items-center gap-3 md:flex">
-          <Link href="/login" className="text-sm text-ink-muted hover:text-ink">
+        <div className="hidden items-center gap-4 md:flex">
+          <Link href="/login" className="text-sm text-ink-muted transition-colors hover:text-ink">
             Client login
           </Link>
           <Link href="/quote" className={buttonClass("primary", "sm")}>
@@ -44,7 +62,7 @@ export function SiteHeader() {
           </Link>
         </div>
         <button
-          className="rounded-lg p-2 md:hidden"
+          className="rounded-lg p-2 text-ink transition-colors hover:bg-white/5 md:hidden"
           aria-expanded={open}
           aria-controls="mobile-nav"
           aria-label="Toggle menu"
@@ -56,14 +74,19 @@ export function SiteHeader() {
         </button>
       </div>
       {open && (
-        <nav id="mobile-nav" className="border-t border-line px-4 py-4 md:hidden" aria-label="Mobile">
-          <div className="flex flex-col gap-3">
+        <nav id="mobile-nav" className="border-t border-line/60 px-4 pt-2 pb-6 md:hidden" aria-label="Mobile">
+          <div className="flex flex-col">
             {NAV.map((item) => (
-              <Link key={item.href} href={item.href} onClick={() => setOpen(false)} className="py-1">
+              <Link
+                key={item.href}
+                href={item.href}
+                onClick={() => setOpen(false)}
+                className="border-b border-line/40 py-3.5 font-display text-2xl transition-colors hover:text-brand-light"
+              >
                 {item.label}
               </Link>
             ))}
-            <Link href="/login" onClick={() => setOpen(false)} className="py-1 text-ink-muted">
+            <Link href="/login" onClick={() => setOpen(false)} className="py-4 text-ink-muted">
               Client login
             </Link>
             <Link href="/quote" onClick={() => setOpen(false)} className={buttonClass("primary")}>

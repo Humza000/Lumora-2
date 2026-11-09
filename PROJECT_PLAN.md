@@ -74,8 +74,9 @@ Decisions: self-signup is required before submitting a quote (with email verific
 
 ## 4. Launch checklist (blockers in **bold**)
 
-- [ ] **Brand colours**: supply hex codes → update `src/app/globals.css` (+ PDF and email copies)
-- [ ] **Logo**: supply file → replace `public/logo.svg`
+- [x] Brand colours: dark lavender palette (Cetacean Blue `#150A35`, Lavender `#A577FF`, Ghost White `#F8F8FF`) in `src/app/globals.css`
+- [x] Logo: LUMORA wordmark recreated as SVG; PNG used as favicon/app icon
+- [x] Premium dark UI + interactivity (scroll reveals, cursor spotlight, hover glow, animated hero)
 - [ ] **Portfolio images** for the 6 case studies (+ case-study write-ups)
 - [ ] Final copy for About / Services / Contact (current text is a solid draft); confirm contact email in `src/lib/site.ts`
 - [ ] **Production Postgres** (Neon/Supabase) + Vercel project, env vars, `npm run db:deploy`, seed with `SEED_DEMO=false`
@@ -130,7 +131,7 @@ Decisions: self-signup is required before submitting a quote (with email verific
 
 ## 9. Open questions
 
-- Final brand hex codes and logo file (blocker for launch styling).
+- A transparent, high-res logo export (SVG preferred) to replace the recreated wordmark if you want a pixel-exact match.
 - Are you VAT registered? (affects default VAT rate and invoice wording)
 - Preferred payment terms (e.g. 50% deposit / 50% on launch) to bake into the default milestone & invoice flow?
 - Should hosting plans move to automatic Stripe subscriptions in Phase 2?

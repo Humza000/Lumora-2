@@ -39,13 +39,13 @@ export default async function AdminHostingPlan({ params }: PageProps<"/admin/hos
           title={plan.domain}
           description={
             <>
-              <Link href={`/admin/clients/${plan.client.id}`} className="text-brand hover:underline">
+              <Link href={`/admin/clients/${plan.client.id}`} className="text-brand-light hover:underline">
                 {plan.client.name}
               </Link>
               {plan.project && (
                 <>
                   {" · "}
-                  <Link href={`/admin/projects/${plan.project.id}`} className="text-brand hover:underline">
+                  <Link href={`/admin/projects/${plan.project.id}`} className="text-brand-light hover:underline">
                     {plan.project.title}
                   </Link>
                 </>
@@ -90,7 +90,7 @@ export default async function AdminHostingPlan({ params }: PageProps<"/admin/hos
               <ul className="space-y-2 text-sm">
                 {plan.invoices.map((inv) => (
                   <li key={inv.id} className="flex items-center justify-between gap-2">
-                    <Link href={`/admin/invoices/${inv.id}`} className="text-brand hover:underline">
+                    <Link href={`/admin/invoices/${inv.id}`} className="text-brand-light hover:underline">
                       {inv.number ?? "Draft"}
                     </Link>
                     <span>{formatGBP(inv.total)}</span>

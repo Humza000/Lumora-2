@@ -32,7 +32,7 @@ export default async function AdminPortfolio() {
             {items.map((i) => (
               <tr key={i.id}>
                 <Td>
-                  <Link href={`/admin/portfolio/${i.id}`} className="font-medium text-brand hover:underline">
+                  <Link href={`/admin/portfolio/${i.id}`} className="font-medium text-brand-light hover:underline">
                     {i.title}
                   </Link>
                   <p className="text-xs text-ink-muted">/portfolio/{i.slug}</p>

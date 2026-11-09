@@ -33,11 +33,11 @@ export function PortfolioForm({ action, item }: { action: (s: ActionState, fd: F
       </div>
       <div className="flex gap-6 text-sm">
         <label className="flex items-center gap-2">
-          <input type="checkbox" name="published" defaultChecked={item?.published ?? true} className="accent-[var(--brand)]" />
+          <input type="checkbox" name="published" defaultChecked={item?.published ?? true} className="accent-[var(--brand-strong)]" />
           Published
         </label>
         <label className="flex items-center gap-2">
-          <input type="checkbox" name="featured" defaultChecked={item?.featured ?? false} className="accent-[var(--brand)]" />
+          <input type="checkbox" name="featured" defaultChecked={item?.featured ?? false} className="accent-[var(--brand-strong)]" />
           Featured on homepage
         </label>
       </div>

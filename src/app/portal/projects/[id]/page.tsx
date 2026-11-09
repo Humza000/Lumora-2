@@ -63,7 +63,7 @@ export default async function PortalProject({ params }: PageProps<"/portal/proje
               <ul className="space-y-2 text-sm">
                 {project.invoices.map((inv) => (
                   <li key={inv.id} className="flex items-center justify-between gap-2">
-                    <Link href={`/portal/invoices/${inv.id}`} className="text-brand hover:underline">
+                    <Link href={`/portal/invoices/${inv.id}`} className="text-brand-light hover:underline">
                       {inv.number}
                     </Link>
                     <span>{formatGBP(inv.total)}</span>

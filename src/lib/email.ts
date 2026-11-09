@@ -10,13 +10,13 @@ const esc = (s: string) =>
   s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
 
 function layout(title: string, body: string, cta?: { label: string; href: string }) {
-  return `<!doctype html><html><body style="margin:0;background:#f5f5f7;font-family:Arial,Helvetica,sans-serif;color:#111">
+  return `<!doctype html><html><body style="margin:0;background:#f8f8ff;font-family:Arial,Helvetica,sans-serif;color:#150a35">
   <table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:32px 16px">
-  <table width="560" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:12px;padding:32px">
-  <tr><td><p style="font-size:20px;font-weight:bold;margin:0 0 24px">${esc(site.name)}</p>
+  <table width="560" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:16px;padding:36px;border:1px solid #e7defc">
+  <tr><td><p style="font-family:Georgia,'Times New Roman',serif;font-size:20px;font-weight:bold;letter-spacing:6px;color:#7d4dff;margin:0 0 28px">${esc(site.name.toUpperCase())}</p>
   <h1 style="font-size:20px;margin:0 0 16px">${esc(title)}</h1>
   <div style="font-size:15px;line-height:1.6">${body}</div>
-  ${cta ? `<p style="margin:28px 0"><a href="${cta.href}" style="background:#111;color:#fff;padding:12px 20px;border-radius:8px;text-decoration:none;display:inline-block">${esc(cta.label)}</a></p><p style="font-size:12px;color:#666">Or paste this link into your browser:<br>${cta.href}</p>` : ""}
+  ${cta ? `<p style="margin:28px 0"><a href="${cta.href}" style="background:#150a35;color:#f8f8ff;padding:12px 22px;border-radius:10px;text-decoration:none;display:inline-block">${esc(cta.label)}</a></p><p style="font-size:12px;color:#666">Or paste this link into your browser:<br>${cta.href}</p>` : ""}
   </td></tr></table></td></tr></table></body></html>`;
 }
 

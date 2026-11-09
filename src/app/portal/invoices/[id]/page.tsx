@@ -26,7 +26,7 @@ export default async function PortalInvoice({ params, searchParams }: PageProps<
         ← All invoices
       </Link>
       {paid && invoice.status !== "PAID" && (
-        <p className="mt-4 rounded-lg bg-success/10 px-4 py-3 text-sm text-success">
+        <p className="mt-4 rounded-xl border border-success/25 bg-success/10 px-4 py-3 text-sm text-success">
           Thanks! Your payment is being confirmed. This page will show “Paid” shortly.
         </p>
       )}

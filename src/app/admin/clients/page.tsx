@@ -35,7 +35,7 @@ export default async function AdminClients() {
             {clients.map((c) => (
               <tr key={c.id}>
                 <Td>
-                  <Link href={`/admin/clients/${c.id}`} className="font-medium text-brand hover:underline">
+                  <Link href={`/admin/clients/${c.id}`} className="font-medium text-brand-light hover:underline">
                     {c.name}
                   </Link>
                   <p className="text-xs text-ink-muted">{c.email}</p>

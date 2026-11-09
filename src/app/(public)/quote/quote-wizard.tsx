@@ -91,10 +91,11 @@ export function QuoteWizard({ initialDraft, initialQuoteId, prices }: Props) {
                 disabled={i > step}
                 aria-current={i === step ? "step" : undefined}
                 className={cn(
-                  "rounded-full px-3 py-1.5 text-xs font-medium transition-colors",
-                  i === step && "bg-brand text-white",
-                  i < step && "bg-brand-soft text-brand-strong hover:bg-brand-soft/70",
-                  i > step && "bg-surface text-ink-muted",
+                  "rounded-full border px-3.5 py-1.5 text-xs font-medium transition-all duration-300",
+                  i === step &&
+                    "border-transparent bg-gradient-to-r from-brand-light to-brand text-canvas shadow-[0_0_20px_-2px_rgba(165,119,255,0.7)]",
+                  i < step && "border-brand-light/30 bg-brand-strong/15 text-brand-light hover:bg-brand-strong/25",
+                  i > step && "border-line/70 bg-white/[0.02] text-ink-muted",
                 )}
               >
                 {i + 1}. {label}
@@ -103,8 +104,8 @@ export function QuoteWizard({ initialDraft, initialQuoteId, prices }: Props) {
           ))}
         </ol>
 
-        <div className="rounded-2xl border border-line bg-surface p-6 md:p-8">
-          <h2 className="text-xl font-semibold">{STEPS[step]}</h2>
+        <div className="ring-gradient rounded-3xl border border-line/60 bg-surface/80 p-6 shadow-[0_30px_80px_-40px_rgba(165,119,255,0.5)] md:p-9">
+          <h2 className="font-display text-3xl font-semibold">{STEPS[step]}</h2>
 
           {step === 0 && (
             <ChoiceGrid>
@@ -195,10 +196,10 @@ export function QuoteWizard({ initialDraft, initialQuoteId, prices }: Props) {
                   ))}
                 </ChoiceGrid>
               </fieldset>
-              <label className="flex items-start gap-3 rounded-xl border border-line p-4">
+              <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-line/70 bg-white/[0.02] p-4 transition-all duration-300 hover:border-brand-light/30 has-[:checked]:border-brand-light/50 has-[:checked]:bg-brand-strong/10">
                 <input
                   type="checkbox"
-                  className="mt-1 accent-[var(--brand)]"
+                  className="mt-1 accent-[var(--brand-strong)]"
                   checked={draft.hosting ?? false}
                   onChange={(e) => update({ hosting: e.target.checked })}
                 />
@@ -293,7 +294,7 @@ export function QuoteWizard({ initialDraft, initialQuoteId, prices }: Props) {
           )}
 
           {error && (
-            <p role="alert" className="mt-6 rounded-lg bg-danger/10 px-3 py-2 text-sm text-danger">
+            <p role="alert" className="mt-6 rounded-xl border border-danger/25 bg-danger/10 px-3.5 py-2.5 text-sm text-danger">
               {error}
             </p>
           )}
@@ -320,9 +321,10 @@ export function QuoteWizard({ initialDraft, initialQuoteId, prices }: Props) {
 
       {/* Live estimate */}
       <aside className="lg:sticky lg:top-24 lg:self-start">
-        <div className="rounded-2xl bg-ink p-6 text-white">
-          <p className="text-sm text-white/60">Indicative estimate</p>
-          <p className="mt-2 text-3xl font-semibold tracking-tight">
+        <div className="ring-gradient relative isolate overflow-hidden rounded-3xl border border-brand-light/20 bg-gradient-to-br from-[#2a1a66] via-surface to-surface p-7 text-white shadow-[0_30px_80px_-30px_rgba(165,119,255,0.75)]">
+          <div className="absolute -top-20 -right-20 -z-10 h-56 w-56 rounded-full bg-brand-strong/40 blur-[80px]" aria-hidden />
+          <p className="text-xs tracking-[0.2em] text-brand-light uppercase">Indicative estimate</p>
+          <p key={estimate.total} className="mt-3 animate-[fade-in_0.5s_ease] font-display text-4xl font-semibold tracking-tight">
             {estimate.total > 0
               ? `${formatGBP(estimate.min, { whole: true })} – ${formatGBP(estimate.max, { whole: true })}`
               : "£—"}
@@ -379,15 +381,19 @@ function Choice({
   return (
     <label
       className={cn(
-        "flex cursor-pointer items-start gap-3 rounded-xl border p-4 transition-colors has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-brand",
-        checked ? "border-brand bg-brand-soft/60" : "border-line hover:border-ink/30",
+        "group relative flex cursor-pointer items-start gap-3 rounded-2xl border p-4 transition-all duration-300 has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-brand-light",
+        checked
+          ? "border-brand-light/60 bg-brand-strong/15 shadow-[0_0_0_1px_rgba(203,181,255,0.35),0_12px_40px_-12px_rgba(165,119,255,0.7)]"
+          : "border-line/70 bg-white/[0.02] hover:-translate-y-0.5 hover:border-brand-light/30 hover:bg-white/[0.04] hover:shadow-[0_12px_30px_-15px_rgba(165,119,255,0.6)]",
       )}
     >
-      <input type={type} name={name} checked={checked} onChange={onChange} className="mt-1 accent-[var(--brand)]" />
+      <input type={type} name={name} checked={checked} onChange={onChange} className="mt-1 accent-[var(--brand-strong)]" />
       <span className="flex-1">
         <span className="flex justify-between gap-2">
           <span className="text-sm font-medium">{title}</span>
-          {meta && <span className="text-xs whitespace-nowrap text-ink-muted">{meta}</span>}
+          {meta && (
+            <span className={cn("text-xs whitespace-nowrap transition-colors", checked ? "text-brand-light" : "text-ink-muted")}>{meta}</span>
+          )}
         </span>
         {description && <span className="mt-1 block text-sm text-ink-muted">{description}</span>}
       </span>

@@ -14,9 +14,9 @@ export default async function CheckEmailPage({ searchParams }: PageProps<"/check
 
   return (
     <>
-      <h1 className="text-xl font-semibold">Check your email</h1>
+      <h1 className="font-display text-4xl font-semibold">Check your email</h1>
       {error === "invalid" && (
-        <p role="alert" className="mt-4 rounded-lg bg-danger/10 px-3 py-2 text-sm text-danger">
+        <p role="alert" className="mt-4 rounded-xl border border-danger/25 bg-danger/10 px-3.5 py-2.5 text-sm text-danger">
           That verification link is invalid or has expired. Request a new one below.
         </p>
       )}

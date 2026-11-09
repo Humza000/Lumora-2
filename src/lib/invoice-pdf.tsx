@@ -4,8 +4,9 @@ import type { InvoiceForView } from "@/components/invoice-view";
 import { formatGBP } from "./money";
 import { site } from "./site";
 
-// PDF fonts can't read CSS variables. Keep in sync with --ink / --brand in globals.css.
-const INK = "#0e0d14";
+// PDFs are printed, so they stay light. Brand colours from the logo (globals.css: --brand / --accent).
+const INK = "#150a35";
+const BRAND = "#7d4dff";
 const MUTED = "#5b5a66";
 const LINE = "#e6e4ee";
 
@@ -13,6 +14,7 @@ const s = StyleSheet.create({
   page: { padding: 48, fontSize: 10, color: INK, fontFamily: "Helvetica" },
   row: { flexDirection: "row", justifyContent: "space-between" },
   h1: { fontSize: 22, fontFamily: "Helvetica-Bold" },
+  brand: { fontSize: 20, fontFamily: "Times-Bold", letterSpacing: 5, color: BRAND },
   muted: { color: MUTED },
   label: { color: MUTED, marginBottom: 2 },
   section: { marginTop: 28 },
@@ -33,7 +35,7 @@ function InvoicePdf({ invoice }: { invoice: InvoiceForView }) {
       <Page size="A4" style={s.page}>
         <View style={s.row}>
           <View>
-            <Text style={s.h1}>{site.name}</Text>
+            <Text style={s.brand}>{site.name.toUpperCase()}</Text>
             <Text style={s.muted}>{site.email}</Text>
           </View>
           <View style={{ alignItems: "flex-end" }}>

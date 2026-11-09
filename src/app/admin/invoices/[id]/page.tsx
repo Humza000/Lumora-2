@@ -87,12 +87,12 @@ export default async function AdminInvoice({ params, searchParams }: PageProps<"
       </div>
 
       {sent && invoice.status === "SENT" && (
-        <p role="status" className="mb-4 rounded-lg bg-success/10 px-4 py-3 text-sm text-success">
+        <p role="status" className="mb-4 rounded-xl border border-success/25 bg-success/10 px-4 py-3 text-sm text-success">
           Invoice {invoice.number} sent to {invoice.client.email}.
         </p>
       )}
       {isDraft && (
-        <p className="mb-4 rounded-lg bg-brand-soft px-4 py-3 text-sm text-brand-strong">
+        <p className="mb-4 rounded-xl border border-brand-light/20 bg-brand-strong/10 px-4 py-3 text-sm text-brand-light">
           This is a draft. The client can&apos;t see it until you send it. Sending assigns the invoice number and emails
           the client a link to view and pay.
         </p>

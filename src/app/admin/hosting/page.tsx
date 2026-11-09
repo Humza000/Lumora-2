@@ -59,7 +59,7 @@ export default async function AdminHosting() {
               return (
                 <tr key={p.id}>
                   <Td>
-                    <Link href={`/admin/hosting/${p.id}`} className="font-medium text-brand hover:underline">
+                    <Link href={`/admin/hosting/${p.id}`} className="font-medium text-brand-light hover:underline">
                       {p.domain}
                     </Link>
                     <p className="text-xs text-ink-muted">{p.provider}</p>

@@ -35,7 +35,7 @@ export default async function PortalInvoices() {
             {invoices.map((inv) => (
               <tr key={inv.id}>
                 <Td>
-                  <Link href={`/portal/invoices/${inv.id}`} className="font-medium text-brand hover:underline">
+                  <Link href={`/portal/invoices/${inv.id}`} className="font-medium text-brand-light hover:underline">
                     {inv.number}
                   </Link>
                 </Td>

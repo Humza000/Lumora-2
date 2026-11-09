@@ -23,7 +23,7 @@ export default async function PortalProjects() {
         <div className="grid gap-4 md:grid-cols-2">
           {projects.map((p) => (
             <Link key={p.id} href={`/portal/projects/${p.id}`}>
-              <Card className="h-full transition-shadow hover:shadow-md">
+              <Card interactive className="h-full">
                 <div className="flex items-start justify-between gap-2">
                   <h2 className="font-semibold">{p.title}</h2>
                   <StatusBadge status={p.status} />

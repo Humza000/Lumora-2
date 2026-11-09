@@ -21,10 +21,11 @@ export type InvoiceForView = {
 
 export function InvoiceView({ invoice }: { invoice: InvoiceForView }) {
   return (
-    <div className="rounded-2xl border border-line bg-surface p-6 md:p-10">
+    <div className="ring-gradient relative isolate overflow-hidden rounded-2xl border border-line/60 bg-surface/90 p-6 md:p-10">
+      <div className="pointer-events-none absolute -top-24 -right-24 -z-10 h-64 w-64 rounded-full bg-brand/25 blur-[90px]" aria-hidden />
       <div className="flex flex-wrap items-start justify-between gap-6">
         <div>
-          <p className="text-2xl font-semibold">Invoice</p>
+          <p className="font-display text-4xl font-semibold">Invoice</p>
           <p className="mt-1 font-mono text-sm text-ink-muted">{invoice.number ?? "Draft"}</p>
         </div>
         <StatusBadge status={effectiveStatus(invoice.status, invoice.dueDate)} />
@@ -73,7 +74,7 @@ export function InvoiceView({ invoice }: { invoice: InvoiceForView }) {
         </thead>
         <tbody>
           {invoice.lines.map((l) => (
-            <tr key={l.id} className="border-b border-line">
+            <tr key={l.id} className="border-b border-line/60 transition-colors hover:bg-white/[0.02]">
               <td className="py-3">{l.description}</td>
               <td className="py-3 text-right">{l.quantity}</td>
               <td className="py-3 text-right">{formatGBP(l.unitPrice)}</td>
@@ -92,7 +93,7 @@ export function InvoiceView({ invoice }: { invoice: InvoiceForView }) {
           <span className="text-ink-muted">VAT ({invoice.vatRate}%)</span>
           <span>{formatGBP(invoice.vat)}</span>
         </div>
-        <div className="flex justify-between border-t border-line pt-2 text-base font-semibold">
+        <div className="flex justify-between border-t border-line pt-2 text-lg font-semibold text-brand-light">
           <span>Total</span>
           <span>{formatGBP(invoice.total)}</span>
         </div>

@@ -124,7 +124,7 @@ function Section({ title, empty, children }: { title: string; empty: string; chi
 function Row({ href, title, meta, status }: { href: string; title: string; meta: string; status: string }) {
   return (
     <li className="flex items-center justify-between gap-3 py-2.5 text-sm">
-      <Link href={href} className="font-medium text-brand hover:underline">
+      <Link href={href} className="font-medium text-brand-light hover:underline">
         {title}
       </Link>
       <span className="ml-auto text-ink-muted">{meta}</span>

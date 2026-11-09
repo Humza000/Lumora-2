@@ -27,7 +27,7 @@ export default async function AdminQuote({ params }: PageProps<"/admin/quotes/[i
   const rows: [string, React.ReactNode][] = [
     ["Business", a.businessName],
     ["Industry", a.industry || "—"],
-    ["Current site", a.existingSite ? <a href={a.existingSite} target="_blank" rel="noreferrer" className="text-brand hover:underline">{a.existingSite}</a> : "—"],
+    ["Current site", a.existingSite ? <a href={a.existingSite} target="_blank" rel="noreferrer" className="text-brand-light hover:underline">{a.existingSite}</a> : "—"],
     ["Project type", label(PROJECT_TYPES, a.projectType)],
     ["Pages", a.pages],
     ["Features", a.features?.map((k) => label(FEATURES, k)).join(", ") || "None"],
@@ -73,7 +73,7 @@ export default async function AdminQuote({ params }: PageProps<"/admin/quotes/[i
             <Card>
               <p className="text-sm">
                 Converted to project{" "}
-                <Link href={`/admin/projects/${quote.project.id}`} className="font-medium text-brand hover:underline">
+                <Link href={`/admin/projects/${quote.project.id}`} className="font-medium text-brand-light hover:underline">
                   {quote.project.title}
                 </Link>
               </p>
@@ -98,7 +98,7 @@ export default async function AdminQuote({ params }: PageProps<"/admin/quotes/[i
                     <TextField label="Target launch" name="dueDate" type="date" />
                   </div>
                   <label className="flex items-center gap-2 text-sm">
-                    <input type="checkbox" name="defaultMilestones" defaultChecked className="accent-[var(--brand)]" />
+                    <input type="checkbox" name="defaultMilestones" defaultChecked className="accent-[var(--brand-strong)]" />
                     Add the standard 5-stage milestone plan
                   </label>
                   <SubmitButton pendingText="Creating…">Accept & create project</SubmitButton>
@@ -112,7 +112,7 @@ export default async function AdminQuote({ params }: PageProps<"/admin/quotes/[i
           <Card>
             <h2 className="font-semibold">Client</h2>
             <p className="mt-3 text-sm font-medium">
-              <Link href={`/admin/clients/${quote.user.id}`} className="text-brand hover:underline">
+              <Link href={`/admin/clients/${quote.user.id}`} className="text-brand-light hover:underline">
                 {quote.user.name}
               </Link>
             </p>

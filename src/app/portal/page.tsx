@@ -39,7 +39,7 @@ export default async function PortalHome() {
           <ul className="mt-2 space-y-1 text-sm">
             {invoices.map((inv) => (
               <li key={inv.id}>
-                <Link href={`/portal/invoices/${inv.id}`} className="text-brand hover:underline">
+                <Link href={`/portal/invoices/${inv.id}`} className="text-brand-light hover:underline">
                   {inv.number}
                 </Link>{" "}
                 · {formatGBP(inv.total)} · due {formatDate(inv.dueDate)}{" "}
@@ -65,7 +65,7 @@ export default async function PortalHome() {
         <div className="grid gap-4 md:grid-cols-2">
           {active.map((p) => (
             <Link key={p.id} href={`/portal/projects/${p.id}`} className="block">
-              <Card className="h-full transition-shadow hover:shadow-md">
+              <Card interactive className="h-full">
                 <div className="flex items-start justify-between gap-2">
                   <h3 className="font-semibold">{p.title}</h3>
                   <StatusBadge status={p.status} />

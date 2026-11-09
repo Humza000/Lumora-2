@@ -14,7 +14,7 @@ export default async function PortalQuotes({ searchParams }: PageProps<"/portal/
   return (
     <>
       <PageHeader title="Quotes" actions={<ButtonLink href="/quote">New quote</ButtonLink>} />
-      {submitted && <p className="mb-6 rounded-lg bg-success/10 px-4 py-3 text-sm text-success">Quote submitted, thank you!</p>}
+      {submitted && <p className="mb-6 rounded-xl border border-success/25 bg-success/10 px-4 py-3 text-sm text-success">Quote submitted, thank you!</p>}
       {quotes.length === 0 ? (
         <EmptyState title="No quotes yet" description="Use the quote wizard to get an instant estimate." />
       ) : (
