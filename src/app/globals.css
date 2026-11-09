@@ -246,3 +246,39 @@ body {
     transform: none;
   }
 }
+
+/* ---------- Portfolio website mockups ----------
+ * Inside a mockup, Tailwind's spacing/text/radius scale is re-based on the
+ * frame width (container query units), so mockups are written with normal
+ * Tailwind classes at "design size" and scale crisply to any width.
+ * mock-desktop: 1280px design width · mock-phone: 390px design width.
+ */
+@utility mock-desktop {
+  --spacing: calc(100cqw / 320);
+  @apply mock-scale;
+}
+@utility mock-phone {
+  --spacing: calc(100cqw / 97.5);
+  @apply mock-scale;
+}
+@utility mock-scale {
+  --text-xs: calc(var(--spacing) * 3);
+  --text-sm: calc(var(--spacing) * 3.5);
+  --text-base: calc(var(--spacing) * 4);
+  --text-lg: calc(var(--spacing) * 4.5);
+  --text-xl: calc(var(--spacing) * 5);
+  --text-2xl: calc(var(--spacing) * 6);
+  --text-3xl: calc(var(--spacing) * 7.5);
+  --text-4xl: calc(var(--spacing) * 9);
+  --text-5xl: calc(var(--spacing) * 12);
+  --text-6xl: calc(var(--spacing) * 15);
+  --text-7xl: calc(var(--spacing) * 18);
+  --radius-sm: calc(var(--spacing) * 1);
+  --radius-md: calc(var(--spacing) * 1.5);
+  --radius-lg: calc(var(--spacing) * 2);
+  --radius-xl: calc(var(--spacing) * 3);
+  --radius-2xl: calc(var(--spacing) * 4);
+  --radius-3xl: calc(var(--spacing) * 6);
+  font-size: var(--text-base);
+  line-height: 1.4;
+}

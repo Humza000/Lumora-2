@@ -233,6 +233,21 @@ model PortfolioItem {
   features  String[]
   imageUrl  String?
   liveUrl   String?
+  // Case-study detail (all optional)
+  client            String?
+  location          String?
+  year              Int?
+  services          String[]
+  overview          String? // who the client is / who the site is for
+  challenge         String? // the brief
+  approach          String?
+  outcomes          String[] // qualitative: what we delivered
+  stats             Json? // [{ value, label }]: REAL figures only, hidden when empty
+  testimonialQuote  String? // REAL client quotes only, hidden when empty
+  testimonialAuthor String?
+  testimonialRole   String?
+  mockup            String? // key of a built-in website mockup (src/components/mockups)
+  concept           Boolean  @default(false) // shows a "Concept project" badge
   featured  Boolean  @default(false)
   sortOrder Int      @default(0)
   published Boolean  @default(true)

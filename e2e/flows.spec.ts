@@ -39,9 +39,19 @@ test.describe.serial("Lumora end-to-end", () => {
   test("public site renders portfolio", async ({ page }) => {
     await page.goto("/");
     await expect(page.getByRole("heading", { level: 1 })).toContainText("convert");
-    await expect(page.getByText("Peak Performance Gym").first()).toBeVisible();
+    await expect(page.getByRole("link", { name: /Northline Plumbing & Heating/ }).first()).toBeAttached();
+    await page.goto("/portfolio");
+    await expect(page.getByRole("link", { name: /Miso House/ }).first()).toBeAttached();
+    await expect(page.getByText("Peak Performance Gym")).toHaveCount(0); // retired entry hidden
     await page.goto("/portfolio/maison-co");
-    await expect(page.getByRole("heading", { name: "Maison & Co" })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1, name: "Maison & Co Interiors" })).toBeVisible();
+    for (const h of ["Who it's for", "The challenge", "What we did", "Key features", "What we delivered"]) {
+      await expect(page.getByRole("heading", { name: h })).toBeAttached();
+    }
+    // No fabricated results/testimonial sections unless entered in admin
+    await expect(page.getByText("Results", { exact: true })).toHaveCount(0);
+    await page.getByRole("link", { name: /Next project/ }).click();
+    await expect(page).toHaveURL(/\/portfolio\/miso-house$/);
   });
 
   test("quote requires an account: signup → verify → wizard → submit", async ({ page }) => {

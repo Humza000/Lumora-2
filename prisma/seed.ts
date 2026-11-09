@@ -7,7 +7,7 @@ import { PrismaClient } from "../src/generated/prisma/client";
 import { DEFAULT_PRICES, PRICING_CATALOGUE } from "../src/lib/pricing";
 import { DEFAULT_MILESTONES } from "../src/lib/progress";
 import { formatInvoiceNumber } from "../src/lib/invoice";
-import { portfolioSeed } from "./portfolio-data";
+import { portfolioSeed, retiredPortfolioSlugs } from "./portfolio-data";
 
 const db = new PrismaClient({ adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL }) });
 
@@ -64,10 +64,17 @@ async function main() {
   console.log(`✓ ${PRICING_CATALOGUE.length} pricing items`);
 
   // --- Portfolio ---------------------------------------------------------
+  // Case studies are refreshed from portfolio-data.ts on every seed. Real stats and
+  // testimonials added in the admin are preserved (they are not part of the seed data).
   for (const [i, item] of portfolioSeed.entries()) {
-    await db.portfolioItem.upsert({ where: { slug: item.slug }, update: {}, create: { ...item, sortOrder: i } });
+    const data = { ...item, sortOrder: i, published: true };
+    await db.portfolioItem.upsert({ where: { slug: item.slug }, update: data, create: data });
   }
-  console.log(`✓ ${portfolioSeed.length} portfolio items`);
+  const retired = await db.portfolioItem.updateMany({
+    where: { slug: { in: retiredPortfolioSlugs }, published: true },
+    data: { published: false, featured: false },
+  });
+  console.log(`✓ ${portfolioSeed.length} portfolio case studies${retired.count ? ` (${retired.count} old entries hidden)` : ""}`);
 
   // --- Demo client (skip in production with SEED_DEMO=false) ---------------
   if (process.env.SEED_DEMO === "false") return;

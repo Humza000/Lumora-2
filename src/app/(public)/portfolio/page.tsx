@@ -21,7 +21,7 @@ export default async function PortfolioPage() {
   return (
     <div className="mx-auto max-w-6xl px-4 py-24 sm:px-6">
       <PageHero eyebrow="Portfolio" title="Our work">
-        Fitness, e-commerce, legal, hospitality, healthcare and trades: websites that turn visitors into customers.
+        From local trades to interiors e-commerce and hospitality: websites that turn visitors into customers.
       </PageHero>
       <div className="mt-16 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {items.map((item, i) => (

@@ -95,6 +95,7 @@ The end-to-end suite covers: sign-up → email verification → quote wizard →
 
 - **Colours**: a light lavender theme: Ghost White `#F8F8FF` backgrounds, Cetacean Blue `#150A35` text, Lavender `#A577FF` accents, with soft flowing gradients. Edit the CSS variables at the top of [src/app/globals.css](src/app/globals.css); everything uses these tokens. Emails and invoice PDFs keep their own copies in `src/lib/email.ts` and `src/lib/invoice-pdf.tsx`.
 - **Logo**: the LUMORA wordmark is rendered by [src/components/logo.tsx](src/components/logo.tsx) (static copy: [public/logo.svg](public/logo.svg)); the favicon/app icon comes from `src/app/icon.png` / `apple-icon.png`.
+- **Portfolio**: case studies are seeded from `prisma/portfolio-data.ts` and editable in Admin → Portfolio (client, brief, approach, features, outcomes, mockup). Results and testimonials only appear once you enter real ones from the client.
 - **Business details** (contact email, tagline): [src/lib/site.ts](src/lib/site.ts). Marketing copy: [src/lib/content.ts](src/lib/content.ts) and the pages in `src/app/(public)`.
 
 ## Payments (Stripe)

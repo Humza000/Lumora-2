@@ -6,7 +6,9 @@ import { z } from "zod";
 import { db } from "@/lib/db";
 import { requireAdmin } from "@/lib/dal";
 import { fromZodError, formToObject, type ActionState } from "@/lib/action-state";
+import { lines, parseStats } from "@/lib/portfolio";
 import { optionalText } from "@/lib/validation";
+import { MOCKUPS } from "@/components/mockups";
 
 const url = z
   .string()
@@ -25,10 +27,30 @@ const itemSchema = z.object({
   sector: z.string().trim().min(2).max(100),
   summary: z.string().trim().min(10).max(300),
   body: optionalText(10000),
-  features: z
+  features: z.string().optional().transform(lines),
+  client: optionalText(150),
+  location: optionalText(120),
+  year: z
     .string()
     .optional()
-    .transform((v) => (v ?? "").split("\n").map((f) => f.trim()).filter(Boolean)),
+    .transform((v) => (v ? Number(v) : null))
+    .refine((v) => v === null || (Number.isInteger(v) && v >= 2000 && v <= 2100), "Enter a year like 2026"),
+  services: z.string().optional().transform(lines),
+  overview: optionalText(4000),
+  challenge: optionalText(4000),
+  approach: optionalText(4000),
+  outcomes: z.string().optional().transform(lines),
+  // Real figures only, e.g. "40% | more enquiries"
+  stats: z.string().optional().transform((v) => parseStats(v ?? "")),
+  testimonialQuote: optionalText(1000),
+  testimonialAuthor: optionalText(120),
+  testimonialRole: optionalText(120),
+  mockup: z
+    .string()
+    .optional()
+    .transform((v) => v || null)
+    .refine((v) => v === null || v in MOCKUPS, "Unknown mockup"),
+  concept: z.string().optional().transform((v) => v === "on"),
   imageUrl: url,
   liveUrl: url,
   featured: z.string().optional().transform((v) => v === "on"),

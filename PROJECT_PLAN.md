@@ -77,7 +77,9 @@ Decisions: self-signup is required before submitting a quote (with email verific
 - [x] Brand colours: light lavender palette (Ghost White `#F8F8FF`, Cetacean Blue `#150A35`, Lavender `#A577FF`) in `src/app/globals.css`
 - [x] Logo: LUMORA wordmark recreated as SVG; PNG used as favicon/app icon
 - [x] Premium light lavender UI + interactivity (flowing gradient backgrounds, scroll reveals, cursor spotlight, hover glow)
-- [ ] **Portfolio images** for the 6 case studies (+ case-study write-ups)
+- [x] Portfolio: 3 full case studies (Northline Plumbing & Heating, Maison & Co Interiors, Miso House) with designed desktop/mobile website mockups
+- [ ] Add **real** results figures and client testimonials to the case studies (Admin → Portfolio) once confirmed by each client
+- [ ] Optional: replace mockups with real screenshots (Image URL field) when available
 - [ ] Final copy for About / Services / Contact (current text is a solid draft); confirm contact email in `src/lib/site.ts`
 - [ ] **Production Postgres** (Neon/Supabase) + Vercel project, env vars, `npm run db:deploy`, seed with `SEED_DEMO=false`
 - [ ] **Resend**: verify sending domain, set `RESEND_API_KEY`, `EMAIL_FROM`, `ADMIN_NOTIFY_EMAIL`
