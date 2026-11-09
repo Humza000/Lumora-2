@@ -1,0 +1,22 @@
+import type { Metadata } from "next";
+import { DashboardShell } from "@/components/dashboard-shell";
+import { requireClient } from "@/lib/dal";
+
+export const metadata: Metadata = { title: { default: "Client portal", template: "%s | Lumora portal" }, robots: { index: false } };
+
+const NAV = [
+  { href: "/portal", label: "Overview", exact: true },
+  { href: "/portal/projects", label: "Projects" },
+  { href: "/portal/quotes", label: "Quotes" },
+  { href: "/portal/invoices", label: "Invoices" },
+  { href: "/quote", label: "+ New quote" },
+];
+
+export default async function PortalLayout({ children }: LayoutProps<"/portal">) {
+  const user = await requireClient("/portal");
+  return (
+    <DashboardShell nav={NAV} user={user} homeHref="/portal">
+      {children}
+    </DashboardShell>
+  );
+}

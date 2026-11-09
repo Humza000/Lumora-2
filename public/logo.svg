@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="132" height="32" viewBox="0 0 132 32" role="img" aria-label="Lumora">
+  <!-- PLACEHOLDER LOGO: replace this file with the real Lumora logo (keep the filename, or update site.logo in src/lib/site.ts) -->
+  <circle cx="16" cy="16" r="12" fill="#6d4aff"/>
+  <circle cx="20" cy="12" r="5" fill="#ffb547"/>
+  <text x="36" y="22" font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="700" fill="#0e0d14">Lumora</text>
+</svg>
