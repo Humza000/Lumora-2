@@ -1,0 +1,284 @@
+@import "tailwindcss";
+
+/*
+ * ============================================================
+ *  LUMORA BRAND THEME: the ONLY place UI colours are set.
+ *  Light lavender palette: Ghost White #F8F8FF backgrounds,
+ *  Cetacean Blue #150A35 text, Lavender #A577FF accents.
+ *  - `brand` (lavender) is for fills; put `text-ink` on it.
+ *  - `brand-light` is the deeper lavender for TEXT/links/icons.
+ *  - `brand-tint` is a pale lavender for gradients and highlights.
+ * ============================================================
+ */
+:root {
+  --brand: #a577ff; /* Lavender: fills */
+  --brand-strong: #7d4dff; /* deeper lavender: glows, gradient depth */
+  --brand-light: #6a3be0; /* accent TEXT on light backgrounds (AA on white) */
+  --brand-tint: #cbb5ff; /* pale lavender for gradients */
+  --brand-soft: #efe8ff; /* tinted backgrounds, active states */
+  --accent: #f8f8ff; /* Ghost White */
+  --ink: #150a35; /* Cetacean Blue: primary text */
+  --ink-muted: #5e5683; /* secondary text */
+  --canvas: #f8f8ff; /* page background */
+  --surface: #ffffff; /* cards */
+  --surface-2: #f4f0ff; /* inputs, raised, hover */
+  --line: #e6defa; /* borders */
+
+  --success: #15803d;
+  --warning: #b45309;
+  --danger: #dc2626;
+
+  color-scheme: light;
+}
+
+@theme inline {
+  --color-brand: var(--brand);
+  --color-brand-strong: var(--brand-strong);
+  --color-brand-light: var(--brand-light);
+  --color-brand-tint: var(--brand-tint);
+  --color-brand-soft: var(--brand-soft);
+  --color-accent: var(--accent);
+  --color-ink: var(--ink);
+  --color-ink-muted: var(--ink-muted);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-canvas: var(--canvas);
+  --color-line: var(--line);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --font-display: var(--font-cormorant), Georgia, "Times New Roman", serif;
+
+  --animate-aurora: aurora 18s ease-in-out infinite alternate;
+  --animate-drift: drift 22s ease-in-out infinite alternate;
+  --animate-shimmer: shimmer 6s linear infinite;
+  --animate-pulse-ring: pulse-ring 2.2s ease-out infinite;
+}
+
+body {
+  background: var(--canvas);
+  color: var(--ink);
+}
+
+::selection {
+  background: color-mix(in oklab, var(--brand-strong) 55%, transparent);
+  color: #fff;
+}
+
+:focus-visible {
+  outline: 2px solid var(--brand-light);
+  outline-offset: 2px;
+}
+
+/* Scrollbar */
+* {
+  scrollbar-color: var(--line) transparent;
+}
+
+/* ---------- Utilities ---------- */
+
+/* Frosted glass panel */
+@utility glass {
+  background: color-mix(in oklab, var(--surface) 86%, transparent);
+  backdrop-filter: blur(16px) saturate(140%);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  border: 1px solid color-mix(in oklab, var(--line) 80%, transparent);
+}
+
+/* Lavender gradient text */
+@utility text-gradient {
+  background-image: linear-gradient(100deg, #6a3be0 0%, #a577ff 35%, #7d4dff 55%, #a577ff 75%, #6a3be0 100%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Soft violet glow */
+@utility glow {
+  box-shadow:
+    0 0 0 1px color-mix(in oklab, var(--brand-strong) 40%, transparent),
+    0 10px 40px -10px color-mix(in oklab, var(--brand-strong) 70%, transparent);
+}
+
+/* Smooth lavender mesh background (place on an absolutely positioned element) */
+@utility bg-mesh {
+  background:
+    radial-gradient(60% 50% at 15% 10%, color-mix(in oklab, var(--brand-tint) 55%, transparent), transparent 70%),
+    radial-gradient(50% 45% at 85% 20%, color-mix(in oklab, var(--brand) 30%, transparent), transparent 70%),
+    radial-gradient(55% 50% at 50% 100%, color-mix(in oklab, var(--brand-soft) 90%, transparent), transparent 75%);
+}
+
+/* Gradient 1px border (works with rounded corners) */
+@utility ring-gradient {
+  position: relative;
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(140deg, color-mix(in oklab, var(--brand) 45%, transparent), transparent 40%, transparent 60%, color-mix(in oklab, var(--brand-tint) 80%, transparent));
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+}
+
+/* Cursor spotlight: set --mx/--my via <Spotlight> */
+@utility spotlight {
+  position: relative;
+  isolation: isolate;
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: radial-gradient(420px circle at var(--mx, 50%) var(--my, 50%), color-mix(in oklab, var(--brand) 16%, transparent), transparent 60%);
+    opacity: 0;
+    transition: opacity 0.35s ease;
+    pointer-events: none;
+    z-index: -1;
+  }
+  &:hover::after {
+    opacity: 1;
+  }
+}
+
+/* Light sweep across a button on hover */
+@utility shine {
+  position: relative;
+  overflow: hidden;
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(110deg, transparent 30%, rgb(255 255 255 / 0.22) 50%, transparent 70%);
+    transform: translateX(-120%);
+    transition: transform 0.7s ease;
+    pointer-events: none;
+  }
+  &:hover::after {
+    transform: translateX(120%);
+  }
+}
+
+/* ---------- Keyframes ---------- */
+
+@keyframes aurora {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(6%, -4%, 0) scale(1.12);
+  }
+  100% {
+    transform: translate3d(-5%, 5%, 0) scale(0.95);
+  }
+}
+
+@keyframes drift {
+  from {
+    transform: translate3d(0, 0, 0) scaleY(1);
+  }
+  to {
+    transform: translate3d(-4%, -3%, 0) scaleY(1.08);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+
+@keyframes marquee {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes shimmer {
+  to {
+    background-position: 200% center;
+  }
+}
+
+@keyframes pulse-ring {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in oklab, var(--brand-strong) 60%, transparent);
+  }
+  100% {
+    box-shadow: 0 0 0 10px transparent;
+  }
+}
+
+/* ---------- Scroll reveal (driven by <Reveal>) ---------- */
+
+[data-reveal] {
+  opacity: 0;
+  transform: translateY(18px);
+  transition:
+    opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+  transition-delay: var(--reveal-delay, 0ms);
+}
+
+[data-reveal="in"] {
+  opacity: 1;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+  [data-reveal] {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ---------- Portfolio website mockups ----------
+ * Inside a mockup, Tailwind's spacing/text/radius scale is re-based on the
+ * frame width (container query units), so mockups are written with normal
+ * Tailwind classes at "design size" and scale crisply to any width.
+ * mock-desktop: 1280px design width · mock-phone: 390px design width.
+ */
+@utility mock-desktop {
+  --spacing: calc(100cqw / 320);
+  @apply mock-scale;
+}
+@utility mock-phone {
+  --spacing: calc(100cqw / 97.5);
+  @apply mock-scale;
+}
+@utility mock-scale {
+  --text-xs: calc(var(--spacing) * 3);
+  --text-sm: calc(var(--spacing) * 3.5);
+  --text-base: calc(var(--spacing) * 4);
+  --text-lg: calc(var(--spacing) * 4.5);
+  --text-xl: calc(var(--spacing) * 5);
+  --text-2xl: calc(var(--spacing) * 6);
+  --text-3xl: calc(var(--spacing) * 7.5);
+  --text-4xl: calc(var(--spacing) * 9);
+  --text-5xl: calc(var(--spacing) * 12);
+  --text-6xl: calc(var(--spacing) * 15);
+  --text-7xl: calc(var(--spacing) * 18);
+  --radius-sm: calc(var(--spacing) * 1);
+  --radius-md: calc(var(--spacing) * 1.5);
+  --radius-lg: calc(var(--spacing) * 2);
+  --radius-xl: calc(var(--spacing) * 3);
+  --radius-2xl: calc(var(--spacing) * 4);
+  --radius-3xl: calc(var(--spacing) * 6);
+  font-size: var(--text-base);
+  line-height: 1.4;
+}

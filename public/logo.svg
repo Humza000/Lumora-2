@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="352" height="64" viewBox="0 0 176 32" role="img" aria-label="Lumora">
+  <!-- LUMORA wordmark for dark backgrounds (cream on transparent). Brand: Cetacean Blue #150A35, Lavender #A577FF, Ghost White #F8F8FF. -->
+  <g fill="#cbb5ff" fill-opacity="0.6">
+    <circle cx="2.5" cy="7" r="1.5"/>
+    <circle cx="2.5" cy="25" r="1.5"/>
+    <circle cx="173.5" cy="7" r="1.5"/>
+    <circle cx="173.5" cy="25" r="1.5"/>
+  </g>
+  <text x="92" y="24" text-anchor="middle" fill="#f8f8ff" font-family="'Cormorant Garamond', Georgia, 'Times New Roman', serif" font-weight="700" font-size="26" letter-spacing="8.3">LUMORA</text>
+</svg>

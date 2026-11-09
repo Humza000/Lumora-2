@@ -1,0 +1,255 @@
+// Lumora data model. Money is always stored as integer pence.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  ADMIN
+  CLIENT
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String
+  passwordHash  String
+  role          Role      @default(CLIENT)
+  emailVerified DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  profile      ClientProfile?
+  quotes       Quote[]
+  projects     Project[]
+  invoices     Invoice[]
+  hostingPlans HostingPlan[]
+  tokens       AuthToken[]
+}
+
+model ClientProfile {
+  id      String  @id @default(cuid())
+  userId  String  @unique
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  company String?
+  phone   String?
+  address String?
+}
+
+enum TokenType {
+  EMAIL_VERIFICATION
+  INVITE
+  PASSWORD_RESET
+}
+
+model AuthToken {
+  id        String    @id @default(cuid())
+  tokenHash String    @unique
+  type      TokenType
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+}
+
+enum QuoteStatus {
+  DRAFT
+  SUBMITTED
+  REVIEWING
+  ACCEPTED
+  DECLINED
+}
+
+model Quote {
+  id          String      @id @default(cuid())
+  userId      String
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status      QuoteStatus @default(DRAFT)
+  answers     Json
+  estimateMin Int         @default(0)
+  estimateMax Int         @default(0)
+  adminNotes  String?
+  submittedAt DateTime?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  project     Project?
+}
+
+model PricingItem {
+  id        String  @id @default(cuid())
+  key       String  @unique
+  label     String
+  category  String
+  price     Int
+  sortOrder Int     @default(0)
+  active    Boolean @default(true)
+}
+
+enum ProjectStatus {
+  PLANNING
+  IN_PROGRESS
+  REVIEW
+  COMPLETED
+  ON_HOLD
+}
+
+model Project {
+  id          String        @id @default(cuid())
+  title       String
+  description String?
+  clientId    String
+  client      User          @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  quoteId     String?       @unique
+  quote       Quote?        @relation(fields: [quoteId], references: [id], onDelete: SetNull)
+  status      ProjectStatus @default(PLANNING)
+  startDate   DateTime?
+  dueDate     DateTime?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  milestones   Milestone[]
+  updates      ProjectUpdate[]
+  invoices     Invoice[]
+  hostingPlans HostingPlan[]
+}
+
+enum MilestoneStatus {
+  PENDING
+  IN_PROGRESS
+  DONE
+}
+
+model Milestone {
+  id          String          @id @default(cuid())
+  projectId   String
+  project     Project         @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  title       String
+  description String?
+  status      MilestoneStatus @default(PENDING)
+  order       Int             @default(0)
+  dueDate     DateTime?
+  completedAt DateTime?
+}
+
+model ProjectUpdate {
+  id        String   @id @default(cuid())
+  projectId String
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  body      String
+  createdAt DateTime @default(now())
+}
+
+enum InvoiceStatus {
+  DRAFT
+  SENT
+  PAID
+  OVERDUE
+  VOID
+}
+
+model Invoice {
+  id              String        @id @default(cuid())
+  number          String?       @unique // allocated when the invoice is sent, so drafts never leave gaps
+  clientId        String
+  client          User          @relation(fields: [clientId], references: [id], onDelete: Restrict)
+  projectId       String?
+  project         Project?      @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  hostingPlanId   String?
+  hostingPlan     HostingPlan?  @relation(fields: [hostingPlanId], references: [id], onDelete: SetNull)
+  status          InvoiceStatus @default(DRAFT)
+  issueDate       DateTime      @default(now())
+  dueDate         DateTime
+  vatRate         Int           @default(0) // percent, e.g. 20
+  subtotal        Int
+  vat             Int
+  total           Int
+  notes           String?
+  paidAt          DateTime?
+  stripeSessionId String?       @unique
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  lines           InvoiceLine[]
+}
+
+model InvoiceLine {
+  id          String  @id @default(cuid())
+  invoiceId   String
+  invoice     Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  description String
+  quantity    Int     @default(1)
+  unitPrice   Int
+}
+
+// Atomic per-year invoice counter used to build numbers like LUM-2026-0001.
+model InvoiceSequence {
+  year Int @id
+  last Int @default(0)
+}
+
+enum HostingInterval {
+  MONTHLY
+  ANNUAL
+}
+
+enum HostingStatus {
+  ACTIVE
+  PAUSED
+  CANCELLED
+}
+
+model HostingPlan {
+  id          String          @id @default(cuid())
+  clientId    String
+  client      User            @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  projectId   String?
+  project     Project?        @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  domain      String
+  provider    String
+  planName    String
+  includesMaintenance Boolean @default(true)
+  price       Int
+  interval    HostingInterval @default(MONTHLY)
+  renewalDate DateTime
+  status      HostingStatus   @default(ACTIVE)
+  notes       String?
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  invoices    Invoice[]
+}
+
+model PortfolioItem {
+  id        String   @id @default(cuid())
+  slug      String   @unique
+  title     String
+  sector    String
+  summary   String
+  body      String?
+  features  String[]
+  imageUrl  String?
+  liveUrl   String?
+  // Case-study detail (all optional)
+  client            String?
+  location          String?
+  year              Int?
+  services          String[]
+  overview          String? // who the client is / who the site is for
+  challenge         String? // the brief
+  approach          String?
+  outcomes          String[] // qualitative: what we delivered
+  stats             Json? // [{ value, label }]: REAL figures only, hidden when empty
+  testimonialQuote  String? // REAL client quotes only, hidden when empty
+  testimonialAuthor String?
+  testimonialRole   String?
+  mockup            String? // key of a built-in website mockup (src/components/mockups)
+  concept           Boolean  @default(false) // shows a "Concept project" badge
+  featured  Boolean  @default(false)
+  sortOrder Int      @default(0)
+  published Boolean  @default(true)
+  createdAt DateTime @default(now())
+}

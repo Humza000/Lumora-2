@@ -1,0 +1,15 @@
+-- AlterTable
+ALTER TABLE "PortfolioItem" ADD COLUMN     "approach" TEXT,
+ADD COLUMN     "challenge" TEXT,
+ADD COLUMN     "client" TEXT,
+ADD COLUMN     "concept" BOOLEAN NOT NULL DEFAULT false,
+ADD COLUMN     "location" TEXT,
+ADD COLUMN     "mockup" TEXT,
+ADD COLUMN     "outcomes" TEXT[],
+ADD COLUMN     "overview" TEXT,
+ADD COLUMN     "services" TEXT[],
+ADD COLUMN     "stats" JSONB,
+ADD COLUMN     "testimonialAuthor" TEXT,
+ADD COLUMN     "testimonialQuote" TEXT,
+ADD COLUMN     "testimonialRole" TEXT,
+ADD COLUMN     "year" INTEGER;
