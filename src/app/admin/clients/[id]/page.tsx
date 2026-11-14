@@ -6,6 +6,7 @@ import { db } from "@/lib/db";
 import { requireAdmin } from "@/lib/dal";
 import { effectiveStatus } from "@/lib/invoice";
 import { formatGBP } from "@/lib/money";
+import { formatEstimate } from "@/lib/pricing";
 import { resendInvite, updateClient } from "../../_actions/clients";
 import { ClientFields } from "../client-fields";
 
@@ -78,7 +79,7 @@ export default async function AdminClient({ params }: PageProps<"/admin/clients/
                 key={q.id}
                 href={`/admin/quotes/${q.id}`}
                 title={`Quote ${formatDate(q.submittedAt)}`}
-                meta={`${formatGBP(q.estimateMin, { whole: true })} – ${formatGBP(q.estimateMax, { whole: true })}`}
+                meta={formatEstimate(q.estimateMin, q.estimateMax)}
                 status={q.status}
               />
             ))}

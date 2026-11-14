@@ -36,8 +36,8 @@ Decisions: self-signup is required before submitting a quote (with email verific
 | Public site | Portfolio list + case study pages (6 projects carried over from current site) | ✅ Done |
 | Accounts | Sign-up, email verification, login/logout, forgot/reset password, role-based routing | ✅ Done |
 | Accounts | Admin invites client → client sets password | ✅ Done |
-| Quote wizard | 6-step wizard (type, pages & features, design & content, timeline & budget, business, review) | ✅ Done |
-| Quote wizard | Live estimate range + monthly hosting, autosaved drafts, server-side recalculation | ✅ Done |
+| Quote wizard | 5-step wizard (project type, pages & features, hosting & care, business, review); features depend on the project type and are for scope only | ✅ Done |
+| Quote wizard | Live estimate: one-time starting price + separate monthly hosting & care plan, autosaved drafts, server-side recalculation | ✅ Done |
 | Quote wizard | Admin-editable pricing table | ✅ Done |
 | Client portal | Overview, projects list, **project timeline** (milestones, progress %, updates) | ✅ Done |
 | Client portal | Quotes list with status | ✅ Done |

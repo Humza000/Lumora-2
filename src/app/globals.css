@@ -195,10 +195,10 @@ body {
   }
 }
 
+/* Opacity only: moving text with transform makes browsers render it blurry until the motion ends. */
 @keyframes fade-in {
   from {
     opacity: 0;
-    transform: translateY(4px);
   }
 }
 
@@ -225,18 +225,15 @@ body {
 
 /* ---------- Scroll reveal (driven by <Reveal>) ---------- */
 
+/* Fade only (no slide): animating transform on text makes it look fuzzy until the animation ends. */
 [data-reveal] {
   opacity: 0;
-  transform: translateY(18px);
-  transition:
-    opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1),
-    transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: opacity 0.6s ease-out;
   transition-delay: var(--reveal-delay, 0ms);
 }
 
 [data-reveal="in"] {
   opacity: 1;
-  transform: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -249,7 +246,6 @@ body {
   }
   [data-reveal] {
     opacity: 1;
-    transform: none;
   }
 }
 

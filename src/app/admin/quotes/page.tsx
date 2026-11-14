@@ -2,8 +2,7 @@ import Link from "next/link";
 import { EmptyState, PageHeader, StatusBadge, Table, Td, Th, cn, formatDate } from "@/components/ui";
 import { db } from "@/lib/db";
 import { requireAdmin } from "@/lib/dal";
-import { formatGBP } from "@/lib/money";
-import { PROJECT_TYPES, quoteDraftSchema } from "@/lib/pricing";
+import { PROJECT_TYPES, formatEstimate, quoteDraftSchema } from "@/lib/pricing";
 import type { QuoteStatus } from "@/generated/prisma/client";
 
 export const metadata = { title: "Quotes" };
@@ -71,7 +70,7 @@ export default async function AdminQuotes({ searchParams }: PageProps<"/admin/qu
                   <Td>{answers.businessName || "—"}</Td>
                   <Td>{PROJECT_TYPES.find((t) => t.key === answers.projectType)?.label ?? "—"}</Td>
                   <Td>
-                    {formatGBP(q.estimateMin, { whole: true })} – {formatGBP(q.estimateMax, { whole: true })}
+                    {formatEstimate(q.estimateMin, q.estimateMax)}
                   </Td>
                   <Td>{formatDate(q.submittedAt ?? q.updatedAt)}</Td>
                   <Td>

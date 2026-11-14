@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { db } from "@/lib/db";
 import { requireVerifiedClient } from "@/lib/dal";
 import { getPriceMap } from "@/lib/prices";
-import { EMPTY_DRAFT, quoteDraftSchema } from "@/lib/pricing";
+import { EMPTY_DRAFT, featuresForType, quoteDraftSchema } from "@/lib/pricing";
 import { QuoteWizard } from "./quote-wizard";
 import { Eyebrow } from "@/components/ui";
 
@@ -17,10 +17,13 @@ export default async function QuotePage() {
   ]);
 
   const saved = draft ? quoteDraftSchema.safeParse(draft.answers) : null;
+  const restored = saved?.success ? saved.data : {};
   const initial = {
     ...EMPTY_DRAFT,
     businessName: profile?.company ?? "",
-    ...(saved?.success ? saved.data : {}),
+    ...restored,
+    // Drop options that no longer exist (e.g. from drafts saved before the catalogue changed).
+    features: featuresForType(restored.projectType, restored.features),
   };
 
   return (

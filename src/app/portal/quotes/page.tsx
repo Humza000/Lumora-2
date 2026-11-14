@@ -1,9 +1,8 @@
 import { ButtonLink, Card, EmptyState, PageHeader, StatusBadge, formatDate } from "@/components/ui";
 import { db } from "@/lib/db";
 import { requireClient } from "@/lib/dal";
-import { formatGBP } from "@/lib/money";
 import { quoteStatusNote } from "@/lib/portal";
-import { PROJECT_TYPES, quoteDraftSchema } from "@/lib/pricing";
+import { PROJECT_TYPES, formatEstimate, quoteDraftSchema } from "@/lib/pricing";
 
 export const metadata = { title: "Quotes" };
 
@@ -37,7 +36,7 @@ export default async function PortalQuotes({ searchParams }: PageProps<"/portal/
                 </div>
                 <div className="flex items-center gap-4">
                   <span className="text-sm font-medium">
-                    {formatGBP(q.estimateMin, { whole: true })} – {formatGBP(q.estimateMax, { whole: true })}
+                    {formatEstimate(q.estimateMin, q.estimateMax)}
                   </span>
                   <StatusBadge status={q.status} />
                   {q.status === "DRAFT" && (

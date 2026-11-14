@@ -14,8 +14,7 @@ export async function savePricing(_: ActionState, fd: FormData): Promise<ActionS
 
   PRICING_CATALOGUE.forEach((item, i) => {
     const raw = String(fd.get(item.key) ?? "");
-    // Timeline values are a whole-number percentage uplift, everything else is pounds.
-    const price = item.category === "Timeline" ? (/^\d{1,3}$/.test(raw) ? Number(raw) : NaN) : poundsToPence(raw);
+    const price = poundsToPence(raw);
     if (!Number.isFinite(price)) errors[item.key] = ["Invalid value"];
     else updates.push({ ...item, price, sortOrder: i });
   });

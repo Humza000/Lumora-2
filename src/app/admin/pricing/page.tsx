@@ -16,7 +16,7 @@ export default async function AdminPricing() {
     <>
       <PageHeader
         title="Quote pricing"
-        description="Prices used by the quote wizard's live estimate. Clients see a range of −10% / +20% around the total."
+        description="Starting prices and monthly hosting & care prices shown in the quote wizard. Features are never priced individually."
       />
       <ActionForm action={savePricing} className="max-w-3xl space-y-6">
         {categories.map((cat) => (
@@ -26,10 +26,10 @@ export default async function AdminPricing() {
               {PRICING_CATALOGUE.filter((p) => p.category === cat).map((p) => (
                 <TextField
                   key={p.key}
-                  label={cat === "Timeline" ? `${p.label}` : `${p.label} (£)`}
+                  label={`${p.label} (£)`}
                   name={p.key}
                   inputMode="decimal"
-                  defaultValue={cat === "Timeline" ? String(prices[p.key] ?? 0) : ((prices[p.key] ?? 0) / 100).toFixed(2)}
+                  defaultValue={((prices[p.key] ?? 0) / 100).toFixed(2)}
                 />
               ))}
             </div>

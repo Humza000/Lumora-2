@@ -75,31 +75,43 @@ test.describe.serial("Lumora end-to-end", () => {
     await page.goto(verifyLink);
     await expect(page).toHaveURL(/\/quote$/);
 
-    // Step 1: project type
+    // Step 1: project type (starting prices)
+    await expect(page.getByText("From £400")).toBeVisible(); // web app is not capped below e-commerce
+    await page.getByText("E-commerce store").click();
     await page.getByText("Business website").click();
-    await expect(page.getByText(/£\d/).first()).toBeVisible();
+    await expect(page.locator("aside").getByText("From £100")).toBeVisible();
     await page.getByRole("button", { name: "Continue →" }).click();
-    // Step 2: pages & features
+    // Step 2: pages & features change with the project type; features never change the price
+    await expect(page.getByText("Shopping cart")).toHaveCount(0);
     await page.getByLabel("How many pages?").fill("7");
-    await page.getByText("Online booking / appointments").click();
+    await page.getByText("Booking functionality").click();
+    await page.getByText("Google Maps").click();
+    await page.getByLabel("Anything else you need?").fill("Integration with our catering order system");
+    await expect(page.locator("aside").getByText("From £100")).toBeVisible();
+    await expect(page.locator("aside").getByText(/may need a custom quote/)).toBeVisible();
     await page.getByRole("button", { name: "Continue →" }).click();
-    // Step 3: design
-    await page.getByText("Fully bespoke design").click();
+    // Step 3: hosting & care (a choice is required)
     await page.getByRole("button", { name: "Continue →" }).click();
-    // Step 4: timeline & budget (budget required)
+    await expect(page.locator("p[role=alert]")).toContainText("hosting");
+    await page.getByText("Standard care").click();
+    await expect(page.locator("aside").getByText("£10/month")).toBeVisible();
     await page.getByRole("button", { name: "Continue →" }).click();
-    await expect(page.locator("p[role=alert]")).toContainText("budget");
-    await page.getByText("£2,500 – £5,000").click();
-    await page.getByRole("button", { name: "Continue →" }).click();
-    // Step 5: business
+    // Step 4: business
     await page.getByLabel("Business name *").fill(client.business);
     await page.getByLabel(/What do you want the website to achieve/).fill("More online orders and catering enquiries.");
     await page.getByRole("button", { name: "Continue →" }).click();
-    // Review + submit
+    // Step 5: review with separate one-time and monthly totals
     await expect(page.getByText(client.business)).toBeVisible();
+    await expect(page.getByText("Google Maps, Booking functionality")).toBeVisible();
+    await expect(page.getByText("Integration with our catering order system").first()).toBeVisible();
+    await expect(page.getByText("One-time development cost")).toBeVisible();
+    await expect(page.getByText("Monthly hosting cost")).toBeVisible();
+    await expect(page.getByText("This is an indicative estimate. We'll review your requirements").first()).toBeVisible();
     await page.getByRole("button", { name: "Submit quote request" }).click();
     await expect(page).toHaveURL(/\/quote\/thanks/);
     await expect(page.getByRole("heading", { name: /got your request/ })).toBeVisible();
+    await expect(page.getByText("From £100")).toBeVisible(); // matches what was shown in the wizard
+    await expect(page.getByText("£10/month")).toBeVisible();
 
     // Clicking the verification link again is harmless, not an "invalid link" error
     await page.goto(verifyLink);
@@ -204,8 +216,9 @@ test.describe.serial("Lumora end-to-end", () => {
     await expect(page.getByText("Kick-off call booked for Monday.")).toBeVisible();
     await expect(page.getByText("20%")).toBeVisible(); // 1 of 5 milestones done
 
-    // Logged in on this tab: the header link goes to the portal instead of asking again
-    await page.goto("/");
+    // Logged in on this tab: "Back to website" leaves the portal, and the header link returns without asking again
+    await page.getByRole("link", { name: /Back to website/ }).click();
+    await expect(page).toHaveURL(/localhost:\d+\/$/);
     await expect(page.getByRole("link", { name: "My portal" }).first()).toBeVisible();
 
     // A new tab must log in itself, even though the session cookie is shared…

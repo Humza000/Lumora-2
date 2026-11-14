@@ -4,6 +4,8 @@ import { ButtonLink } from "@/components/ui";
 import { db } from "@/lib/db";
 import { requireClient } from "@/lib/dal";
 import { formatGBP } from "@/lib/money";
+import { calculateEstimate, formatEstimate, quoteDraftSchema } from "@/lib/pricing";
+import { getPriceMap } from "@/lib/prices";
 
 export const metadata: Metadata = { title: "Quote received" };
 
@@ -12,6 +14,8 @@ export default async function QuoteThanksPage({ searchParams }: PageProps<"/quot
   const { id } = await searchParams;
   const quote = typeof id === "string" ? await db.quote.findFirst({ where: { id, userId: user.id } }) : null;
   if (!quote) notFound();
+  const answers = quoteDraftSchema.safeParse(quote.answers);
+  const estimate = calculateEstimate(answers.success ? answers.data : {}, await getPriceMap());
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-24 text-center sm:px-6">
@@ -20,11 +24,16 @@ export default async function QuoteThanksPage({ searchParams }: PageProps<"/quot
       </div>
       <h1 className="mt-8 font-display text-5xl font-semibold tracking-tight">Thanks, we&apos;ve got your request</h1>
       <p className="mt-4 text-ink-muted">
-        Your indicative estimate is{" "}
-        <strong className="text-ink">
-          {formatGBP(quote.estimateMin, { whole: true })} – {formatGBP(quote.estimateMax, { whole: true })}
-        </strong>
-        . We&apos;ll review your requirements and get back to you within 2 working days with a tailored proposal.
+        Your indicative one-time development cost is{" "}
+        <strong className="text-ink">{formatEstimate(quote.estimateMin, quote.estimateMax)}</strong>
+        {estimate.monthlyHosting > 0 && (
+          <>
+            , plus <strong className="text-ink">{formatGBP(estimate.monthlyHosting, { whole: true })}/month</strong> for{" "}
+            {estimate.hostingPlan?.label.toLowerCase()}
+          </>
+        )}
+        . We&apos;ll review your requirements and confirm the final price before any work begins, usually within 2 working
+        days.
       </p>
       <ol className="mx-auto mt-10 max-w-md space-y-4 text-left text-sm">
         {[

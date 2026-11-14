@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { requireAdmin } from "@/lib/dal";
 import { daysFromNow, daysUntil, monthlyValue } from "@/lib/hosting";
 import { formatGBP } from "@/lib/money";
+import { formatEstimate } from "@/lib/pricing";
 import { projectProgress } from "@/lib/progress";
 
 export default async function AdminOverview() {
@@ -70,7 +71,7 @@ export default async function AdminOverview() {
                     {q.user.name}
                   </Link>
                   <span className="text-ink-muted">
-                    {formatGBP(q.estimateMin, { whole: true })}–{formatGBP(q.estimateMax, { whole: true })}
+                    {formatEstimate(q.estimateMin, q.estimateMax)}
                   </span>
                   <StatusBadge status={q.status} />
                 </li>

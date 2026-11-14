@@ -61,7 +61,9 @@ async function main() {
       create: { ...item, price: DEFAULT_PRICES[item.key] ?? 0, sortOrder: i },
     });
   }
-  console.log(`✓ ${PRICING_CATALOGUE.length} pricing items`);
+  // Remove rows for prices the wizard no longer uses (old features, design, timeline, budget-era keys).
+  const retiredPrices = await db.pricingItem.deleteMany({ where: { key: { notIn: PRICING_CATALOGUE.map((p) => p.key) } } });
+  console.log(`✓ ${PRICING_CATALOGUE.length} pricing items${retiredPrices.count ? ` (${retiredPrices.count} retired removed)` : ""}`);
 
   // --- Portfolio ---------------------------------------------------------
   // Case studies are refreshed from portfolio-data.ts on every seed. Real stats and

@@ -57,7 +57,7 @@ export async function submitQuote(quoteId: string | null, answers: unknown) {
     : await db.quote.create({ data: { ...data, userId: user.id } });
 
   await Promise.all([
-    emails.quoteReceived(user.email, user.name, estimate.min, estimate.max),
+    emails.quoteReceived(user.email, user.name, estimate),
     emails.adminNewQuote(quote.id, user.name, parsed.data.businessName),
   ]);
 

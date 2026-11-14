@@ -6,7 +6,7 @@ import { db } from "@/lib/db";
 import { requireAdmin } from "@/lib/dal";
 import { formatGBP } from "@/lib/money";
 import { getPriceMap } from "@/lib/prices";
-import { DESIGN_OPTIONS, EXTRAS, FEATURES, PROJECT_TYPES, TIMELINES, calculateEstimate, quoteDraftSchema } from "@/lib/pricing";
+import { PROJECT_TYPES, calculateEstimate, featureLabel, formatEstimate, quoteDraftSchema } from "@/lib/pricing";
 import { acceptQuote, updateQuoteReview } from "../../_actions/quotes";
 
 export default async function AdminQuote({ params }: PageProps<"/admin/quotes/[id]">) {
@@ -24,20 +24,23 @@ export default async function AdminQuote({ params }: PageProps<"/admin/quotes/[i
   const label = <T extends readonly { key: string; label: string }[]>(list: T, key?: string) =>
     list.find((i) => i.key === key)?.label ?? "—";
 
+  const site = a.existingSite ? (/^https?:\/\//.test(a.existingSite) ? a.existingSite : `https://${a.existingSite}`) : null;
+  // Quotes submitted before the wizard was simplified also have design/timeline/budget answers.
+  const raw = (quote.answers ?? {}) as Record<string, unknown>;
+  const legacy = (["budget", "design", "timeline"] as const).filter((k) => typeof raw[k] === "string");
+
   const rows: [string, React.ReactNode][] = [
     ["Business", a.businessName],
     ["Industry", a.industry || "—"],
-    ["Current site", a.existingSite ? <a href={a.existingSite} target="_blank" rel="noreferrer" className="text-brand-light hover:underline">{a.existingSite}</a> : "—"],
+    ["Current site", site ? <a href={site} target="_blank" rel="noreferrer" className="text-brand-light hover:underline">{a.existingSite}</a> : "—"],
     ["Project type", label(PROJECT_TYPES, a.projectType)],
     ["Pages", a.pages],
-    ["Features", a.features?.map((k) => label(FEATURES, k)).join(", ") || "None"],
-    ["Design", label(DESIGN_OPTIONS, a.design)],
-    ["Extras", a.extras?.map((k) => label(EXTRAS, k)).join(", ") || "None"],
-    ["Hosting & care", a.hosting ? "Yes" : "No"],
-    ["Timeline", label(TIMELINES, a.timeline)],
-    ["Budget", a.budget ?? "—"],
+    ["Features", a.features?.map(featureLabel).join(", ") || "None"],
+    ["Additional requirements", a.featuresOther || "—"],
+    ["Hosting & care", estimate.hostingPlan?.label ?? (raw.hosting === true ? "Yes (older quote)" : "—")],
     ["Goals", a.goals],
     ["Notes", a.notes || "—"],
+    ...legacy.map((k): [string, React.ReactNode] => [`${k[0].toUpperCase()}${k.slice(1)} (older quote)`, String(raw[k])]),
   ];
 
   const canAct = quote.status === "SUBMITTED" || quote.status === "REVIEWING" || quote.status === "DECLINED";
@@ -122,33 +125,20 @@ export default async function AdminQuote({ params }: PageProps<"/admin/quotes/[i
 
           <Card>
             <h2 className="font-semibold">Estimate</h2>
-            <p className="mt-2 text-xl font-semibold">
-              {formatGBP(quote.estimateMin, { whole: true })} – {formatGBP(quote.estimateMax, { whole: true })}
-            </p>
-            <p className="text-xs text-ink-muted">As shown to the client at submission</p>
+            <p className="mt-2 text-xl font-semibold">{formatEstimate(quote.estimateMin, quote.estimateMax)}</p>
+            <p className="text-xs text-ink-muted">One-time development, as shown to the client at submission</p>
             <ul className="mt-4 space-y-1.5 border-t border-line pt-4 text-sm">
-              {estimate.lines.map((l) => (
-                <li key={l.label} className="flex justify-between gap-2">
-                  <span className="text-ink-muted">{l.label}</span>
-                  <span>{formatGBP(l.amount, { whole: true })}</span>
-                </li>
-              ))}
-              {estimate.uplift > 0 && (
-                <li className="flex justify-between gap-2">
-                  <span className="text-ink-muted">Rush uplift</span>
-                  <span>{formatGBP(estimate.uplift, { whole: true })}</span>
-                </li>
-              )}
-              <li className="flex justify-between gap-2 border-t border-line pt-1.5 font-medium">
-                <span>Base total (current prices)</span>
-                <span>{formatGBP(estimate.total, { whole: true })}</span>
+              <li className="flex justify-between gap-2">
+                <span className="text-ink-muted">Monthly hosting & care</span>
+                <span>
+                  {estimate.hostingPlan
+                    ? estimate.monthlyHosting > 0
+                      ? `${formatGBP(estimate.monthlyHosting, { whole: true })}/mo`
+                      : "None"
+                    : "—"}
+                </span>
               </li>
-              {estimate.monthlyHosting > 0 && (
-                <li className="flex justify-between gap-2 text-ink-muted">
-                  <span>Hosting</span>
-                  <span>{formatGBP(estimate.monthlyHosting, { whole: true })}/mo</span>
-                </li>
-              )}
+              {estimate.customQuote && <li className="text-warning">May need a custom quote</li>}
             </ul>
           </Card>
 
