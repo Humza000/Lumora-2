@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { DashboardShell } from "@/components/dashboard-shell";
+import { TabSessionGuard } from "@/components/tab-session";
 import { requireAdmin } from "@/lib/dal";
 
 export const metadata: Metadata = { title: { default: "Admin", template: "%s | Lumora admin" }, robots: { index: false } };
@@ -18,8 +19,10 @@ const NAV = [
 export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
   const user = await requireAdmin();
   return (
-    <DashboardShell nav={NAV} user={user} homeHref="/admin" badge="Admin">
-      {children}
-    </DashboardShell>
+    <TabSessionGuard>
+      <DashboardShell nav={NAV} user={user} homeHref="/admin" badge="Admin">
+        {children}
+      </DashboardShell>
+    </TabSessionGuard>
   );
 }

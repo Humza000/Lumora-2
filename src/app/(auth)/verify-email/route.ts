@@ -4,6 +4,9 @@ import { consumeToken, usedTokenUser } from "@/lib/tokens";
 import { createSession, readSession } from "@/lib/session";
 import { clientNext } from "@/lib/validation";
 
+// Lets TabSessionGuard mark the tab that opened the link as signed in (see components/tab-session.tsx).
+const SIGNED_IN = "#signed-in";
+
 // GET /verify-email?token=...&next=...: consumes the token, marks the email verified, refreshes the session.
 export async function GET(req: NextRequest) {
   const token = req.nextUrl.searchParams.get("token") ?? "";
@@ -14,7 +17,7 @@ export async function GET(req: NextRequest) {
   if (userId) {
     const user = await db.user.update({ where: { id: userId }, data: { emailVerified: new Date() } });
     await createSession({ userId: user.id, role: user.role, verified: true });
-    return to(user.role === "ADMIN" ? "/admin" : next);
+    return to((user.role === "ADMIN" ? "/admin" : next) + SIGNED_IN);
   }
 
   // A link that was already used (clicked twice, or pre-opened by a mail scanner) isn't an error
@@ -24,7 +27,7 @@ export async function GET(req: NextRequest) {
     const session = await readSession();
     if (session?.userId !== used.id) return to("/login?verified=1");
     await createSession({ userId: used.id, role: used.role, verified: true });
-    return to(used.role === "ADMIN" ? "/admin" : next);
+    return to((used.role === "ADMIN" ? "/admin" : next) + SIGNED_IN);
   }
 
   return to("/check-email?error=invalid");

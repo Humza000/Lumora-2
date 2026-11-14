@@ -23,14 +23,12 @@ export async function proxy(req: NextRequest) {
     if ((pathname.startsWith("/portal") || pathname.startsWith("/quote")) && session.role === "ADMIN") {
       return NextResponse.redirect(new URL("/admin", req.url));
     }
-    if (pathname === "/login" || pathname === "/signup") {
-      return NextResponse.redirect(new URL(session.role === "ADMIN" ? "/admin" : "/portal", req.url));
-    }
   }
 
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ["/admin/:path*", "/portal/:path*", "/quote/:path*", "/quote", "/login", "/signup"],
+  // /login and /signup always show their form: each tab must log in itself (see components/tab-session.tsx).
+  matcher: ["/admin/:path*", "/portal/:path*", "/quote/:path*", "/quote"],
 };

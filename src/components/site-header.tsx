@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { InstagramLink } from "./instagram";
 import { Logo } from "./logo";
+import { useTabSignedIn } from "./tab-session";
 import { useScrolled } from "./motion";
 import { buttonClass, cn } from "./ui";
 
@@ -19,6 +20,8 @@ export function SiteHeader() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const scrolled = useScrolled();
+  // Already logged in on this tab: go straight to the portal. Otherwise always ask to log in.
+  const account = useTabSignedIn() ? { href: "/portal", label: "My portal" } : { href: "/login", label: "Client login" };
 
   return (
     <header
@@ -55,8 +58,8 @@ export function SiteHeader() {
           })}
         </nav>
         <div className="hidden items-center gap-4 md:flex">
-          <Link href="/login" className="text-sm text-ink-muted transition-colors hover:text-ink">
-            Client login
+          <Link href={account.href} className="text-sm text-ink-muted transition-colors hover:text-ink">
+            {account.label}
           </Link>
           <Link href="/quote" className={buttonClass("primary", "sm")}>
             Get a quote
@@ -88,8 +91,8 @@ export function SiteHeader() {
               </Link>
             ))}
             <div className="flex items-center justify-between py-4">
-              <Link href="/login" onClick={() => setOpen(false)} className="text-ink-muted">
-                Client login
+              <Link href={account.href} onClick={() => setOpen(false)} className="text-ink-muted">
+                {account.label}
               </Link>
               <InstagramLink withHandle />
             </div>

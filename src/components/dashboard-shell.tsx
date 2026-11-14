@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { logout } from "@/app/(auth)/actions";
 import { Logo } from "./logo";
+import { LogoutButton } from "./tab-session";
 import { SideNav, type NavItem } from "./side-nav";
 
 export function DashboardShell({
@@ -36,9 +37,9 @@ export function DashboardShell({
               {badge}
             </span>
           )}
-          <form action={logout} className="ml-auto md:hidden">
-            <button className="rounded-lg px-2 py-1 text-sm text-ink-muted transition-colors hover:text-brand-light">Log out</button>
-          </form>
+          <div className="ml-auto md:hidden">
+            <LogoutButton action={logout} className="rounded-lg px-2 py-1 text-sm text-ink-muted transition-colors hover:text-brand-light" />
+          </div>
         </div>
         <SideNav items={nav} />
         <div className="hidden border-t border-line/60 p-4 md:mt-auto md:block">
@@ -51,9 +52,9 @@ export function DashboardShell({
               <p className="truncate text-xs text-ink-muted">{user.email}</p>
             </div>
           </div>
-          <form action={logout} className="mt-2 px-2">
-            <button className="text-sm text-ink-muted transition-colors hover:text-brand-light">Log out</button>
-          </form>
+          <div className="mt-2 px-2">
+            <LogoutButton action={logout} className="text-sm text-ink-muted transition-colors hover:text-brand-light" />
+          </div>
         </div>
       </aside>
       <main className="flex-1 px-4 py-8 sm:px-8 md:py-12">

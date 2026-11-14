@@ -60,6 +60,7 @@ e2e/                        Playwright journeys
 ## Conventions
 
 - **Authorization lives in the Data Access Layer** (`src/lib/dal.ts`). Every page, server action and route handler touching private data must call `requireAdmin()`, `requireClient()` or `requireVerifiedClient()`, or `getCurrentUser()` + an explicit check. `proxy.ts` and layouts are *not* security boundaries.
+- **Per-tab sign-in**: every tab must log in itself. `<TabSessionGuard>` (`src/components/tab-session.tsx`) wraps the portal, admin and `/quote` layouts and sends tabs without a sessionStorage flag to `/login` (other tabs stay signed in). Auth-page form submits set the flag; server redirects that sign someone in outside a form append `#signed-in`. `/login` and `/signup` always show their form. This is UX on top of the cookie, not a security boundary.
 - **Scope client queries by owner**: `findFirst({ where: { id, clientId: user.id } })`, never `findUnique({ where: { id } })` in portal code. Clients never see `DRAFT` invoices.
 - **Server actions** return `ActionState` (`src/lib/action-state.ts`) and are used with `<ActionForm>` (`src/components/forms.tsx`), which renders `error`, `message` and per-field errors. Validate with Zod, use `formToObject` + `fromZodError`/`fieldError`. Bind ids with `action.bind(null, id)`.
 - **Money is integer pence** everywhere (DB, maths, Stripe). Convert at the edges with `poundsToPence` / `formatGBP` (`src/lib/money.ts`).
@@ -80,6 +81,7 @@ See `.env.example`. Email goes via SMTP (`SMTP_*`, e.g. Gmail App Password) if s
 
 ## Gotchas
 
+- Playwright starts its own dev server on **port 3100** with `NEXT_DIST_DIR=.next-e2e` and `EMAIL_TRANSPORT=console`, so it runs beside your `npm run dev` and never sends real email. Next adds `.next-e2e` entries to `tsconfig.json`; keep them.
 - Next.js adds a hidden `role="alert"` route announcer. In Playwright, target `p[role=alert]` or headings rather than `getByRole("alert")`.
 - `src/lib/rate-limit.ts` is in-memory (per instance). Replace with a shared store before relying on it in serverless production.
 - `prisma/seed.ts` builds its own PrismaClient (it can't import `src/lib/db.ts`, which is `server-only`).

@@ -204,6 +204,18 @@ test.describe.serial("Lumora end-to-end", () => {
     await expect(page.getByText("Kick-off call booked for Monday.")).toBeVisible();
     await expect(page.getByText("20%")).toBeVisible(); // 1 of 5 milestones done
 
+    // Logged in on this tab: the header link goes to the portal instead of asking again
+    await page.goto("/");
+    await expect(page.getByRole("link", { name: "My portal" }).first()).toBeVisible();
+
+    // A new tab must log in itself, even though the session cookie is shared…
+    const other = await page.context().newPage();
+    await other.goto("/portal/invoices");
+    await expect(other).toHaveURL(/\/login\?next=%2Fportal%2Finvoices/);
+    await expect(other.getByRole("heading", { name: "Log in" })).toBeVisible();
+    await other.close();
+
+    // …and the original tab stays signed in
     await page.goto("/portal/invoices");
     await page.getByRole("link", { name: /LUM-/ }).first().click();
     await expect(page.getByText("£1,500.00").first()).toBeVisible();

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { DashboardShell } from "@/components/dashboard-shell";
+import { TabSessionGuard } from "@/components/tab-session";
 import { requireClient } from "@/lib/dal";
 
 export const metadata: Metadata = { title: { default: "Client portal", template: "%s | Lumora portal" }, robots: { index: false } };
@@ -14,8 +15,10 @@ const NAV = [
 export default async function PortalLayout({ children }: LayoutProps<"/portal">) {
   const user = await requireClient("/portal");
   return (
-    <DashboardShell nav={NAV} user={user} homeHref="/portal">
-      {children}
-    </DashboardShell>
+    <TabSessionGuard>
+      <DashboardShell nav={NAV} user={user} homeHref="/portal">
+        {children}
+      </DashboardShell>
+    </TabSessionGuard>
   );
 }
