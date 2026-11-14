@@ -5,11 +5,14 @@ import { Button, Input, Label, Textarea, cn } from "@/components/ui";
 import { formatGBP } from "@/lib/money";
 import {
   FEATURES_BY_TYPE,
+  HOSTING_BILLING,
   HOSTING_PLANS,
   PROJECT_TYPES,
   calculateEstimate,
   featureLabel,
   featuresForType,
+  formatHosting,
+  hostingPrices,
   type PriceMap,
   type QuoteDraft,
 } from "@/lib/pricing";
@@ -129,11 +132,10 @@ export function QuoteWizard({ initialDraft, initialQuoteId, prices }: Props) {
   const type = estimate.projectType;
   const typeFeatures = type ? FEATURES_BY_TYPE[type.key] : [];
   const selectedFeatures = featuresForType(draft.projectType, draft.features);
-  const monthlyText = estimate.hostingPlan
-    ? estimate.monthlyHosting > 0
-      ? `${formatGBP(estimate.monthlyHosting, { whole: true })}/month`
-      : "No monthly charge"
-    : "Not chosen yet";
+  const hostingText = formatHosting(estimate);
+  const yearly = estimate.hostingBilling === "yearly";
+  // Biggest yearly saving across plans, for the "Yearly" toggle label.
+  const maxSaving = Math.max(...HOSTING_PLANS.map((p) => hostingPrices(p.key, prices).yearlySaving));
 
   return (
     <div className="mt-10 grid gap-8 lg:grid-cols-[1fr_340px]">
@@ -245,13 +247,41 @@ export function QuoteWizard({ initialDraft, initialQuoteId, prices }: Props) {
           {step === 2 && (
             <div className="mt-6">
               <p className="rounded-2xl border border-brand-light/20 bg-brand-soft/60 px-4 py-3 text-sm text-ink">
-                Hosting & care plans are <strong>optional monthly payments</strong>, separate from the one-time price of
-                building your website.
+                Hosting & care plans are <strong>optional recurring payments</strong>, billed monthly or yearly, and separate
+                from the one-time price of building your website. Paying yearly costs less.
               </p>
-              <div className="mt-6 grid gap-3 sm:grid-cols-2" role="radiogroup" aria-label="Hosting & care plan">
+              <div className="mt-6 flex flex-wrap items-center gap-3">
+                <div className="inline-flex rounded-full border border-line bg-surface-2/70 p-1" role="radiogroup" aria-label="Billing">
+                  {HOSTING_BILLING.map((b) => {
+                    const active = estimate.hostingBilling === b;
+                    return (
+                      <button
+                        key={b}
+                        type="button"
+                        role="radio"
+                        aria-checked={active}
+                        onClick={() => update({ hostingBilling: b })}
+                        className={cn(
+                          "rounded-full px-4 py-1.5 text-sm font-medium transition-colors duration-200",
+                          active ? "bg-brand text-on-brand shadow-sm" : "text-ink-muted hover:text-ink",
+                        )}
+                      >
+                        {b === "monthly" ? "Monthly" : "Yearly"}
+                      </button>
+                    );
+                  })}
+                </div>
+                {maxSaving > 0 && (
+                  <span className="rounded-full bg-success/10 px-3 py-1 text-xs font-medium text-success">
+                    Pay yearly and save up to {formatGBP(maxSaving, { whole: true })} a year
+                  </span>
+                )}
+              </div>
+              <div className="mt-5 grid gap-3 sm:grid-cols-2" role="radiogroup" aria-label="Hosting & care plan">
                 {HOSTING_PLANS.map((plan) => {
                   const checked = draft.hostingPlan === plan.key;
-                  const monthly = prices[plan.key] ?? 0;
+                  const p = hostingPrices(plan.key, prices);
+                  const showYearly = yearly && p.monthly > 0;
                   return (
                     <label
                       key={plan.key}
@@ -274,11 +304,18 @@ export function QuoteWizard({ initialDraft, initialQuoteId, prices }: Props) {
                           <span className="font-medium">{plan.label}</span>
                         </span>
                         <span className="text-right whitespace-nowrap">
-                          <span className="font-display text-2xl font-semibold">{formatGBP(monthly, { whole: true })}</span>
-                          <span className="text-xs text-ink-muted">/month</span>
+                          <span className="font-display text-2xl font-semibold">
+                            {formatGBP(showYearly ? p.yearly : p.monthly, { whole: true })}
+                          </span>
+                          <span className="text-xs text-ink-muted">/{showYearly ? "year" : "month"}</span>
                         </span>
                       </span>
                       <span className="mt-1 pl-6 text-sm text-ink-muted">{plan.description}</span>
+                      {showYearly && p.yearlySaving > 0 && (
+                        <span className="mt-1 pl-6 text-xs font-medium text-success">
+                          Save {formatGBP(p.yearlySaving, { whole: true })} vs {formatGBP(p.monthly, { whole: true })}/month
+                        </span>
+                      )}
                       <ul className="mt-3 space-y-1.5 border-t border-line/70 pt-3 pl-6 text-sm">
                         {plan.includes.map((item) => (
                           <li key={item} className="flex gap-2">
@@ -359,7 +396,7 @@ export function QuoteWizard({ initialDraft, initialQuoteId, prices }: Props) {
                 </ReviewRow>
                 <ReviewRow label="Additional requirements">{draft.featuresOther?.trim() || "None"}</ReviewRow>
                 <ReviewRow label="Hosting & care">
-                  {estimate.hostingPlan ? `${estimate.hostingPlan.label} · ${monthlyText}` : "—"}
+                  {estimate.hostingPlan ? `${estimate.hostingPlan.label} · ${hostingText}${estimate.hostingPrice > 0 ? ` (billed ${estimate.hostingBilling})` : ""}` : "—"}
                 </ReviewRow>
                 <ReviewRow label="Business">{draft.businessName}</ReviewRow>
                 <ReviewRow label="Industry">{draft.industry?.trim() || "—"}</ReviewRow>
@@ -372,8 +409,9 @@ export function QuoteWizard({ initialDraft, initialQuoteId, prices }: Props) {
                 <Total label="One-time development cost" value={type ? `From ${formatGBP(estimate.oneTime, { whole: true })}` : "—"}>
                   Your {type?.label.toLowerCase() ?? "website"} package, paid once.
                 </Total>
-                <Total label="Monthly hosting cost" value={monthlyText}>
+                <Total label={yearly && estimate.hostingPrice > 0 ? "Yearly hosting cost" : "Monthly hosting cost"} value={hostingText}>
                   {estimate.hostingPlan?.label ?? "Hosting & care"}. Optional and separate from the build.
+                  {estimate.hostingSaving > 0 && ` Saves ${formatGBP(estimate.hostingSaving, { whole: true })} a year.`}
                 </Total>
               </div>
 
@@ -427,8 +465,11 @@ export function QuoteWizard({ initialDraft, initialQuoteId, prices }: Props) {
           {type && <p className="mt-1 text-sm text-white/70">{type.label}</p>}
 
           <div className="mt-5 border-t border-white/10 pt-4">
-            <p className="text-sm text-white/70">Monthly hosting & care</p>
-            <p className="mt-1 text-xl font-semibold">{monthlyText}</p>
+            <p className="text-sm text-white/70">{yearly && estimate.hostingPrice > 0 ? "Yearly" : "Monthly"} hosting & care</p>
+            <p className="mt-1 text-xl font-semibold">{hostingText}</p>
+            {estimate.hostingSaving > 0 && (
+              <p className="text-sm text-brand-tint">You save {formatGBP(estimate.hostingSaving, { whole: true })} a year</p>
+            )}
             {estimate.hostingPlan && <p className="text-sm text-white/70">{estimate.hostingPlan.label}</p>}
           </div>
 

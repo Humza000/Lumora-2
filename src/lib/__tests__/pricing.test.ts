@@ -5,6 +5,8 @@ import {
   calculateEstimate,
   featuresForType,
   formatEstimate,
+  formatHosting,
+  hostingPrices,
   quoteAnswersSchema,
 } from "../pricing";
 
@@ -28,8 +30,9 @@ describe("calculateEstimate", () => {
   it("returns zero for an empty draft", () => {
     const e = calculateEstimate({});
     expect(e.oneTime).toBe(0);
-    expect(e.monthlyHosting).toBe(0);
+    expect(e.hostingPrice).toBe(0);
     expect(e.projectType).toBeNull();
+    expect(formatHosting(e)).toBe("Not chosen yet");
   });
 
   it("is the package starting price; features and pages never add to it", () => {
@@ -48,21 +51,50 @@ describe("calculateEstimate", () => {
   it("keeps hosting separate from the one-time cost", () => {
     const e = calculateEstimate({ projectType: "type_landing", hostingPlan: "hosting_standard" });
     expect(e.oneTime).toBe(5000);
-    expect(e.monthlyHosting).toBe(1000);
-    expect(calculateEstimate({ projectType: "type_landing", hostingPlan: "hosting_none" }).monthlyHosting).toBe(0);
+    expect(e.hostingPrice).toBe(1000);
+    expect(formatHosting(e)).toBe("£10/month");
+    const none = calculateEstimate({ projectType: "type_landing", hostingPlan: "hosting_none", hostingBilling: "yearly" });
+    expect(none.hostingPrice).toBe(0);
+    expect(formatHosting(none)).toBe("No monthly charge");
   });
 
   it("uses overridden (admin) prices when provided", () => {
     const prices = { ...DEFAULT_PRICES, start_landing: 7500, hosting_premium: 2000 };
     const e = calculateEstimate({ projectType: "type_landing", hostingPlan: "hosting_premium" }, prices);
     expect(e.oneTime).toBe(7500);
-    expect(e.monthlyHosting).toBe(2000);
+    expect(e.hostingPrice).toBe(2000);
   });
 
   it("flags requirements that may need a custom quote", () => {
     expect(calculateEstimate({ projectType: "type_business" }).customQuote).toBe(false);
     expect(calculateEstimate({ projectType: "type_webapp" }).customQuote).toBe(true);
     expect(calculateEstimate({ projectType: "type_business", featuresOther: "Live chat" }).customQuote).toBe(true);
+  });
+});
+
+describe("yearly hosting", () => {
+  it("costs less than 12 monthly payments (two months free by default)", () => {
+    for (const plan of ["hosting_basic", "hosting_standard", "hosting_premium"]) {
+      const p = hostingPrices(plan);
+      expect(p.yearly).toBe(p.monthly * 10);
+      expect(p.yearly).toBeLessThan(p.monthly * 12);
+      expect(p.yearlySaving).toBe(p.monthly * 2);
+    }
+  });
+
+  it("charges the yearly price and reports the saving when billed yearly", () => {
+    const e = calculateEstimate({ projectType: "type_business", hostingPlan: "hosting_standard", hostingBilling: "yearly" });
+    expect(e.oneTime).toBe(10000); // never affects the one-time cost
+    expect(e.hostingPrice).toBe(10000);
+    expect(e.hostingPeriod).toBe("year");
+    expect(e.hostingSaving).toBe(2000);
+    expect(formatHosting(e)).toBe("£100/year");
+  });
+
+  it("defaults to monthly billing", () => {
+    const e = calculateEstimate({ hostingPlan: "hosting_basic" });
+    expect(e.hostingBilling).toBe("monthly");
+    expect(e.hostingSaving).toBe(0);
   });
 });
 

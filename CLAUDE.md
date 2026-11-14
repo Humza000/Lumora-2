@@ -84,4 +84,6 @@ See `.env.example`. Email goes via SMTP (`SMTP_*`, e.g. Gmail App Password) if s
 - Playwright starts its own dev server on **port 3100** with `NEXT_DIST_DIR=.next-e2e` and `EMAIL_TRANSPORT=console`, so it runs beside your `npm run dev` and never sends real email. Next adds `.next-e2e` entries to `tsconfig.json`; keep them.
 - Next.js adds a hidden `role="alert"` route announcer. In Playwright, target `p[role=alert]` or headings rather than `getByRole("alert")`.
 - `src/lib/rate-limit.ts` is in-memory (per instance). Replace with a shared store before relying on it in serverless production.
+- **Deploys** run `prisma db push` then `prisma/bootstrap.ts` (see `build` in package.json): it creates/updates the admin from `ADMIN_EMAIL`/`ADMIN_PASSWORD`, adds missing prices, and loads portfolio case studies only into an empty table. No demo data. The full `npm run db:seed` is for local/dev databases. Admin logic is shared in `prisma/admin.ts`.
+- `APP_URL` without a scheme is treated as `https://` (`src/lib/site.ts`).
 - `prisma/seed.ts` builds its own PrismaClient (it can't import `src/lib/db.ts`, which is `server-only`).

@@ -1,4 +1,11 @@
 // Site-wide constants. Edit business details here.
+
+/** APP_URL with a scheme, e.g. "www.lumoradesign.uk" → "https://www.lumoradesign.uk". */
+function baseUrl() {
+  const raw = (process.env.APP_URL || "http://localhost:3000").trim().replace(/\/$/, "");
+  return /^https?:\/\//i.test(raw) ? raw : `https://${raw}`;
+}
+
 export const site = {
   name: "Lumora",
   tagline: "We build websites that convert.",
@@ -6,11 +13,11 @@ export const site = {
     "Lumora is a boutique web design and development studio crafting premium, high-performance websites for ambitious brands.",
   email: "hello.lumoradesign@gmail.com", // main inbox: contact links, invoices, email reply-to
   instagram: { handle: "lumora_ig", url: "https://www.instagram.com/lumora_ig/" },
-  url: process.env.APP_URL ?? "http://localhost:3000",
+  url: baseUrl(),
   // Path to the logo in /public. Replace public/logo.svg with the real logo.
   logo: "/logo.svg",
 };
 
 export function appUrl(path = "") {
-  return `${(process.env.APP_URL ?? "http://localhost:3000").replace(/\/$/, "")}${path}`;
+  return `${baseUrl()}${path}`;
 }

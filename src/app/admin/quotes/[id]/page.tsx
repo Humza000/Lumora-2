@@ -4,9 +4,8 @@ import { ActionForm, SelectField, SubmitButton, TextAreaField, TextField } from 
 import { Card, PageHeader, StatusBadge, formatDate } from "@/components/ui";
 import { db } from "@/lib/db";
 import { requireAdmin } from "@/lib/dal";
-import { formatGBP } from "@/lib/money";
 import { getPriceMap } from "@/lib/prices";
-import { PROJECT_TYPES, calculateEstimate, featureLabel, formatEstimate, quoteDraftSchema } from "@/lib/pricing";
+import { PROJECT_TYPES, calculateEstimate, featureLabel, formatEstimate, formatHosting, quoteDraftSchema } from "@/lib/pricing";
 import { acceptQuote, updateQuoteReview } from "../../_actions/quotes";
 
 export default async function AdminQuote({ params }: PageProps<"/admin/quotes/[id]">) {
@@ -37,7 +36,7 @@ export default async function AdminQuote({ params }: PageProps<"/admin/quotes/[i
     ["Pages", a.pages],
     ["Features", a.features?.map(featureLabel).join(", ") || "None"],
     ["Additional requirements", a.featuresOther || "—"],
-    ["Hosting & care", estimate.hostingPlan?.label ?? (raw.hosting === true ? "Yes (older quote)" : "—")],
+    ["Hosting & care", estimate.hostingPlan ? `${estimate.hostingPlan.label}${estimate.hostingPrice > 0 ? ` (billed ${estimate.hostingBilling})` : ""}` : raw.hosting === true ? "Yes (older quote)" : "—"],
     ["Goals", a.goals],
     ["Notes", a.notes || "—"],
     ...legacy.map((k): [string, React.ReactNode] => [`${k[0].toUpperCase()}${k.slice(1)} (older quote)`, String(raw[k])]),
@@ -129,14 +128,8 @@ export default async function AdminQuote({ params }: PageProps<"/admin/quotes/[i
             <p className="text-xs text-ink-muted">One-time development, as shown to the client at submission</p>
             <ul className="mt-4 space-y-1.5 border-t border-line pt-4 text-sm">
               <li className="flex justify-between gap-2">
-                <span className="text-ink-muted">Monthly hosting & care</span>
-                <span>
-                  {estimate.hostingPlan
-                    ? estimate.monthlyHosting > 0
-                      ? `${formatGBP(estimate.monthlyHosting, { whole: true })}/mo`
-                      : "None"
-                    : "—"}
-                </span>
+                <span className="text-ink-muted">Hosting & care</span>
+                <span>{estimate.hostingPlan ? (estimate.hostingPrice > 0 ? formatHosting(estimate) : "None") : "—"}</span>
               </li>
               {estimate.customQuote && <li className="text-warning">May need a custom quote</li>}
             </ul>

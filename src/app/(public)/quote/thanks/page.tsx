@@ -3,8 +3,7 @@ import { notFound } from "next/navigation";
 import { ButtonLink } from "@/components/ui";
 import { db } from "@/lib/db";
 import { requireClient } from "@/lib/dal";
-import { formatGBP } from "@/lib/money";
-import { calculateEstimate, formatEstimate, quoteDraftSchema } from "@/lib/pricing";
+import { calculateEstimate, formatEstimate, formatHosting, quoteDraftSchema } from "@/lib/pricing";
 import { getPriceMap } from "@/lib/prices";
 
 export const metadata: Metadata = { title: "Quote received" };
@@ -26,9 +25,9 @@ export default async function QuoteThanksPage({ searchParams }: PageProps<"/quot
       <p className="mt-4 text-ink-muted">
         Your indicative one-time development cost is{" "}
         <strong className="text-ink">{formatEstimate(quote.estimateMin, quote.estimateMax)}</strong>
-        {estimate.monthlyHosting > 0 && (
+        {estimate.hostingPrice > 0 && (
           <>
-            , plus <strong className="text-ink">{formatGBP(estimate.monthlyHosting, { whole: true })}/month</strong> for{" "}
+            , plus <strong className="text-ink">{formatHosting(estimate)}</strong> for{" "}
             {estimate.hostingPlan?.label.toLowerCase()}
           </>
         )}

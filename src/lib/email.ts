@@ -4,7 +4,7 @@ import { Resend } from "resend";
 import { appUrl, site } from "./site";
 import { formatGBP } from "./money";
 import { resolveEmailProvider, type EmailProvider } from "./email-provider";
-import type { Estimate } from "./pricing";
+import { formatHosting, type Estimate } from "./pricing";
 
 // Transactional email. Delivery, in order of preference:
 //   1. SMTP (e.g. Gmail with an App Password): SMTP_HOST/PORT/USER/PASS
@@ -110,8 +110,8 @@ export const emails = {
 
   quoteReceived(to: string, name: string, estimate: Estimate) {
     const hosting = estimate.hostingPlan
-      ? estimate.monthlyHosting > 0
-        ? `${esc(estimate.hostingPlan.label)}: <strong>${formatGBP(estimate.monthlyHosting, { whole: true })}/month</strong> (optional, separate from the build)`
+      ? estimate.hostingPrice > 0
+        ? `${esc(estimate.hostingPlan.label)}: <strong>${formatHosting(estimate)}</strong> (optional, separate from the build)`
         : "No hosting required"
       : "Not chosen";
     return send(
@@ -120,7 +120,7 @@ export const emails = {
       layout(
         `Thanks, ${esc(name)}`,
         `<p>We've received your project details. Here's your indicative estimate:</p>
-<p>One-time development: <strong>from ${formatGBP(estimate.oneTime, { whole: true })}</strong>${estimate.projectType ? ` (${esc(estimate.projectType.label)})` : ""}<br>Monthly hosting: ${hosting}</p>
+<p>One-time development: <strong>from ${formatGBP(estimate.oneTime, { whole: true })}</strong>${estimate.projectType ? ` (${esc(estimate.projectType.label)})` : ""}<br>Hosting & care: ${hosting}</p>
 ${estimate.customQuote ? "<p>Your requirements may need a custom quote.</p>" : ""}
 <p>This is an indicative estimate. We'll review your requirements and confirm the final price before any work begins, usually within 2 working days.</p>`,
         { label: "View in your portal", href: appUrl("/portal/quotes") },

@@ -95,6 +95,12 @@ test.describe.serial("Lumora end-to-end", () => {
     await expect(page.locator("p[role=alert]")).toContainText("hosting");
     await page.getByText("Standard care").click();
     await expect(page.locator("aside").getByText("£10/month")).toBeVisible();
+    // Yearly billing is cheaper; switch back to monthly for the rest of the journey
+    await page.getByRole("radio", { name: "Yearly", exact: true }).click();
+    await expect(page.locator("aside").getByText("£100/year")).toBeVisible();
+    await expect(page.locator("aside").getByText("You save £20 a year")).toBeVisible();
+    await page.getByRole("radio", { name: "Monthly", exact: true }).click();
+    await expect(page.locator("aside").getByText("£10/month")).toBeVisible();
     await page.getByRole("button", { name: "Continue →" }).click();
     // Step 4: business
     await page.getByLabel("Business name *").fill(client.business);

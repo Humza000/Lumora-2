@@ -12,6 +12,8 @@ import { formatGBP } from "./money";
 
 export type PriceMap = Record<string, number>; // key -> pence
 
+const price = (prices: PriceMap, key: string) => prices[key] ?? DEFAULT_PRICES[key] ?? 0;
+
 // Project type keys (`type_*`) are stored in quote answers, so they never change.
 // Prices use separate `start_*` keys, so starting prices can be re-based without touching stored quotes.
 export const PROJECT_TYPES = [
@@ -128,6 +130,20 @@ export const HOSTING_PLANS = [
 
 export type HostingPlanKey = (typeof HOSTING_PLANS)[number]["key"];
 
+/** Hosting & care can be paid monthly, or yearly at a reduced price. */
+export const HOSTING_BILLING = ["monthly", "yearly"] as const;
+export type HostingBilling = (typeof HOSTING_BILLING)[number];
+
+/** Price key of a plan's yearly price, e.g. "hosting_basic" → "hosting_basic_yearly". */
+export const yearlyKey = (planKey: string) => `${planKey}_yearly`;
+
+/** Monthly and yearly price of a plan, plus how much paying yearly saves over 12 months. */
+export function hostingPrices(planKey: string, prices: PriceMap = DEFAULT_PRICES) {
+  const monthly = price(prices, planKey);
+  const yearly = price(prices, yearlyKey(planKey));
+  return { monthly, yearly, yearlySaving: Math.max(0, monthly * 12 - yearly) };
+}
+
 export const DEFAULT_PRICES: PriceMap = {
   start_landing: 5000,
   start_business: 10000,
@@ -137,16 +153,19 @@ export const DEFAULT_PRICES: PriceMap = {
   hosting_basic: 500,
   hosting_standard: 1000,
   hosting_premium: 1500,
+  // Yearly = 10 × monthly: two months free.
+  hosting_basic_yearly: 5000,
+  hosting_standard_yearly: 10000,
+  hosting_premium_yearly: 15000,
 };
 
 /** Labels + categories used to seed/edit the PricingItem table. */
 export const PRICING_CATALOGUE: { key: string; label: string; category: string }[] = [
   ...PROJECT_TYPES.map((t) => ({ key: t.priceKey, label: `${t.label} (starting price)`, category: "Project type" })),
-  ...HOSTING_PLANS.filter((p) => p.key !== "hosting_none").map((p) => ({
-    key: p.key,
-    label: `${p.label} (per month)`,
-    category: "Hosting & care",
-  })),
+  ...HOSTING_PLANS.filter((p) => p.key !== "hosting_none").flatMap((p) => [
+    { key: p.key, label: `${p.label} (per month)`, category: "Hosting & care" },
+    { key: yearlyKey(p.key), label: `${p.label} (per year)`, category: "Hosting & care" },
+  ]),
 ];
 
 const keysOf = <T extends readonly { key: string }[]>(arr: T) =>
@@ -159,6 +178,7 @@ const quoteFields = z.object({
   features: z.array(z.string().max(60)).max(30).default([]),
   featuresOther: z.string().trim().max(2000).default(""),
   hostingPlan: z.enum(keysOf(HOSTING_PLANS)),
+  hostingBilling: z.enum(HOSTING_BILLING).default("monthly"),
   businessName: z.string().trim().min(1, "Tell us your business name").max(120),
   industry: z.string().trim().max(120).default(""),
   existingSite: z.string().trim().max(300).default(""),
@@ -196,9 +216,13 @@ export type Estimate = {
   projectType: (typeof PROJECT_TYPES)[number] | null;
   /** One-time development estimate (the package's starting price), pence. */
   oneTime: number;
-  /** Optional recurring hosting & care, pence per month. */
-  monthlyHosting: number;
   hostingPlan: (typeof HOSTING_PLANS)[number] | null;
+  hostingBilling: HostingBilling;
+  /** Optional recurring hosting & care, pence per `hostingPeriod`. 0 for no plan / no hosting. */
+  hostingPrice: number;
+  hostingPeriod: "month" | "year";
+  /** Saving over 12 monthly payments when billed yearly, else 0. */
+  hostingSaving: number;
   /** Requirements that usually need an individually tailored quote. */
   customQuote: boolean;
   // Stored on the Quote row (estimateMin/estimateMax). Both are the starting price.
@@ -206,7 +230,6 @@ export type Estimate = {
   max: number;
 };
 
-const price = (prices: PriceMap, key: string) => prices[key] ?? DEFAULT_PRICES[key] ?? 0;
 
 /** Web apps, "other custom functionality" or extra written requirements may need a tailored quote. */
 export function needsCustomQuote(answers: QuoteDraft) {
@@ -222,15 +245,28 @@ export function calculateEstimate(answers: QuoteDraft, prices: PriceMap = DEFAUL
   const projectType = PROJECT_TYPES.find((t) => t.key === answers.projectType) ?? null;
   const hostingPlan = HOSTING_PLANS.find((p) => p.key === answers.hostingPlan) ?? null;
   const oneTime = projectType ? price(prices, projectType.priceKey) : 0;
+  const hostingBilling: HostingBilling = answers.hostingBilling === "yearly" ? "yearly" : "monthly";
+  const plan = hostingPlan ? hostingPrices(hostingPlan.key, prices) : null;
+  const yearly = hostingBilling === "yearly" && !!plan && plan.monthly > 0;
   return {
     projectType,
     oneTime,
-    monthlyHosting: hostingPlan ? price(prices, hostingPlan.key) : 0,
     hostingPlan,
+    hostingBilling,
+    hostingPrice: plan ? (yearly ? plan.yearly : plan.monthly) : 0,
+    hostingPeriod: yearly ? "year" : "month",
+    hostingSaving: yearly && plan ? plan.yearlySaving : 0,
     customQuote: needsCustomQuote(answers),
     min: oneTime,
     max: oneTime,
   };
+}
+
+/** The chosen hosting as text: "£50/year", "£5/month", "No monthly charge" or "Not chosen yet". */
+export function formatHosting(e: Pick<Estimate, "hostingPlan" | "hostingPrice" | "hostingPeriod">) {
+  if (!e.hostingPlan) return "Not chosen yet";
+  if (e.hostingPrice === 0) return "No monthly charge";
+  return `${formatGBP(e.hostingPrice, { whole: true })}/${e.hostingPeriod}`;
 }
 
 /**

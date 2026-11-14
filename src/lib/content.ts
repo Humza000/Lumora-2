@@ -1,3 +1,6 @@
+import { formatGBP } from "./money";
+import { DEFAULT_PRICES } from "./pricing";
+
 // Marketing copy shared across public pages. Edit freely.
 
 export const services = [
@@ -30,11 +33,14 @@ export const process = [
   { step: "04", title: "Launch & care", description: "We launch, measure and keep your site fast, secure and up to date." },
 ];
 
-// FAQs carried over from the original lumoradesign.uk site.
+// FAQs (also published as FAQPage structured data). Prices come from the quote wizard's
+// DEFAULT_PRICES so these answers stay in step with the wizard; admin-edited prices aren't reflected here.
+const from = (key: string) => formatGBP(DEFAULT_PRICES[key] ?? 0, { whole: true });
+
 export const faqs = [
   {
     q: "What is your typical project timeline?",
-    a: "Timelines depend on project type — landing pages typically take around 1-2 weeks, redesigns 2-3 weeks, full websites 3-4 weeks, and larger or more complex projects can take a month or more. We'll give you a clear estimate once we understand your project's scope.",
+    a: "Timelines depend on project type — landing pages typically take around 1-2 weeks, business websites 2-4 weeks, and e-commerce stores, web apps and custom builds can take a month or more. We'll give you a clear estimate once we understand your project's scope.",
   },
   {
     q: "Do you use templates?",
@@ -45,16 +51,16 @@ export const faqs = [
     a: "We specialize in modern React ecosystems (Next.js, Vite), robust headless CMS solutions (Sanity, Contentful), and modern CSS frameworks like Tailwind.",
   },
   {
-    q: "Do you provide ongoing maintenance?",
-    a: "Yes, we offer monthly and yearly maintenance packages for ongoing technical support, security updates, bug fixes, client requests and analytics reviews.",
+    q: "Do you provide hosting and ongoing maintenance?",
+    a: `Yes, and it's optional. Basic hosting (hosting and SSL certificate) is ${from("hosting_basic")}/month, Standard care (adds regular backups and software updates) is ${from("hosting_standard")}/month, and Premium care (adds small content updates and priority support) is ${from("hosting_premium")}/month. Pay yearly instead and you get two months free (${from("hosting_basic_yearly")}, ${from("hosting_standard_yearly")} or ${from("hosting_premium_yearly")} a year). These plans are separate from the one-time cost of building your website, or you can arrange your own hosting.`,
   },
   {
     q: "How does pricing work?",
-    a: "Pricing depends on the size and complexity of the project. Smaller sites and landing pages typically start from £500, while full websites and larger business projects start from £1,000+. We'll always give you a clear, upfront quote before starting any work.",
+    a: `Every project has a starting price: landing pages from ${from("start_landing")}, business websites from ${from("start_business")}, e-commerce stores from ${from("start_ecommerce")}, and web apps or custom builds from ${from("start_webapp")}. Our quote wizard gives you an instant estimate, and the features you choose help us understand your project rather than adding individual charges. Complex functionality may need a tailored quote. We'll always confirm the final price before any work begins.`,
   },
   {
-    q: "Do you handle copywriting and SEO?",
-    a: "Yes. Our team includes strategic copywriting support and SEO best practices to give your site a strong foundation for search.",
+    q: "What if I'm not happy with my website?",
+    a: "We offer a money-back guarantee. We'll work with you on revisions until you're happy with your website, and if you're still not satisfied before it goes live, we'll refund your payment. No hard feelings.",
   },
 ];
 

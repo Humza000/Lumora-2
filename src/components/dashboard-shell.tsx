@@ -47,15 +47,6 @@ export function DashboardShell({
           </div>
         </div>
         <SideNav items={nav} />
-        <div className="hidden px-3 pt-2 md:block">
-          <Link
-            href="/"
-            className="flex items-center gap-2 rounded-xl px-3.5 py-2.5 text-sm text-ink-muted transition-colors hover:bg-ink/[0.035] hover:text-ink"
-          >
-            <HouseIcon />
-            Homepage
-          </Link>
-        </div>
         <div className="hidden border-t border-line/60 p-4 md:mt-auto md:block">
           <div className="flex items-center gap-3 rounded-xl p-2 transition-colors hover:bg-ink/[0.035]">
             <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand text-xs font-semibold text-on-brand">
@@ -66,7 +57,11 @@ export function DashboardShell({
               <p className="truncate text-xs text-ink-muted">{user.email}</p>
             </div>
           </div>
-          <div className="mt-2 px-2">
+          <div className="mt-2 flex items-center justify-between gap-2 px-2">
+            <Link href="/" className="flex items-center gap-1.5 text-sm text-ink-muted transition-colors hover:text-brand-light">
+              <HouseIcon />
+              Homepage
+            </Link>
             <LogoutButton action={logout} className="text-sm text-ink-muted transition-colors hover:text-brand-light" />
           </div>
         </div>

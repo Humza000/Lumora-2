@@ -8,50 +8,17 @@ import { DEFAULT_PRICES, PRICING_CATALOGUE } from "../src/lib/pricing";
 import { DEFAULT_MILESTONES } from "../src/lib/progress";
 import { formatInvoiceNumber } from "../src/lib/invoice";
 import { portfolioSeed, retiredPortfolioSlugs } from "./portfolio-data";
+import { ensureAdmin } from "./admin";
 
 const db = new PrismaClient({ adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL }) });
 
 async function main() {
   // --- Admin -------------------------------------------------------------
-  // .env is the source of truth for the single admin account: re-running the
-  // seed applies a changed ADMIN_EMAIL / ADMIN_PASSWORD to the existing admin.
-  const adminEmail = (process.env.ADMIN_EMAIL ?? "hello.lumoradesign@gmail.com").trim().toLowerCase();
   const adminPassword = process.env.ADMIN_PASSWORD;
   if (!adminPassword || adminPassword.length < 10) {
     throw new Error("Set ADMIN_PASSWORD (10+ characters) in .env before seeding.");
   }
-
-  const byEmail = await db.user.findUnique({ where: { email: adminEmail } });
-  if (byEmail && byEmail.role !== "ADMIN") {
-    throw new Error(`${adminEmail} already belongs to a client account. Use a different ADMIN_EMAIL.`);
-  }
-  // Reuse the existing admin (e.g. after changing ADMIN_EMAIL) instead of creating a second one.
-  const existing = byEmail ?? (await db.user.findFirst({ where: { role: "ADMIN" }, orderBy: { createdAt: "asc" } }));
-
-  if (existing) {
-    const passwordMatches = await bcrypt.compare(adminPassword, existing.passwordHash);
-    await db.user.update({
-      where: { id: existing.id },
-      data: {
-        email: adminEmail,
-        emailVerified: existing.emailVerified ?? new Date(),
-        ...(passwordMatches ? {} : { passwordHash: await bcrypt.hash(adminPassword, 12) }),
-      },
-    });
-    const changes = [existing.email !== adminEmail && `email ${existing.email} → ${adminEmail}`, !passwordMatches && "password updated"];
-    console.log(`✓ admin: ${adminEmail}${changes.some(Boolean) ? ` (${changes.filter(Boolean).join(", ")})` : ""}`);
-  } else {
-    await db.user.create({
-      data: {
-        email: adminEmail,
-        name: "Lumora Admin",
-        role: "ADMIN",
-        emailVerified: new Date(),
-        passwordHash: await bcrypt.hash(adminPassword, 12),
-      },
-    });
-    console.log(`✓ admin created: ${adminEmail}`);
-  }
+  await ensureAdmin(db, process.env.ADMIN_EMAIL ?? "hello.lumoradesign@gmail.com", adminPassword);
 
   // --- Pricing -----------------------------------------------------------
   for (const [i, item] of PRICING_CATALOGUE.entries()) {
