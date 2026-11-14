@@ -421,7 +421,7 @@ export function QuoteWizard({ initialDraft, initialQuoteId, prices }: Props) {
           <p className="text-xs tracking-[0.2em] text-brand-tint uppercase">Indicative estimate</p>
 
           <p className="mt-5 text-sm text-white/70">One-time development</p>
-          <p key={estimate.oneTime} className="mt-1 animate-[fade-in_0.5s_ease] font-display text-4xl font-semibold tracking-tight">
+          <p key={estimate.oneTime} className="relative mt-1 animate-[fade-in_0.5s_ease] font-display text-4xl font-semibold tracking-tight">
             {type ? `From ${formatGBP(estimate.oneTime, { whole: true })}` : "£—"}
           </p>
           {type && <p className="mt-1 text-sm text-white/70">{type.label}</p>}

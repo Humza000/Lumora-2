@@ -38,11 +38,12 @@ export function DashboardShell({
               {badge}
             </span>
           )}
-          <div className="ml-auto flex items-center gap-1 md:hidden">
-            <Link href="/" className="rounded-lg px-2 py-1 text-sm text-ink-muted transition-colors hover:text-brand-light">
+          <div className="ml-auto flex items-center md:hidden">
+            <Link href="/" className="flex items-center gap-1.5 rounded-lg px-2 py-1 text-sm whitespace-nowrap text-ink-muted transition-colors hover:text-brand-light">
+              <HouseIcon />
               Homepage
             </Link>
-            <LogoutButton action={logout} className="rounded-lg px-2 py-1 text-sm text-ink-muted transition-colors hover:text-brand-light" />
+            <LogoutButton action={logout} className="rounded-lg px-2 py-1 text-sm whitespace-nowrap text-ink-muted transition-colors hover:text-brand-light" />
           </div>
         </div>
         <SideNav items={nav} />
@@ -51,7 +52,8 @@ export function DashboardShell({
             href="/"
             className="flex items-center gap-2 rounded-xl px-3.5 py-2.5 text-sm text-ink-muted transition-colors hover:bg-ink/[0.035] hover:text-ink"
           >
-            <span aria-hidden>←</span> Back to website
+            <HouseIcon />
+            Homepage
           </Link>
         </div>
         <div className="hidden border-t border-line/60 p-4 md:mt-auto md:block">
@@ -73,5 +75,14 @@ export function DashboardShell({
         <div className="mx-auto max-w-6xl">{children}</div>
       </main>
     </div>
+  );
+}
+
+function HouseIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M3 10.5 12 3l9 7.5" />
+      <path d="M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5" />
+    </svg>
   );
 }

@@ -58,7 +58,7 @@ export function FaqSection() {
                   </svg>
                 </span>
               </summary>
-              <p className="animate-[fade-in_0.4s_ease] px-6 pb-6 leading-relaxed text-ink-muted">{f.a}</p>
+              <p className="relative animate-[fade-in_0.4s_ease] px-6 pb-6 leading-relaxed text-ink-muted">{f.a}</p>
             </details>
           </Reveal>
         ))}

@@ -216,8 +216,8 @@ test.describe.serial("Lumora end-to-end", () => {
     await expect(page.getByText("Kick-off call booked for Monday.")).toBeVisible();
     await expect(page.getByText("20%")).toBeVisible(); // 1 of 5 milestones done
 
-    // Logged in on this tab: "Back to website" leaves the portal, and the header link returns without asking again
-    await page.getByRole("link", { name: /Back to website/ }).click();
+    // Logged in on this tab: "Homepage" leaves the portal, and the header link returns without asking again
+    await page.getByRole("link", { name: "Homepage" }).click();
     await expect(page).toHaveURL(/localhost:\d+\/$/);
     await expect(page.getByRole("link", { name: "My portal" }).first()).toBeVisible();
 

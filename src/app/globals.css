@@ -195,10 +195,14 @@ body {
   }
 }
 
-/* Opacity only: moving text with transform makes browsers render it blurry until the motion ends. */
+/*
+ * Slides use `top` (on a position: relative element), not `transform`: text moved with transform
+ * is drawn as a bitmap and looks blurry until the motion ends; `top` keeps it crisp every frame.
+ */
 @keyframes fade-in {
   from {
     opacity: 0;
+    top: 4px;
   }
 }
 
@@ -225,14 +229,19 @@ body {
 
 /* ---------- Scroll reveal (driven by <Reveal>) ---------- */
 
-/* Fade only (no slide): animating transform on text makes it look fuzzy until the animation ends. */
+/* Fade + slide up. Uses `top`, not `transform`, so text stays sharp while it moves (see fade-in). */
 [data-reveal] {
+  position: relative;
+  top: 18px;
   opacity: 0;
-  transition: opacity 0.6s ease-out;
+  transition:
+    opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1),
+    top 0.8s cubic-bezier(0.16, 1, 0.3, 1);
   transition-delay: var(--reveal-delay, 0ms);
 }
 
 [data-reveal="in"] {
+  top: 0;
   opacity: 1;
 }
 
@@ -245,6 +254,7 @@ body {
     transition-duration: 0.001ms !important;
   }
   [data-reveal] {
+    top: 0;
     opacity: 1;
   }
 }
