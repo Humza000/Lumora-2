@@ -38,6 +38,19 @@ export async function consumeToken(raw: string, type: TokenType) {
   return res.count === 1 ? token.userId : null;
 }
 
+/**
+ * The owner of a token that has already been used (e.g. a verification link clicked twice,
+ * or pre-opened by a mail scanner), so the caller can treat it as "already done" not "invalid".
+ */
+export async function usedTokenUser(raw: string, type: TokenType) {
+  const token = await db.authToken.findUnique({
+    where: { tokenHash: hash(raw) },
+    include: { user: { select: { id: true, role: true, emailVerified: true } } },
+  });
+  if (!token || token.type !== type || !token.usedAt) return null;
+  return token.user;
+}
+
 /** Look up a token without consuming it (e.g. to render the invite form). */
 export async function peekToken(raw: string, type: TokenType) {
   const token = await db.authToken.findUnique({

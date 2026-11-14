@@ -67,6 +67,8 @@ Sign-up needs working email, because customers must click a verification link. T
 
 If neither SMTP nor `RESEND_API_KEY` is configured, emails are **not sent**: they are printed to the terminal running `npm run dev`, and the "Check your email" page shows a dev notice saying so. Replies to any Lumora email go to `hello.lumoradesign@gmail.com`.
 
+The same email setup powers **Forgot password** (`/forgot-password`). Keep real passwords in `.env` only, never in `.env.example`. Setting `EMAIL_TRANSPORT=console` (dev/test only) prints emails to the log even when SMTP is configured; the Playwright suite does this so test runs never send real email.
+
 ## Scripts
 
 | Command | Description |

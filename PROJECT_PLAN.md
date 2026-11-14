@@ -34,7 +34,7 @@ Decisions: self-signup is required before submitting a quote (with email verific
 | --- | --- | --- |
 | Public site | Home, Services, About, Contact, responsive header/footer, SEO metadata, sitemap, robots | ✅ Done |
 | Public site | Portfolio list + case study pages (6 projects carried over from current site) | ✅ Done |
-| Accounts | Sign-up, email verification, login/logout, role-based routing | ✅ Done |
+| Accounts | Sign-up, email verification, login/logout, forgot/reset password, role-based routing | ✅ Done |
 | Accounts | Admin invites client → client sets password | ✅ Done |
 | Quote wizard | 6-step wizard (type, pages & features, design & content, timeline & budget, business, review) | ✅ Done |
 | Quote wizard | Live estimate range + monthly hosting, autosaved drafts, server-side recalculation | ✅ Done |
@@ -60,10 +60,9 @@ Decisions: self-signup is required before submitting a quote (with email verific
 | --- | --- |
 | Messaging / comments per project | Client ↔ admin threads on the project page; email notification |
 | File sharing | Uploads on projects (S3/R2/Vercel Blob); until then, share externally |
-| Testimonials management | Admin CRUD + display on home/case studies |
+| Testimonials management | Admin CRUD (reviews currently live in `src/lib/content.ts`, shown above the FAQs) |
 | Recurring / automated billing | Stripe subscriptions for hosting plans, auto-invoice on renewal |
 | Email notification polish | Branded templates (React Email), milestone-complete & update emails, overdue reminders |
-| Password reset | `PASSWORD_RESET` token type already exists in the schema |
 | Proposal documents | Turn an accepted quote into a formal proposal with e-sign/accept |
 | Portfolio images | Image upload instead of URLs |
 
@@ -74,10 +73,12 @@ Decisions: self-signup is required before submitting a quote (with email verific
 
 ## 4. Launch checklist (blockers in **bold**)
 
-- [x] Brand colours: light lavender palette (Ghost White `#F8F8FF`, Cetacean Blue `#150A35`, Lavender `#A577FF`) in `src/app/globals.css`
+- [x] Brand colours: light lavender palette (`#F8F7FF` background, `#17152B` text, `#8B5CF6` purple, `#DDD6FE` soft lavender) in `src/app/globals.css`
 - [x] Logo: LUMORA wordmark recreated as SVG; PNG used as favicon/app icon
 - [x] Premium light lavender UI + interactivity (flowing gradient backgrounds, scroll reveals, cursor spotlight, hover glow)
 - [x] Portfolio: 3 full case studies (Northline Plumbing & Heating, Maison & Co Interiors, Miso House) with designed desktop/mobile website mockups
+- [ ] **Email**: revoke the Gmail App Password that was committed in `.env.example`, create a new one, set `SMTP_PASS` in `.env` (and in production env vars)
+- [ ] Add real client reviews to `reviews` in `src/lib/content.ts` (block above the FAQs stays hidden until then)
 - [ ] Add **real** results figures and client testimonials to the case studies (Admin → Portfolio) once confirmed by each client
 - [ ] Optional: replace mockups with real screenshots (Image URL field) when available
 - [ ] Final copy for About / Services / Contact (current text is a solid draft); confirm contact email in `src/lib/site.ts`
@@ -101,7 +102,7 @@ Decisions: self-signup is required before submitting a quote (with email verific
 | Area | Routes |
 | --- | --- |
 | Public | `/`, `/services`, `/portfolio`, `/portfolio/[slug]`, `/about`, `/contact` |
-| Auth | `/signup`, `/login`, `/check-email`, `/verify-email`, `/accept-invite` |
+| Auth | `/signup`, `/login`, `/check-email`, `/verify-email`, `/forgot-password`, `/reset-password`, `/accept-invite` |
 | Quote | `/quote` (verified clients), `/quote/thanks` |
 | Portal | `/portal`, `/portal/projects[/id]`, `/portal/quotes`, `/portal/invoices[/id]` |
 | Admin | `/admin`, `/admin/quotes[/id]`, `/admin/clients[/new|/id]`, `/admin/projects[/new|/id]`, `/admin/invoices[/new|/id]`, `/admin/hosting[/new|/id]`, `/admin/portfolio[/new|/id]`, `/admin/pricing` |

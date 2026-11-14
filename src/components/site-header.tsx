@@ -24,7 +24,7 @@ export function SiteHeader() {
     <header
       className={cn(
         "sticky top-0 z-40 transition-all duration-500",
-        scrolled || open ? "glass border-x-0 border-t-0 shadow-[0_10px_40px_-24px_rgba(21,10,53,0.25)]" : "border-b border-transparent",
+        scrolled || open ? "glass border-x-0 border-t-0 shadow-[0_10px_40px_-24px_color-mix(in_oklab,var(--ink)_25%,transparent)]" : "border-b border-transparent",
       )}
     >
       <div className={cn("mx-auto flex max-w-6xl items-center justify-between px-4 transition-all duration-500 sm:px-6", scrolled ? "py-3" : "py-5")}>

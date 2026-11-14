@@ -21,19 +21,21 @@ async function login(page: Page, email: string, password: string) {
   await page.getByRole("button", { name: "Log in" }).click();
 }
 
-async function verificationLink(email: string) {
-  // Poll the dev log for the email we just triggered.
+/** Poll the dev log for the latest email to `email` and return its link to `path`. */
+async function emailLink(email: string, path: "verify-email" | "reset-password") {
+  const pattern = new RegExp(`(http://\\S+/${path}\\?token=[^\\s"]+)`);
   for (let i = 0; i < 20; i++) {
     const log = readFileSync(DEV_LOG, "utf8");
     const idx = log.lastIndexOf(`To: ${email}`);
     if (idx !== -1) {
-      const m = log.slice(idx).match(/(http:\/\/\S+\/verify-email\?token=[\w-]+)/);
+      const m = log.slice(idx).match(pattern);
       if (m) return m[1];
     }
     await new Promise((r) => setTimeout(r, 500));
   }
-  throw new Error(`No verification email for ${email} in ${DEV_LOG}`);
+  throw new Error(`No ${path} email for ${email} in ${DEV_LOG}`);
 }
+let verifyLink = "";
 
 test.describe.serial("Lumora end-to-end", () => {
   test("public site renders portfolio", async ({ page }) => {
@@ -68,7 +70,9 @@ test.describe.serial("Lumora end-to-end", () => {
     await page.goto("/quote");
     await expect(page).toHaveURL(/\/check-email/);
 
-    await page.goto(await verificationLink(client.email));
+    verifyLink = await emailLink(client.email, "verify-email");
+    expect(verifyLink).toContain("next=%2Fquote"); // sends them back to where they started
+    await page.goto(verifyLink);
     await expect(page).toHaveURL(/\/quote$/);
 
     // Step 1: project type
@@ -97,9 +101,44 @@ test.describe.serial("Lumora end-to-end", () => {
     await expect(page).toHaveURL(/\/quote\/thanks/);
     await expect(page.getByRole("heading", { name: /got your request/ })).toBeVisible();
 
+    // Clicking the verification link again is harmless, not an "invalid link" error
+    await page.goto(verifyLink);
+    await expect(page).toHaveURL(/\/quote$/);
+
     // Client can't reach admin
     await page.goto("/admin");
     await expect(page).toHaveURL(/\/portal$/);
+    await expect(page.getByRole("heading", { name: "We're reviewing your quote" })).toBeVisible();
+  });
+
+  test("forgot password → reset link → logged in; used links fail safely", async ({ page }) => {
+    // Logged out, an already-used verification link points to login rather than an error
+    await page.goto(verifyLink);
+    await expect(page).toHaveURL(/\/login\?verified=1/);
+    await expect(page.getByText("Your email is verified")).toBeVisible();
+
+    await page.getByRole("link", { name: "Forgot password?" }).click();
+    await expect(page).toHaveURL(/\/forgot-password$/);
+    await page.getByLabel("Email").fill(client.email);
+    await page.getByRole("button", { name: "Send reset link" }).click();
+    await expect(page.getByText(/If an account exists/)).toBeVisible();
+
+    const resetLink = await emailLink(client.email, "reset-password");
+    await page.goto(resetLink);
+    await page.getByLabel("New password").fill("short");
+    await page.getByLabel("Confirm password").fill("short");
+    await page.getByRole("button", { name: /Save password/ }).click();
+    await expect(page.getByText("Use at least 10 characters")).toBeVisible();
+
+    client.password = "E2eResetPass456";
+    await page.getByLabel("New password").fill(client.password);
+    await page.getByLabel("Confirm password").fill(client.password);
+    await page.getByRole("button", { name: /Save password/ }).click();
+    await expect(page).toHaveURL(/\/portal$/);
+
+    // Reset links are single use
+    await page.goto(resetLink);
+    await expect(page.getByRole("heading", { name: "Link expired" })).toBeVisible();
   });
 
   test("admin accepts quote → project; posts update; invoices; hosting", async ({ page }) => {

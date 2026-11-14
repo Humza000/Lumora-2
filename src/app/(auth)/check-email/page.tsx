@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { ActionForm, SubmitButton } from "@/components/forms";
 import { getCurrentUser } from "@/lib/dal";
 import { emailProvider } from "@/lib/email";
+import { clientNext } from "@/lib/validation";
 import { logout, resendVerification } from "../actions";
 
 export const metadata: Metadata = { title: "Check your email" };
@@ -10,8 +11,9 @@ export const metadata: Metadata = { title: "Check your email" };
 export default async function CheckEmailPage({ searchParams }: PageProps<"/check-email">) {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
-  if (user.emailVerified) redirect(user.role === "ADMIN" ? "/admin" : "/quote");
-  const { error } = await searchParams;
+  const { error, next: rawNext } = await searchParams;
+  const next = clientNext(rawNext, "");
+  if (user.emailVerified) redirect(user.role === "ADMIN" ? "/admin" : next || "/quote");
 
   return (
     <>
@@ -19,6 +21,11 @@ export default async function CheckEmailPage({ searchParams }: PageProps<"/check
       {error === "invalid" && (
         <p role="alert" className="mt-4 rounded-xl border border-danger/25 bg-danger/10 px-3.5 py-2.5 text-sm text-danger">
           That verification link is invalid or has expired. Request a new one below.
+        </p>
+      )}
+      {error === "send" && (
+        <p role="alert" className="mt-4 rounded-xl border border-danger/25 bg-danger/10 px-3.5 py-2.5 text-sm text-danger">
+          We couldn&apos;t send your verification email just now. Use the button below to try again.
         </p>
       )}
       {process.env.NODE_ENV !== "production" && emailProvider() === "console" && (
@@ -30,9 +37,10 @@ export default async function CheckEmailPage({ searchParams }: PageProps<"/check
       )}
       <p className="mt-2 text-sm text-ink-muted">
         We sent a verification link to <strong className="text-ink">{user.email}</strong>. Click it to confirm your
-        address, then you can start your quote.
+        address, then you can start your quote. It can take a minute to arrive, so check your spam folder too.
       </p>
       <ActionForm action={resendVerification} className="mt-6">
+        <input type="hidden" name="next" value={next} />
         <SubmitButton variant="secondary" className="w-full" pendingText="Sending…">
           Resend verification email
         </SubmitButton>

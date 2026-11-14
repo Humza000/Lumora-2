@@ -26,7 +26,7 @@ export function ProjectTimeline({ milestones }: { milestones: Milestone[] }) {
                 className={cn(
                   "absolute top-7 left-[13px] h-[calc(100%-1.5rem)] w-0.5 rounded-full",
                   m.status === "DONE"
-                    ? "bg-gradient-to-b from-brand-tint to-brand-strong shadow-[0_0_10px_rgba(203,181,255,0.6)]"
+                    ? "bg-gradient-to-b from-brand-tint to-brand-strong shadow-[0_0_10px_color-mix(in_oklab,var(--brand-tint)_60%,transparent)]"
                     : "bg-line",
                 )}
               />
@@ -36,7 +36,7 @@ export function ProjectTimeline({ milestones }: { milestones: Milestone[] }) {
               className={cn(
                 "relative z-10 mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full border-2 text-xs font-semibold transition-transform duration-300 group-hover:scale-110",
                 m.status === "DONE" &&
-                  "border-brand-light/70 bg-gradient-to-br from-brand-tint to-brand text-ink shadow-[0_0_16px_rgba(165,119,255,0.7)]",
+                  "border-brand-light/70 bg-gradient-to-br from-brand to-brand-strong text-on-brand shadow-[0_0_16px_color-mix(in_oklab,var(--brand)_70%,transparent)]",
                 m.status === "IN_PROGRESS" && "animate-pulse-ring border-brand-light bg-surface text-brand-light",
                 m.status === "PENDING" && "border-line bg-surface text-ink-muted",
               )}

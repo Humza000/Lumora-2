@@ -9,9 +9,9 @@ export function cn(...classes: (string | false | null | undefined)[]) {
 type Variant = "primary" | "secondary" | "ghost" | "danger";
 const variants: Record<Variant, string> = {
   primary:
-    "shine bg-gradient-to-br from-brand-tint to-brand text-ink shadow-[0_8px_30px_-8px_rgba(165,119,255,0.65),inset_0_1px_0_rgba(255,255,255,0.18)] hover:shadow-[0_12px_40px_-8px_rgba(165,119,255,0.9),inset_0_1px_0_rgba(255,255,255,0.25)] hover:brightness-110",
+    "shine bg-gradient-to-br from-brand to-brand-strong text-on-brand shadow-[0_8px_30px_-8px_color-mix(in_oklab,var(--brand)_65%,transparent),inset_0_1px_0_rgba(255,255,255,0.18)] hover:shadow-[0_12px_40px_-8px_color-mix(in_oklab,var(--brand)_90%,transparent),inset_0_1px_0_rgba(255,255,255,0.25)] hover:brightness-110",
   secondary:
-    "border border-line bg-surface-2/60 text-ink backdrop-blur hover:border-brand-light/40 hover:bg-surface-2 hover:shadow-[0_0_24px_-8px_rgba(203,181,255,0.5)]",
+    "border border-line bg-surface-2/60 text-ink backdrop-blur hover:border-brand-light/40 hover:bg-surface-2 hover:shadow-[0_0_24px_-8px_color-mix(in_oklab,var(--brand-tint)_50%,transparent)]",
   ghost: "text-ink hover:bg-brand-soft hover:text-ink",
   danger: "bg-danger/90 text-white hover:bg-danger",
 };
@@ -43,7 +43,7 @@ export function ButtonLink({
   return <Link className={cn(buttonClass(variant, size), className)} {...props} />;
 }
 
-const cardBase = "ring-gradient rounded-2xl border border-line/60 bg-surface/80 p-6 shadow-[0_1px_2px_rgba(21,10,53,0.04),0_8px_30px_-18px_rgba(106,59,224,0.25)]";
+const cardBase = "ring-gradient rounded-2xl border border-line/60 bg-surface/80 p-6 shadow-[0_1px_2px_color-mix(in_oklab,var(--ink)_4%,transparent),0_8px_30px_-18px_color-mix(in_oklab,var(--brand-strong)_25%,transparent)]";
 
 /** Card. `interactive` adds hover lift, glow and a cursor spotlight (use for clickable cards). */
 export function Card({ className, interactive, ...props }: ComponentProps<"div"> & { interactive?: boolean }) {
@@ -52,7 +52,7 @@ export function Card({ className, interactive, ...props }: ComponentProps<"div">
       <Spotlight
         className={cn(
           cardBase,
-          "transition-all duration-300 hover:-translate-y-1 hover:border-brand-light/30 hover:shadow-[0_20px_50px_-20px_rgba(165,119,255,0.55)]",
+          "transition-all duration-300 hover:-translate-y-1 hover:border-brand-light/30 hover:shadow-[0_20px_50px_-20px_color-mix(in_oklab,var(--brand)_55%,transparent)]",
           className,
         )}
         {...props}
@@ -75,7 +75,7 @@ export function PageHeader({ title, description, actions }: { title: string; des
 }
 
 const inputBase =
-  "w-full rounded-xl border border-line bg-surface-2/70 px-3.5 py-2.5 text-sm text-ink placeholder:text-ink-muted/60 transition-all duration-200 hover:border-brand-light/25 focus:border-brand-light/60 focus:bg-surface-2 focus:shadow-[0_0_0_4px_rgba(165,119,255,0.18)] focus:outline-none";
+  "w-full rounded-xl border border-line bg-surface-2/70 px-3.5 py-2.5 text-sm text-ink placeholder:text-ink-muted/60 transition-all duration-200 hover:border-brand-light/25 focus:border-brand-light/60 focus:bg-surface-2 focus:shadow-[0_0_0_4px_color-mix(in_oklab,var(--brand)_18%,transparent)] focus:outline-none";
 
 export function Input({ className, ...props }: ComponentProps<"input">) {
   return <input className={cn(inputBase, className)} {...props} />;
@@ -156,7 +156,7 @@ export function ProgressBar({ value, label }: { value: number; label?: string })
         aria-valuemax={100}
       >
         <div
-          className="h-full rounded-full bg-gradient-to-r from-brand via-brand-strong to-brand-light shadow-[0_0_12px_rgba(203,181,255,0.7)] transition-[width] duration-1000 ease-out"
+          className="h-full rounded-full bg-gradient-to-r from-brand via-brand-strong to-brand-light shadow-[0_0_12px_color-mix(in_oklab,var(--brand-tint)_70%,transparent)] transition-[width] duration-1000 ease-out"
           style={{ width: `${value}%` }}
         />
       </div>
@@ -167,7 +167,7 @@ export function ProgressBar({ value, label }: { value: number; label?: string })
 export function EmptyState({ title, description, action }: { title: string; description?: string; action?: ReactNode }) {
   return (
     <div className="rounded-2xl border border-dashed border-line bg-surface/50 p-12 text-center">
-      <div className="mx-auto mb-4 h-10 w-10 rounded-full bg-brand-strong/15 shadow-[0_0_30px_rgba(165,119,255,0.35)]" aria-hidden />
+      <div className="mx-auto mb-4 h-10 w-10 rounded-full bg-brand-strong/15 shadow-[0_0_30px_color-mix(in_oklab,var(--brand)_35%,transparent)]" aria-hidden />
       <p className="font-medium">{title}</p>
       {description && <p className="mt-1 text-sm text-ink-muted">{description}</p>}
       {action && <div className="mt-5">{action}</div>}

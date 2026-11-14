@@ -19,7 +19,7 @@ export default function ServicesPage() {
       <div className="mt-16 grid gap-6 md:grid-cols-2">
         {services.map((s, i) => (
           <Reveal key={s.title} delay={(i % 2) * 120} className="flex">
-            <Spotlight className="group ring-gradient w-full rounded-2xl border border-line/60 bg-surface/80 p-9 transition-all duration-500 hover:-translate-y-1 hover:border-brand-light/30 hover:shadow-[0_30px_60px_-30px_rgba(165,119,255,0.7)]">
+            <Spotlight className="group ring-gradient w-full rounded-2xl border border-line/60 bg-surface/80 p-9 transition-all duration-500 hover:-translate-y-1 hover:border-brand-light/30 hover:shadow-[0_30px_60px_-30px_color-mix(in_oklab,var(--brand)_70%,transparent)]">
               <div className="flex items-start justify-between gap-4">
                 <h2 className="font-display text-3xl font-semibold">{s.title}</h2>
                 <span className="font-mono text-xs text-brand-light/70 transition-colors group-hover:text-brand-light">0{i + 1}</span>

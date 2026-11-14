@@ -5,7 +5,8 @@ import { signup } from "../actions";
 
 export const metadata: Metadata = { title: "Create an account" };
 
-export default function SignupPage() {
+export default async function SignupPage({ searchParams }: PageProps<"/signup">) {
+  const { next } = await searchParams;
   return (
     <>
       <h1 className="font-display text-4xl font-semibold">Create your account</h1>
@@ -14,6 +15,7 @@ export default function SignupPage() {
       </p>
       <ActionForm action={signup}>
         <Honeypot />
+        <input type="hidden" name="next" value={typeof next === "string" ? next : ""} />
         <TextField label="Your name" name="name" autoComplete="name" required />
         <TextField label="Email" name="email" type="email" autoComplete="email" required />
         <TextField label="Business name (optional)" name="company" autoComplete="organization" />

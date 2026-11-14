@@ -25,6 +25,12 @@ export function safeNext(next: unknown, fallback: string) {
   return typeof next === "string" && next.startsWith("/") && !next.startsWith("//") ? next : fallback;
 }
 
+/** Where a client may be sent after logging in or verifying their email. */
+export function clientNext(next: unknown, fallback: string) {
+  const safe = safeNext(next, "");
+  return safe.startsWith("/portal") || safe.startsWith("/quote") ? safe : fallback;
+}
+
 export const pence = z
   .union([z.string(), z.number()])
   .transform((v) => poundsToPence(v))

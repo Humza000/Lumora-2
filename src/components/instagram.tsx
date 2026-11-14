@@ -23,7 +23,7 @@ export function InstagramLink({ withHandle, className }: { withHandle?: boolean;
         "group inline-flex items-center gap-2 transition-all duration-300",
         withHandle
           ? "font-medium text-brand-light hover:text-ink"
-          : "h-10 w-10 justify-center rounded-full border border-line bg-surface text-ink-muted hover:-translate-y-0.5 hover:border-brand/50 hover:bg-brand hover:text-ink hover:shadow-[0_10px_24px_-10px_rgba(165,119,255,0.8)]",
+          : "h-10 w-10 justify-center rounded-full border border-line bg-surface text-ink-muted hover:-translate-y-0.5 hover:border-brand/50 hover:bg-brand hover:text-on-brand hover:shadow-[0_10px_24px_-10px_color-mix(in_oklab,var(--brand)_80%,transparent)]",
         className,
       )}
     >

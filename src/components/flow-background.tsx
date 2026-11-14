@@ -19,14 +19,14 @@ export function FlowBackground({ waves = true }: { waves?: boolean }) {
         >
           <defs>
             <linearGradient id="flow-a" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%" stopColor="#cbb5ff" stopOpacity="0" />
-              <stop offset="45%" stopColor="#a577ff" stopOpacity="0.55" />
-              <stop offset="100%" stopColor="#7d4dff" stopOpacity="0.15" />
+              <stop offset="0%" className="[stop-color:var(--brand-tint)]" stopOpacity="0" />
+              <stop offset="45%" className="[stop-color:var(--brand)]" stopOpacity="0.55" />
+              <stop offset="100%" className="[stop-color:var(--brand-strong)]" stopOpacity="0.15" />
             </linearGradient>
             <linearGradient id="flow-b" x1="0" y1="1" x2="1" y2="0">
-              <stop offset="0%" stopColor="#efe8ff" stopOpacity="0" />
-              <stop offset="50%" stopColor="#cbb5ff" stopOpacity="0.7" />
-              <stop offset="100%" stopColor="#a577ff" stopOpacity="0.2" />
+              <stop offset="0%" className="[stop-color:var(--brand-soft)]" stopOpacity="0" />
+              <stop offset="50%" className="[stop-color:var(--brand-tint)]" stopOpacity="0.7" />
+              <stop offset="100%" className="[stop-color:var(--brand)]" stopOpacity="0.2" />
             </linearGradient>
             <filter id="flow-blur" x="-10%" y="-10%" width="120%" height="120%">
               <feGaussianBlur stdDeviation="6" />

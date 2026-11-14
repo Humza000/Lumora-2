@@ -14,8 +14,8 @@ export default defineConfig({
     trace: "retain-on-failure",
   },
   webServer: {
-    // Emails are read from this log; rate limits are relaxed for repeated runs (dev only).
-    command: "DISABLE_RATE_LIMIT=true npm run dev > .e2e-dev.log 2>&1",
+    // Emails are printed to this log (never sent) and read back by the tests; rate limits are relaxed for repeated runs (dev only).
+    command: "DISABLE_RATE_LIMIT=true EMAIL_TRANSPORT=console npm run dev > .e2e-dev.log 2>&1",
     url: "http://localhost:3000",
     reuseExistingServer: true,
     timeout: 120_000,

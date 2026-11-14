@@ -18,16 +18,16 @@ export function SideNav({ items }: { items: NavItem[] }) {
             href={item.href}
             aria-current={active ? "page" : undefined}
             className={cn(
-              "relative rounded-xl px-3.5 py-2.5 text-sm whitespace-nowrap transition-all duration-300",
+              "relative rounded-xl px-3.5 py-2.5 text-sm whitespace-nowrap transition-colors duration-200",
               active
-                ? "bg-gradient-to-r from-brand-strong/25 to-brand-strong/5 font-medium text-ink shadow-[inset_0_0_0_1px_rgba(203,181,255,0.2)]"
-                : "text-ink-muted hover:translate-x-0.5 hover:bg-ink/[0.035] hover:text-ink",
+                ? "bg-brand-soft font-medium text-ink"
+                : "text-ink-muted hover:bg-ink/[0.035] hover:text-ink",
             )}
           >
             {active && (
               <span
                 aria-hidden
-                className="absolute top-1/2 left-0 hidden h-5 w-0.5 -translate-y-1/2 rounded-full bg-brand-light shadow-[0_0_10px_rgba(203,181,255,0.9)] md:block"
+                className="absolute top-1/2 left-0 hidden h-5 w-0.5 -translate-y-1/2 rounded-full bg-brand md:block"
               />
             )}
             {item.label}

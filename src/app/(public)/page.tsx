@@ -28,7 +28,7 @@ export default async function HomePage() {
         <div className="mx-auto max-w-6xl px-4 pt-24 pb-28 sm:px-6 md:pt-32 md:pb-36">
           <Reveal>
             <p className="glass mb-8 inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-medium text-ink-muted">
-              <span className="h-1.5 w-1.5 rounded-full bg-brand-light shadow-[0_0_10px_#cbb5ff]" />
+              <span className="h-1.5 w-1.5 rounded-full bg-brand-light shadow-[0_0_10px_var(--brand-tint)]" />
               Boutique web design & development studio
             </p>
           </Reveal>
@@ -106,8 +106,8 @@ export default async function HomePage() {
         <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {services.map((s, i) => (
             <Reveal key={s.title} delay={i * 100} className="flex">
-              <Spotlight className="group ring-gradient flex w-full flex-col rounded-2xl border border-line/60 bg-surface/80 p-7 transition-all duration-500 hover:-translate-y-1 hover:border-brand-light/30 hover:shadow-[0_24px_50px_-25px_rgba(165,119,255,0.7)]">
-                <span className="mb-6 flex h-10 w-10 items-center justify-center rounded-xl border border-brand-light/20 bg-brand-strong/15 font-display text-lg text-brand-light transition-all duration-500 group-hover:bg-brand-strong/30 group-hover:shadow-[0_0_24px_rgba(165,119,255,0.6)]">
+              <Spotlight className="group ring-gradient flex w-full flex-col rounded-2xl border border-line/60 bg-surface/80 p-7 transition-all duration-500 hover:-translate-y-1 hover:border-brand-light/30 hover:shadow-[0_24px_50px_-25px_color-mix(in_oklab,var(--brand)_70%,transparent)]">
+                <span className="mb-6 flex h-10 w-10 items-center justify-center rounded-xl border border-brand-light/20 bg-brand-strong/15 font-display text-lg text-brand-light transition-all duration-500 group-hover:bg-brand-strong/30 group-hover:shadow-[0_0_24px_color-mix(in_oklab,var(--brand)_60%,transparent)]">
                   0{i + 1}
                 </span>
                 <h3 className="text-lg font-semibold">{s.title}</h3>
@@ -136,7 +136,7 @@ export default async function HomePage() {
             />
             {process.map((p, i) => (
               <Reveal key={p.step} delay={i * 150} className="group relative">
-                <span className="relative flex h-10 w-10 items-center justify-center rounded-full border border-brand-light/40 bg-canvas font-mono text-xs text-brand-light shadow-[0_0_20px_rgba(165,119,255,0.45)] transition-all duration-500 group-hover:scale-110 group-hover:bg-brand group-hover:text-ink">
+                <span className="relative flex h-10 w-10 items-center justify-center rounded-full border border-brand-light/40 bg-canvas font-mono text-xs text-brand-light shadow-[0_0_20px_color-mix(in_oklab,var(--brand)_45%,transparent)] transition-all duration-500 group-hover:scale-110 group-hover:bg-brand group-hover:text-on-brand">
                   {p.step}
                 </span>
                 <h3 className="mt-6 text-lg font-semibold">{p.title}</h3>
@@ -153,9 +153,9 @@ export default async function HomePage() {
       <section className="mx-auto mt-32 max-w-6xl px-4 sm:px-6">
         <Reveal>
           <div className="group relative isolate overflow-hidden rounded-[2rem] border border-brand-light/20 px-8 py-20 text-center md:px-16">
-            <div className="absolute inset-0 -z-10 bg-gradient-to-br from-[#8b5cff] via-[#4b2a9e] to-[#1c1042]" aria-hidden />
+            <div className="absolute inset-0 -z-10 bg-gradient-to-br from-brand via-brand-deep to-ink" aria-hidden />
             <div
-              className="absolute -top-32 left-1/2 -z-10 h-80 w-80 -translate-x-1/2 rounded-full bg-[#cbb5ff]/30 blur-[100px] transition-transform duration-1000 group-hover:scale-125"
+              className="absolute -top-32 left-1/2 -z-10 h-80 w-80 -translate-x-1/2 rounded-full bg-brand-tint/30 blur-[100px] transition-transform duration-1000 group-hover:scale-125"
               aria-hidden
             />
             <h2 className="font-display text-4xl font-semibold tracking-tight text-white md:text-6xl">
@@ -166,7 +166,7 @@ export default async function HomePage() {
             </p>
             <Link
               href="/quote"
-              className="shine mt-10 inline-flex items-center gap-2 rounded-xl bg-accent px-7 py-3.5 font-medium text-ink shadow-[0_10px_40px_-10px_rgba(248,248,255,0.6)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_16px_50px_-10px_rgba(248,248,255,0.8)] active:scale-[0.97]"
+              className="shine mt-10 inline-flex items-center gap-2 rounded-xl bg-accent px-7 py-3.5 font-medium text-ink shadow-[0_10px_40px_-10px_color-mix(in_oklab,var(--accent)_60%,transparent)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_16px_50px_-10px_color-mix(in_oklab,var(--accent)_80%,transparent)] active:scale-[0.97]"
             >
               Start your quote <span aria-hidden>→</span>
             </Link>

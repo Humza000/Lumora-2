@@ -5,10 +5,10 @@ import { formatGBP } from "./money";
 import { site } from "./site";
 
 // PDFs are printed, so they stay light. Brand colours from the logo (globals.css: --brand / --accent).
-const INK = "#150a35";
-const BRAND = "#7d4dff";
-const MUTED = "#5b5a66";
-const LINE = "#e6e4ee";
+const INK = "#17152b";
+const BRAND = "#7c3aed";
+const MUTED = "#5b5875";
+const LINE = "#e4defc";
 
 const s = StyleSheet.create({
   page: { padding: 48, fontSize: 10, color: INK, fontFamily: "Helvetica" },

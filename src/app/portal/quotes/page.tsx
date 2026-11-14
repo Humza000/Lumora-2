@@ -2,6 +2,7 @@ import { ButtonLink, Card, EmptyState, PageHeader, StatusBadge, formatDate } fro
 import { db } from "@/lib/db";
 import { requireClient } from "@/lib/dal";
 import { formatGBP } from "@/lib/money";
+import { quoteStatusNote } from "@/lib/portal";
 import { PROJECT_TYPES, quoteDraftSchema } from "@/lib/pricing";
 
 export const metadata = { title: "Quotes" };
@@ -16,7 +17,7 @@ export default async function PortalQuotes({ searchParams }: PageProps<"/portal/
       <PageHeader title="Quotes" actions={<ButtonLink href="/quote">New quote</ButtonLink>} />
       {submitted && <p className="mb-6 rounded-xl border border-success/25 bg-success/10 px-4 py-3 text-sm text-success">Quote submitted, thank you!</p>}
       {quotes.length === 0 ? (
-        <EmptyState title="No quotes yet" description="Use the quote wizard to get an instant estimate." />
+        <EmptyState title="No quotes yet" description="Answer a few questions to get an instant estimate." action={<ButtonLink href="/quote">Get a quote</ButtonLink>} />
       ) : (
         <div className="space-y-4">
           {quotes.map((q) => {
@@ -32,6 +33,7 @@ export default async function PortalQuotes({ searchParams }: PageProps<"/portal/
                   <p className="mt-1 text-sm text-ink-muted">
                     {q.status === "DRAFT" ? `Last edited ${formatDate(q.updatedAt)}` : `Submitted ${formatDate(q.submittedAt)}`}
                   </p>
+                  {quoteStatusNote(q.status) && <p className="mt-1 text-sm text-ink-muted">{quoteStatusNote(q.status)}</p>}
                 </div>
                 <div className="flex items-center gap-4">
                   <span className="text-sm font-medium">

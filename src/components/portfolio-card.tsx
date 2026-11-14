@@ -20,7 +20,7 @@ export function PortfolioCard({ item }: { item: Item }) {
   const mockup = getMockup(item.mockup);
   return (
     <Link href={`/portfolio/${item.slug}`} className="group flex w-full rounded-2xl">
-      <Spotlight className="ring-gradient flex w-full flex-col overflow-hidden rounded-2xl border border-line/60 bg-surface/80 transition-all duration-500 hover:-translate-y-1.5 hover:border-brand-light/30 hover:shadow-[0_30px_60px_-25px_rgba(165,119,255,0.6)]">
+      <Spotlight className="ring-gradient flex w-full flex-col overflow-hidden rounded-2xl border border-line/60 bg-surface/80 transition-all duration-500 hover:-translate-y-1.5 hover:border-brand-light/30 hover:shadow-[0_30px_60px_-25px_color-mix(in_oklab,var(--brand)_60%,transparent)]">
         <div className="relative aspect-[16/10] overflow-hidden border-b border-line/60 bg-surface-2">
           {item.imageUrl ? (
             <Image

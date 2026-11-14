@@ -36,7 +36,7 @@ export function Logo({ href = "/", className }: { href?: string; className?: str
       href={href}
       aria-label={`${site.name} home`}
       className={cn(
-        "group inline-flex items-center text-ink transition-[filter,color] duration-300 hover:text-brand-light hover:drop-shadow-[0_0_14px_rgba(203,181,255,0.65)]",
+        "group inline-flex items-center text-ink transition-[filter,color] duration-300 hover:text-brand-light hover:drop-shadow-[0_0_14px_color-mix(in_oklab,var(--brand-tint)_65%,transparent)]",
         className,
       )}
     >

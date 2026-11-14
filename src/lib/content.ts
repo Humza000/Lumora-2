@@ -57,3 +57,10 @@ export const faqs = [
     a: "Yes. Our team includes strategic copywriting support and SEO best practices to give your site a strong foundation for search.",
   },
 ];
+
+// Client reviews shown above the FAQs on the home page.
+// REAL client quotes only, word for word, with their permission. Never invent or paraphrase.
+// The whole block stays hidden while this list is empty.
+//   { quote: "What the client said.", name: "Client name", role: "Owner, Business name" },
+export type Review = { quote: string; name: string; role?: string };
+export const reviews: Review[] = [];

@@ -43,10 +43,10 @@ export default function ContactPage() {
           href={site.instagram.url}
           target="_blank"
           rel="noopener noreferrer"
-          className="group ring-gradient flex items-center justify-between gap-6 rounded-2xl border border-line/70 bg-surface/80 p-7 transition-all duration-300 hover:-translate-y-1 hover:border-brand/40 hover:shadow-[0_24px_50px_-28px_rgba(106,59,224,0.45)]"
+          className="group ring-gradient flex items-center justify-between gap-6 rounded-2xl border border-line/70 bg-surface/80 p-7 transition-all duration-300 hover:-translate-y-1 hover:border-brand/40 hover:shadow-[0_24px_50px_-28px_color-mix(in_oklab,var(--brand-strong)_45%,transparent)]"
         >
           <div className="flex items-center gap-5">
-            <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-tint to-brand text-ink shadow-[0_10px_30px_-10px_rgba(165,119,255,0.8)] transition-transform duration-300 group-hover:scale-105">
+            <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-brand to-brand-strong text-on-brand shadow-[0_10px_30px_-10px_color-mix(in_oklab,var(--brand)_80%,transparent)] transition-transform duration-300 group-hover:scale-105">
               <InstagramIcon className="h-7 w-7" />
             </span>
             <div>

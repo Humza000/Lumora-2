@@ -9,7 +9,6 @@ const NAV = [
   { href: "/portal/projects", label: "Projects" },
   { href: "/portal/quotes", label: "Quotes" },
   { href: "/portal/invoices", label: "Invoices" },
-  { href: "/quote", label: "+ New quote" },
 ];
 
 export default async function PortalLayout({ children }: LayoutProps<"/portal">) {

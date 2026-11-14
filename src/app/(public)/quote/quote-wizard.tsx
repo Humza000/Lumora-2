@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useTransition, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useTransition, type ReactNode } from "react";
 import { Button, Input, Label, Textarea, cn } from "@/components/ui";
 import { formatGBP } from "@/lib/money";
 import {
@@ -23,10 +23,40 @@ type Props = { initialDraft: QuoteDraft; initialQuoteId: string | null; prices: 
 export function QuoteWizard({ initialDraft, initialQuoteId, prices }: Props) {
   const [draft, setDraft] = useState<QuoteDraft>(initialDraft);
   const [step, setStep] = useState(0);
-  const [quoteId, setQuoteId] = useState(initialQuoteId);
   const [error, setError] = useState<string | null>(null);
-  const [saving, startSaving] = useTransition();
+  const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "error">(initialQuoteId ? "saved" : "idle");
   const [submitting, startSubmitting] = useTransition();
+
+  // Autosave: debounced on every change, run one at a time so the first save's draft id is
+  // reused by the next (never two drafts), and stopped once the quote is being submitted.
+  const quoteId = useRef(initialQuoteId);
+  const saveQueue = useRef<Promise<void>>(Promise.resolve());
+  const submitted = useRef(false);
+  const untouched = useRef(true);
+
+  const save = useCallback((d: QuoteDraft) => {
+    saveQueue.current = saveQueue.current.then(async () => {
+      if (submitted.current) return;
+      setSaveState("saving");
+      try {
+        const res = await saveQuoteDraft(quoteId.current, d);
+        if (res.quoteId) quoteId.current = res.quoteId;
+        setSaveState(res.quoteId ? "saved" : "idle");
+      } catch {
+        setSaveState("error");
+      }
+    });
+    return saveQueue.current;
+  }, []);
+
+  useEffect(() => {
+    if (untouched.current) {
+      untouched.current = false;
+      return;
+    }
+    const t = setTimeout(() => save(draft), 900);
+    return () => clearTimeout(t);
+  }, [draft, save]);
 
   const estimate = useMemo(() => calculateEstimate(draft, prices), [draft, prices]);
   const update = (patch: Partial<QuoteDraft>) => setDraft((d) => ({ ...d, ...patch }));
@@ -55,10 +85,6 @@ export function QuoteWizard({ initialDraft, initialQuoteId, prices }: Props) {
     setError(null);
     setStep(to);
     window.scrollTo({ top: 0, behavior: "smooth" });
-    startSaving(async () => {
-      const res = await saveQuoteDraft(quoteId, draft);
-      if (res.quoteId) setQuoteId(res.quoteId);
-    });
   }
 
   function submit() {
@@ -71,8 +97,18 @@ export function QuoteWizard({ initialDraft, initialQuoteId, prices }: Props) {
     }
     setError(null);
     startSubmitting(async () => {
-      const res = await submitQuote(quoteId, draft);
-      if (res?.error) setError(res.error);
+      submitted.current = true; // no more autosaves from here
+      await saveQueue.current;
+      try {
+        const res = await submitQuote(quoteId.current, draft);
+        if (res?.error) {
+          submitted.current = false;
+          setError(res.error);
+        }
+      } catch {
+        submitted.current = false;
+        setError("We couldn't submit your quote. Check your connection and try again.");
+      }
     });
   }
 
@@ -82,7 +118,19 @@ export function QuoteWizard({ initialDraft, initialQuoteId, prices }: Props) {
     <div className="mt-10 grid gap-8 lg:grid-cols-[1fr_340px]">
       <div>
         {/* Stepper */}
-        <ol className="mb-8 flex flex-wrap gap-2" aria-label="Quote steps">
+        {/* Small screens: one line + progress bar instead of six wrapping pills */}
+        <div className="mb-6 sm:hidden">
+          <p className="text-sm font-medium">
+            Step {step + 1} of {STEPS.length} <span className="font-normal text-ink-muted">· {STEPS[step]}</span>
+          </p>
+          <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-ink/[0.06]" aria-hidden>
+            <div
+              className="h-full rounded-full bg-brand transition-[width] duration-500"
+              style={{ width: `${((step + 1) / STEPS.length) * 100}%` }}
+            />
+          </div>
+        </div>
+        <ol className="mb-8 hidden flex-wrap gap-2 sm:flex" aria-label="Quote steps">
           {STEPS.map((label, i) => (
             <li key={label}>
               <button
@@ -93,7 +141,7 @@ export function QuoteWizard({ initialDraft, initialQuoteId, prices }: Props) {
                 className={cn(
                   "rounded-full border px-3.5 py-1.5 text-xs font-medium transition-all duration-300",
                   i === step &&
-                    "border-transparent bg-gradient-to-r from-brand-tint to-brand text-ink shadow-[0_0_20px_-2px_rgba(165,119,255,0.7)]",
+                    "border-transparent bg-gradient-to-r from-brand to-brand-strong text-on-brand shadow-[0_0_20px_-2px_color-mix(in_oklab,var(--brand)_70%,transparent)]",
                   i < step && "border-brand-light/30 bg-brand-strong/15 text-brand-light hover:bg-brand-strong/25",
                   i > step && "border-line/70 bg-ink/[0.015] text-ink-muted",
                 )}
@@ -104,7 +152,7 @@ export function QuoteWizard({ initialDraft, initialQuoteId, prices }: Props) {
           ))}
         </ol>
 
-        <div className="ring-gradient rounded-3xl border border-line/60 bg-surface/80 p-6 shadow-[0_30px_80px_-40px_rgba(165,119,255,0.5)] md:p-9">
+        <div className="ring-gradient rounded-3xl border border-line/60 bg-surface/80 p-6 shadow-[0_30px_80px_-40px_color-mix(in_oklab,var(--brand)_50%,transparent)] md:p-9">
           <h2 className="font-display text-3xl font-semibold">{STEPS[step]}</h2>
 
           {step === 0 && (
@@ -303,8 +351,10 @@ export function QuoteWizard({ initialDraft, initialQuoteId, prices }: Props) {
             <Button type="button" variant="ghost" onClick={() => go(step - 1)} disabled={step === 0}>
               ← Back
             </Button>
-            <span className="text-xs text-ink-muted" aria-live="polite">
-              {saving ? "Saving…" : quoteId ? "Progress saved" : ""}
+            <span className={cn("text-xs", saveState === "error" ? "text-danger" : "text-ink-muted")} aria-live="polite">
+              {saveState === "saving" && "Saving…"}
+              {saveState === "saved" && "Progress saved"}
+              {saveState === "error" && "Couldn't save. Check your connection."}
             </span>
             {step < STEPS.length - 1 ? (
               <Button type="button" onClick={() => go(step + 1)}>
@@ -321,9 +371,9 @@ export function QuoteWizard({ initialDraft, initialQuoteId, prices }: Props) {
 
       {/* Live estimate */}
       <aside className="lg:sticky lg:top-24 lg:self-start">
-        <div className="ring-gradient relative isolate overflow-hidden rounded-3xl border border-brand-light/20 bg-gradient-to-br from-[#3b2590] via-[#231552] to-[#150a35] p-7 text-white shadow-[0_30px_80px_-30px_rgba(165,119,255,0.75)]">
+        <div className="ring-gradient relative isolate overflow-hidden rounded-3xl border border-brand-light/20 bg-gradient-to-br from-brand-deep to-ink p-7 text-white shadow-[0_30px_80px_-30px_color-mix(in_oklab,var(--brand)_75%,transparent)]">
           <div className="absolute -top-20 -right-20 -z-10 h-56 w-56 rounded-full bg-brand-strong/40 blur-[80px]" aria-hidden />
-          <p className="text-xs tracking-[0.2em] text-[#cbb5ff] uppercase">Indicative estimate</p>
+          <p className="text-xs tracking-[0.2em] text-brand-tint uppercase">Indicative estimate</p>
           <p key={estimate.total} className="mt-3 animate-[fade-in_0.5s_ease] font-display text-4xl font-semibold tracking-tight">
             {estimate.total > 0
               ? `${formatGBP(estimate.min, { whole: true })} – ${formatGBP(estimate.max, { whole: true })}`
@@ -383,8 +433,8 @@ function Choice({
       className={cn(
         "group relative flex cursor-pointer items-start gap-3 rounded-2xl border p-4 transition-all duration-300 has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-brand-light",
         checked
-          ? "border-brand-light/60 bg-brand-strong/15 shadow-[0_0_0_1px_rgba(203,181,255,0.35),0_12px_40px_-12px_rgba(165,119,255,0.7)]"
-          : "border-line/70 bg-ink/[0.015] hover:-translate-y-0.5 hover:border-brand-light/30 hover:bg-ink/[0.035] hover:shadow-[0_12px_30px_-15px_rgba(165,119,255,0.6)]",
+          ? "border-brand-light/60 bg-brand-strong/15 shadow-[0_0_0_1px_color-mix(in_oklab,var(--brand-tint)_35%,transparent),0_12px_40px_-12px_color-mix(in_oklab,var(--brand)_70%,transparent)]"
+          : "border-line/70 bg-ink/[0.015] hover:-translate-y-0.5 hover:border-brand-light/30 hover:bg-ink/[0.035] hover:shadow-[0_12px_30px_-15px_color-mix(in_oklab,var(--brand)_60%,transparent)]",
       )}
     >
       <input type={type} name={name} checked={checked} onChange={onChange} className="mt-1 accent-[var(--brand-strong)]" />
