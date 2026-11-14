@@ -1,18 +1,28 @@
 // Miso House: client brand colours (not the Lumora theme).
 // Designed at 1280px (desktop) / 390px (mobile); see `mock-desktop` in globals.css.
+// Food photography: free Unsplash photos, see photos/CREDITS.md.
+import type { StaticImageData } from "next/image";
+import { Photo } from "./frames";
+import gyoza from "./photos/miso-gyoza.jpg";
+import poke from "./photos/miso-poke.jpg";
+import shoyu from "./photos/miso-shoyu.jpg";
+import tonkotsu from "./photos/miso-tonkotsu.jpg";
 
 const INK = "#111014";
 const RED = "#d6372e";
 const RICE = "#f3e9dc";
 
-/** Illustrated bowl seen from above. */
-function Bowl({ className, tone = "ramen" }: { className?: string; tone?: "ramen" | "poke" | "gyoza" }) {
-  const fill = {
-    ramen: "radial-gradient(circle at 50% 50%,#f0c27b 0 30%,#d8963d 31% 55%,#2a1d14 56% 62%,#1b1512 63%)",
-    poke: "radial-gradient(circle at 50% 50%,#f4f0e6 0 28%,#e2725b 29% 45%,#7fae5a 46% 58%,#1b1512 59%)",
-    gyoza: "radial-gradient(circle at 50% 50%,#e8c79a 0 40%,#c58d4f 41% 55%,#1b1512 56%)",
-  }[tone];
-  return <div className={`aspect-square rounded-full ${className ?? ""}`} style={{ background: fill, boxShadow: "0 20px 40px -12px #000000aa" }} />;
+/** A dish photographed from above, cropped into a round bowl shape. */
+function Dish({ src, className, position, sizes }: { src: StaticImageData; className?: string; position?: string; sizes?: string }) {
+  return (
+    <Photo
+      src={src}
+      position={position}
+      sizes={sizes}
+      className={`aspect-square rounded-full ${className ?? ""}`}
+      style={{ boxShadow: "0 24px 50px -16px #000000cc" }}
+    />
+  );
 }
 
 function Logo({ dark }: { dark?: boolean }) {
@@ -25,10 +35,10 @@ function Logo({ dark }: { dark?: boolean }) {
 }
 
 const MENU = [
-  { n: "Tonkotsu ramen", d: "18-hour pork broth, chashu, ajitama", p: "£14.50" },
-  { n: "Spicy miso ramen", d: "Red miso, chilli oil, bean sprouts", p: "£14" },
-  { n: "Pork & chive gyoza", d: "Crisp-bottomed, ponzu dip", p: "£7" },
-  { n: "Salmon poke bowl", d: "Sushi rice, edamame, sesame", p: "£12.50" },
+  { n: "Tonkotsu ramen", d: "18-hour pork broth, chashu, spring onion", p: "£14.50", img: tonkotsu },
+  { n: "Shoyu ramen", d: "Soy broth, ajitama egg, shiitake, nori", p: "£13.50", img: shoyu },
+  { n: "Pork gyoza", d: "Crisp-bottomed, ponzu dip", p: "£7", img: gyoza },
+  { n: "Salmon poke bowl", d: "Sushi rice, edamame, avocado, sesame", p: "£12.50", img: poke },
 ];
 
 function Reservation({ compact }: { compact?: boolean }) {
@@ -81,23 +91,23 @@ export function Desktop() {
       </div>
       <div className="relative grid grid-cols-[1.1fr_1fr] items-center gap-10 px-16 pt-8">
         <div>
-          <p className="text-sm tracking-[0.3em] text-white/60">LEEDS · CALL LANE</p>
+          <p className="text-sm tracking-[0.3em] text-white/60">RAMEN BAR · OPEN TILL MIDNIGHT</p>
           <p className="mt-4 text-7xl leading-none font-bold tracking-tight">
-            Modern Japanese,
+            Proper ramen,
             <br />
-            made to share.
+            late into the night.
           </p>
           <p className="mt-5 max-w-md text-lg text-white/70">
-            Slow-cooked ramen, robata grill and small plates, with a late bar until midnight.
+            Slow-cooked broths, crisp gyoza and fresh poke bowls, with the bar open until midnight.
           </p>
           <div className="mt-8 w-96">
             <Reservation />
           </div>
         </div>
         <div className="relative h-full">
-          <Bowl className="absolute top-4 right-10 w-[64%]" />
-          <Bowl tone="gyoza" className="absolute bottom-6 left-0 w-[34%]" />
-          <Bowl tone="poke" className="absolute right-0 bottom-0 w-[30%]" />
+          <Dish src={tonkotsu} className="absolute top-4 right-10 w-[64%]" sizes="(min-width: 1024px) 30vw, 45vw" />
+          <Dish src={gyoza} className="absolute bottom-6 left-0 w-[34%]" sizes="(min-width: 1024px) 16vw, 25vw" />
+          <Dish src={poke} className="absolute right-0 bottom-0 w-[30%]" sizes="(min-width: 1024px) 14vw, 22vw" />
         </div>
       </div>
     </div>
@@ -112,16 +122,16 @@ export function Mobile() {
         <span className="text-white">☰</span>
       </div>
       <div className="flex gap-2 overflow-hidden px-5 py-4 text-sm font-semibold">
-        {["Ramen", "Small plates", "Robata", "Sushi"].map((c, i) => (
+        {["Ramen", "Gyoza", "Bowls", "Drinks"].map((c, i) => (
           <span key={c} className="rounded-full px-4 py-2 whitespace-nowrap" style={i === 0 ? { background: INK, color: "white" } : { background: "white" }}>
             {c}
           </span>
         ))}
       </div>
       <div className="space-y-3 px-5">
-        {MENU.map((m, i) => (
+        {MENU.map((m) => (
           <div key={m.n} className="flex items-center gap-4 rounded-2xl bg-white p-3">
-            <Bowl tone={i === 2 ? "gyoza" : i === 3 ? "poke" : "ramen"} className="w-16 shrink-0" />
+            <Photo src={m.img} sizes="80px" className="aspect-square w-16 shrink-0 rounded-xl" />
             <div className="flex-1">
               <p className="font-bold">{m.n}</p>
               <p className="text-xs opacity-60">{m.d}</p>
@@ -164,14 +174,12 @@ export function Detail() {
             </div>
             <p className="mt-4 text-sm text-white/80">3 more for a free bowl of ramen</p>
           </div>
-          <div className="rounded-3xl p-6" style={{ background: "#1d1b22" }}>
-            <p className="text-sm text-white/60">Tonight’s special</p>
-            <div className="mt-3 flex items-center gap-4">
-              <Bowl className="w-20" />
-              <div>
-                <p className="font-bold">Black garlic tonkotsu</p>
-                <p className="text-sm text-white/60">£15.50 · Limited to 30 bowls</p>
-              </div>
+          <div className="overflow-hidden rounded-3xl" style={{ background: "#1d1b22" }}>
+            <Photo src={shoyu} sizes="(min-width: 1024px) 30vw, 50vw" position="50% 40%" className="aspect-[16/7]" />
+            <div className="p-6">
+              <p className="text-sm text-white/60">Tonight’s special</p>
+              <p className="mt-1 font-bold">Shoyu ramen with ajitama egg</p>
+              <p className="text-sm text-white/60">£13.50 · Limited to 30 bowls</p>
             </div>
           </div>
         </div>

@@ -76,14 +76,14 @@ export const portfolioSeed = [
     sector: "Hospitality · Restaurant",
     location: "Leeds",
     year: 2025,
-    summary: "A bold, appetite-led website for a modern Japanese restaurant, with live table booking, a mobile menu and a digital loyalty card.",
+    summary: "A bold, appetite-led website for a Japanese ramen bar, with live table booking, a mobile menu and a digital loyalty card.",
     services: ["Web design", "Development", "Online reservations", "Loyalty programme integration", "Hosting & care"],
     overview:
-      "Miso House is a modern Japanese restaurant and late bar serving slow-cooked ramen, robata grill and small plates to share. Their guests are a mix of after-work groups, date nights and regulars who pop in for a bowl of ramen, and most of them check the menu and book from their phones on the way.",
+      "Miso House is a Japanese ramen bar, open until midnight, serving slow-cooked ramen, crisp gyoza and poke bowls. Their guests are a mix of after-work groups, date nights and regulars who pop in for a bowl of ramen, and most of them check the menu and book from their phones on the way.",
     challenge:
       "Bookings were split across phone calls, social media messages and walk-ins, which made busy nights hard to plan. The menu lived in a PDF that was awkward to read on a phone and quickly went out of date, and the paper loyalty cards that regulars loved were easy to lose.",
     approach:
-      "We gave Miso House a confident visual identity online, with deep ink tones, their signature red and illustrated bowls, so the site feels like the restaurant. Reservations happen directly on the homepage with live time slots. The menu became a fast, filterable mobile page the team can update daily, specials included. The Miso Club loyalty card moved online, so regulars can track their stamps without carrying a card.",
+      "We gave Miso House a confident visual identity online, with deep ink tones, their signature red and big, mouth-watering food photography, so the site feels like the restaurant. Reservations happen directly on the homepage with live time slots. The menu became a fast, filterable mobile page the team can update daily, specials included. The Miso Club loyalty card moved online, so regulars can track their stamps without carrying a card.",
     features: [
       "Homepage table booking with live time slots",
       "Mobile-first, filterable menu",

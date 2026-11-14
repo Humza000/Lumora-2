@@ -1,4 +1,5 @@
-import type { ReactNode } from "react";
+import Image, { type StaticImageData } from "next/image";
+import type { CSSProperties, ReactNode } from "react";
 import { cn } from "../ui";
 
 /** Desktop browser window. Children are a mockup designed at 1280px wide (see `mock-desktop`). */
@@ -59,6 +60,32 @@ export function MockCanvas({ children }: { children: ReactNode }) {
       <div className="mock-desktop aspect-[16/10] overflow-hidden" aria-hidden>
         {children}
       </div>
+    </div>
+  );
+}
+
+/**
+ * A cropped stock photo inside a mockup (see photos/CREDITS.md). Decorative, so alt is empty.
+ * `sizes` is the rough on-screen width; mockups are scaled down, so it's usually well under the design size.
+ */
+export function Photo({
+  src,
+  className,
+  position,
+  sizes = "(min-width: 1024px) 40vw, 80vw",
+  style,
+}: {
+  src: StaticImageData;
+  className?: string;
+  position?: string;
+  sizes?: string;
+  style?: CSSProperties;
+}) {
+  // Positioned by default so `fill` works; keep a caller's absolute/fixed placement instead of overriding it.
+  const placed = /(^|\s)(absolute|fixed)(\s|$)/.test(className ?? "");
+  return (
+    <div className={cn(!placed && "relative", "overflow-hidden", className)} style={style}>
+      <Image src={src} alt="" fill sizes={sizes} placeholder="blur" className="object-cover" style={{ objectPosition: position }} />
     </div>
   );
 }

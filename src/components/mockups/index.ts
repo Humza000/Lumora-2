@@ -18,7 +18,7 @@ export type Mockup = {
 export const MOCKUPS: Record<string, Mockup> = {
   northline: { label: "Northline Plumbing & Heating", url: "Northline Plumbing & Heating · Home", detailCaption: "3-step instant quote and online booking", ...northline },
   maison: { label: "Maison & Co Interiors", url: "Maison & Co Interiors · The Autumn Edit", detailCaption: "“View in your room” AR preview with slide-out checkout", ...maison },
-  miso: { label: "Miso House", url: "Miso House · Modern Japanese, Leeds", detailCaption: "Table booking and the Miso Club loyalty card", ...miso },
+  miso: { label: "Miso House", url: "Miso House · Ramen bar, Leeds", detailCaption: "Table booking and the Miso Club loyalty card", ...miso },
 };
 
 export const MOCKUP_OPTIONS = [

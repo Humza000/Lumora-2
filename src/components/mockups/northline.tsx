@@ -1,13 +1,32 @@
 // Northline Plumbing & Heating: client brand colours (not the Lumora theme).
 // Designed at 1280px (desktop) / 390px (mobile); see `mock-desktop` in globals.css.
+// Photography: free Unsplash photos, see photos/CREDITS.md.
+import type { StaticImageData } from "next/image";
+import { Photo } from "./frames";
+import bathroom from "./photos/northline-bathroom.jpg";
+import bathroomInstall from "./photos/northline-bathroom-install.jpg";
+import boiler from "./photos/northline-boiler.jpg";
+import engineer from "./photos/northline-engineer.jpg";
+import leak from "./photos/northline-leak.jpg";
+import radiator from "./photos/northline-radiator.jpg";
+import tools from "./photos/northline-tools.jpg";
 
 const NAVY = "#0f2a44";
+const NAVY_DEEP = "#0a1d30";
 const ORANGE = "#f97316";
 
 function Drop({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" className={className} fill="currentColor">
       <path d="M12 2.5c-.4 0-.8.2-1 .6C8.4 7 5 11.3 5 15a7 7 0 0014 0c0-3.7-3.4-8-6-11.9-.2-.4-.6-.6-1-.6z" />
+    </svg>
+  );
+}
+
+function Check({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 20 20" className={className} fill="currentColor">
+      <path d="M10 1.5a8.5 8.5 0 100 17 8.5 8.5 0 000-17zm4 6.3l-4.8 5.2a.8.8 0 01-1.2 0L6 10.8a.8.8 0 111.2-1.1l1.4 1.5 4.2-4.5A.8.8 0 0114 7.8z" />
     </svg>
   );
 }
@@ -30,19 +49,28 @@ function Stars() {
   return <span style={{ color: "#fbbf24" }}>★★★★★</span>;
 }
 
-const SERVICES = [
-  { t: "Boiler repairs", d: "Same-day fixes on all major brands" },
-  { t: "Emergency leaks", d: "On site within the hour, 24/7" },
-  { t: "Bathroom installs", d: "Design to finish, one team" },
-  { t: "Central heating", d: "Power flushes & radiators" },
+const SERVICES: { t: string; d: string; img: StaticImageData; pos?: string }[] = [
+  { t: "Boiler repairs", d: "Same-day fixes on all major brands", img: boiler, pos: "45% 40%" },
+  { t: "Emergency leaks", d: "On site within the hour, 24/7", img: leak, pos: "50% 45%" },
+  { t: "Bathroom installs", d: "Design to finish, one team", img: bathroomInstall, pos: "50% 30%" },
+  { t: "Central heating", d: "Power flushes & radiators", img: radiator, pos: "60% 70%" },
 ];
+
+const TRUST = ["Gas Safe registered", "Fixed prices up front", "No call-out fee"];
 
 function QuoteCard({ compact }: { compact?: boolean }) {
   return (
     <div className="rounded-2xl bg-white p-6 shadow-2xl" style={{ color: NAVY }}>
-      <p className="text-xs font-bold tracking-widest" style={{ color: ORANGE }}>
-        INSTANT QUOTE
-      </p>
+      <div className="flex items-center justify-between">
+        <p className="text-xs font-bold tracking-widest" style={{ color: ORANGE }}>
+          INSTANT QUOTE
+        </p>
+        {!compact && (
+          <span className="flex items-center gap-1.5 text-xs font-semibold text-emerald-600">
+            <span className="h-2 w-2 rounded-full bg-emerald-500" /> 3 engineers free today
+          </span>
+        )}
+      </div>
       <p className="mt-1 text-xl font-extrabold">What do you need?</p>
       <div className="mt-4 space-y-3 text-sm">
         {[
@@ -88,44 +116,50 @@ export function Desktop() {
         </span>
       </div>
 
-      <div className="relative overflow-hidden px-16 py-14" style={{ background: NAVY }}>
-        <div className="absolute -top-24 -right-24 h-96 w-96 rounded-full opacity-20" style={{ background: ORANGE }} />
-        <div className="absolute right-80 -bottom-32 h-72 w-72 rounded-full bg-white opacity-5" />
+      {/* Hero: engineer photo with a navy fade so the copy stays readable */}
+      <div className="relative overflow-hidden px-16 py-12">
+        <Photo src={engineer} sizes="(min-width: 1024px) 60vw, 90vw" position="70% 40%" className="absolute inset-0" />
+        <div
+          className="absolute inset-0"
+          style={{ background: `linear-gradient(90deg, ${NAVY_DEEP} 0%, ${NAVY}f2 38%, ${NAVY}99 62%, ${NAVY}26 100%)` }}
+        />
         <div className="relative grid grid-cols-[1.25fr_1fr] items-center gap-14">
           <div className="text-white">
             <p className="text-sm font-bold tracking-widest" style={{ color: ORANGE }}>
-              GAS SAFE REGISTERED · FAMILY RUN SINCE 2009
+              FAMILY RUN SINCE 2009 · MANCHESTER & SALFORD
             </p>
             <p className="mt-4 text-6xl leading-none font-extrabold tracking-tight">
               Plumbing & heating you can count on, day or night.
             </p>
-            <p className="mt-5 text-lg text-slate-300">
-              Fixed prices before we start, engineers on time, and no mess left behind.
-            </p>
-            <div className="mt-8 flex gap-4">
-              <span className="rounded-lg px-6 py-4 font-bold" style={{ background: ORANGE }}>
+            <p className="mt-5 text-lg text-slate-200">Fixed prices before we start, engineers on time, and no mess left behind.</p>
+            <div className="mt-7 flex gap-4">
+              <span className="rounded-lg px-6 py-4 font-bold shadow-lg" style={{ background: ORANGE }}>
                 📞 Call an engineer now
               </span>
-              <span className="rounded-lg border border-white/30 px-6 py-4 font-bold">See our prices</span>
+              <span className="rounded-lg border border-white/40 bg-white/10 px-6 py-4 font-bold backdrop-blur">See our prices</span>
             </div>
-            <div className="mt-8 flex items-center gap-3 text-sm text-slate-300">
-              <Stars /> Rated 4.9 by local customers
+            <div className="mt-7 flex flex-wrap gap-x-6 gap-y-2 text-sm font-semibold text-slate-100">
+              {TRUST.map((t) => (
+                <span key={t} className="flex items-center gap-1.5">
+                  <Check className="h-4 w-4 text-orange-400" /> {t}
+                </span>
+              ))}
             </div>
           </div>
           <QuoteCard />
         </div>
       </div>
 
-      <div className="grid grid-cols-4 gap-5 px-16 py-10">
+      <div className="grid grid-cols-4 gap-5 px-16 py-8">
         {SERVICES.map((s) => (
-          <div key={s.t} className="rounded-xl bg-white p-5 shadow-sm">
-            <span className="flex h-10 w-10 items-center justify-center rounded-lg" style={{ background: `${ORANGE}1f`, color: ORANGE }}>
-              <Drop className="h-5 w-5" />
-            </span>
-            <p className="mt-3 font-bold" style={{ color: NAVY }}>
-              {s.t}
-            </p>
-            <p className="mt-1 text-sm text-slate-500">{s.d}</p>
+          <div key={s.t} className="overflow-hidden rounded-xl bg-white shadow-sm">
+            <Photo src={s.img} position={s.pos} sizes="(min-width: 1024px) 15vw, 24vw" className="h-28" />
+            <div className="p-4">
+              <p className="font-bold" style={{ color: NAVY }}>
+                {s.t}
+              </p>
+              <p className="mt-0.5 text-sm text-slate-500">{s.d}</p>
+            </div>
           </div>
         ))}
       </div>
@@ -142,23 +176,28 @@ export function Mobile() {
           ☰
         </span>
       </div>
-      <div className="px-5 pt-6 pb-8 text-white" style={{ background: NAVY }}>
-        <p className="text-xs font-bold tracking-widest" style={{ color: ORANGE }}>
-          24/7 EMERGENCY CALL-OUT
-        </p>
-        <p className="mt-2 text-4xl leading-tight font-extrabold">Plumbing & heating you can count on.</p>
-        <div className="mt-3 text-sm text-slate-300">
-          <Stars /> 4.9 from local customers
+      <div className="relative shrink-0 overflow-hidden px-5 pt-5 pb-9 text-white">
+        <Photo src={engineer} sizes="(min-width: 1024px) 20vw, 50vw" position="78% 40%" className="absolute inset-0" />
+        <div className="absolute inset-0" style={{ background: `linear-gradient(180deg, ${NAVY}cc 0%, ${NAVY_DEEP}f5 100%)` }} />
+        <div className="relative">
+          <p className="text-xs font-bold tracking-widest" style={{ color: ORANGE }}>
+            24/7 EMERGENCY CALL-OUT
+          </p>
+          <p className="mt-2 text-3xl leading-tight font-extrabold">Plumbing & heating you can count on.</p>
+          <div className="mt-3 text-sm text-slate-200">
+            <Stars /> 4.9 from local customers
+          </div>
         </div>
       </div>
-      <div className="-mt-4 px-5">
+      <div className="-mt-5 shrink-0 px-5">
         <QuoteCard compact />
       </div>
-      <div className="mt-5 grid grid-cols-2 gap-3 px-5">
-        {SERVICES.map((s) => (
-          <div key={s.t} className="rounded-xl bg-white p-4 shadow-sm">
-            <Drop className="h-5 w-5" />
-            <p className="mt-2 text-sm font-bold" style={{ color: NAVY }}>
+      {/* One row on the phone so the call bar stays on screen */}
+      <div className="mt-4 grid shrink-0 grid-cols-2 gap-3 px-5">
+        {SERVICES.slice(0, 2).map((s) => (
+          <div key={s.t} className="overflow-hidden rounded-xl bg-white shadow-sm">
+            <Photo src={s.img} position={s.pos} sizes="(min-width: 1024px) 9vw, 22vw" className="h-14" />
+            <p className="px-3 py-1.5 text-sm font-bold" style={{ color: NAVY }}>
               {s.t}
             </p>
           </div>
@@ -176,16 +215,25 @@ export function Mobile() {
   );
 }
 
+const JOBS: { j: string; from: string; img: StaticImageData; pos?: string }[] = [
+  { j: "Boiler service", from: "from £89", img: boiler, pos: "45% 40%" },
+  { j: "Boiler repair", from: "from £95", img: tools, pos: "45% 50%" },
+  { j: "Leak / burst pipe", from: "from £120", img: leak, pos: "50% 45%" },
+  { j: "New radiator", from: "from £95", img: radiator, pos: "60% 70%" },
+  { j: "Bathroom fit", from: "free survey", img: bathroom, pos: "50% 55%" },
+  { j: "Power flush", from: "from £95", img: engineer, pos: "35% 60%" },
+];
+
 /** Signature screen: the 3-step instant-quote calculator. */
 export function Detail() {
   const steps = ["Your job", "Your property", "Pick a time"];
   return (
-    <div className="h-full bg-slate-100 px-16 py-12" style={{ color: NAVY }}>
+    <div className="h-full bg-slate-100 px-16 py-10" style={{ color: NAVY }}>
       <div className="flex items-center justify-between">
         <Logo />
         <span className="text-sm text-slate-500">Secure booking · No call-out fee</span>
       </div>
-      <div className="mt-10 grid grid-cols-[1.6fr_1fr] gap-8">
+      <div className="mt-8 grid grid-cols-[1.6fr_1fr] gap-8">
         <div className="rounded-2xl bg-white p-8 shadow-sm">
           <div className="flex gap-3">
             {steps.map((s, i) => (
@@ -200,17 +248,22 @@ export function Detail() {
               </div>
             ))}
           </div>
-          <p className="mt-8 text-3xl font-extrabold">What can we help with?</p>
-          <div className="mt-6 grid grid-cols-3 gap-4">
-            {["Boiler service", "Boiler repair", "Leak / burst pipe", "New radiator", "Bathroom fit", "Power flush"].map((j, i) => (
+          <p className="mt-6 text-3xl font-extrabold">What can we help with?</p>
+          <div className="mt-5 grid grid-cols-3 gap-4">
+            {JOBS.map((job, i) => (
               <div
-                key={j}
-                className="rounded-xl border-2 p-5"
+                key={job.j}
+                className="overflow-hidden rounded-xl border-2"
                 style={i === 0 ? { borderColor: ORANGE, background: `${ORANGE}12` } : { borderColor: "#e2e8f0" }}
               >
-                <Drop className="h-6 w-6" />
-                <p className="mt-3 font-bold">{j}</p>
-                <p className="text-sm text-slate-500">{i === 0 ? "from £89" : i === 2 ? "from £120" : "from £95"}</p>
+                <Photo src={job.img} position={job.pos} sizes="(min-width: 1024px) 10vw, 18vw" className="h-20" />
+                <div className="flex items-center justify-between gap-2 px-3 py-2.5">
+                  <div>
+                    <p className="text-sm font-bold">{job.j}</p>
+                    <p className="text-xs text-slate-500">{job.from}</p>
+                  </div>
+                  {i === 0 && <Check className="h-5 w-5 shrink-0 text-orange-500" />}
+                </div>
               </div>
             ))}
           </div>
