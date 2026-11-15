@@ -63,3 +63,38 @@ export async function submitQuote(quoteId: string | null, answers: unknown) {
 
   redirect(`/quote/thanks?id=${quote.id}`);
 }
+
+/**
+ * "Request changes" on a quote we sent: the client's edited answers and note replace the old
+ * answers (kept in `previousAnswers` so the admin can see what changed) and the quote comes back
+ * to us to re-price and send again.
+ */
+export async function requestQuoteChanges(quoteId: string, answers: unknown, note: string) {
+  const user = await requireVerifiedClient();
+  const parsed = quoteAnswersSchema.safeParse(answers);
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Please complete all required steps." };
+  const changeRequest = String(note ?? "").trim().slice(0, 2000);
+  if (changeRequest.length < 3) return { error: "Tell us what you'd like changed, so we know what to look at." };
+
+  const quote = await db.quote.findFirst({ where: { id: quoteId, userId: user.id, status: "SENT" } });
+  if (!quote) return { error: "This quote is no longer open for changes. Check its latest status in your portal." };
+
+  const estimate = calculateEstimate(parsed.data, await getPriceMap());
+  // Conditional on still being SENT, so it can't race with accepting or declining in another tab.
+  const { count } = await db.quote.updateMany({
+    where: { id: quote.id, userId: user.id, status: "SENT" },
+    data: {
+      status: "CHANGES_REQUESTED",
+      previousAnswers: (quote.answers ?? {}) as Prisma.InputJsonValue,
+      answers: parsed.data as Prisma.InputJsonValue,
+      estimateMin: estimate.min,
+      estimateMax: estimate.max,
+      changeRequest,
+      respondedAt: new Date(),
+    },
+  });
+  if (count !== 1) return { error: "This quote is no longer open for changes. Check its latest status in your portal." };
+
+  await emails.adminQuoteChangesRequested(quote.id, user.name, changeRequest);
+  redirect(`/portal/quotes/${quote.id}?changes=1`);
+}

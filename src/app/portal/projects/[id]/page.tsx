@@ -7,9 +7,10 @@ import { requireClient } from "@/lib/dal";
 import { formatGBP } from "@/lib/money";
 import { projectProgress } from "@/lib/progress";
 
-export default async function PortalProject({ params }: PageProps<"/portal/projects/[id]">) {
+export default async function PortalProject({ params, searchParams }: PageProps<"/portal/projects/[id]">) {
   const user = await requireClient();
   const { id } = await params;
+  const { accepted } = await searchParams;
   // Scoped to the current client: other clients' projects 404.
   const project = await db.project.findFirst({
     where: { id, clientId: user.id },
@@ -31,6 +32,26 @@ export default async function PortalProject({ params }: PageProps<"/portal/proje
       <div className="mt-4">
         <PageHeader title={project.title} description={project.description} actions={<StatusBadge status={project.status} />} />
       </div>
+
+      {accepted && (
+        <p role="status" className="mb-6 rounded-xl border border-success/25 bg-success/10 px-4 py-3 text-sm text-success">
+          Quote accepted, thank you! Your project is set up and your invoice has been emailed to you.
+        </p>
+      )}
+
+      {project.status === "AWAITING_PAYMENT" && (() => {
+        const due = project.invoices.find((i) => i.status === "SENT" || i.status === "OVERDUE");
+        return (
+          <p className="mb-6 rounded-xl border border-warning/40 bg-warning/5 px-4 py-3 text-sm">
+            Work starts as soon as your invoice is paid.{" "}
+            {due && (
+              <Link href={`/portal/invoices/${due.id}`} className="font-medium text-brand-light hover:underline">
+                View &amp; pay invoice {due.number} ({formatGBP(due.total)})
+              </Link>
+            )}
+          </p>
+        );
+      })()}
 
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="space-y-6 lg:col-span-2">

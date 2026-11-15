@@ -16,20 +16,27 @@ import {
   type PriceMap,
   type QuoteDraft,
 } from "@/lib/pricing";
-import { saveQuoteDraft, submitQuote } from "./actions";
+import { requestQuoteChanges, saveQuoteDraft, submitQuote } from "./actions";
 
 const STEPS = ["Project type", "Pages & features", "Hosting & care", "Your business", "Review"];
 
 const DISCLAIMER =
   "This is an indicative estimate. We'll review your requirements and confirm the final price before any work begins.";
 
-type Props = { initialDraft: QuoteDraft; initialQuoteId: string | null; prices: PriceMap };
+type Props = {
+  initialDraft: QuoteDraft;
+  initialQuoteId: string | null;
+  prices: PriceMap;
+  /** Set when the client is editing a quote we sent them: nothing is saved until they send the changes. */
+  changesFor?: string;
+};
 
-export function QuoteWizard({ initialDraft, initialQuoteId, prices }: Props) {
+export function QuoteWizard({ initialDraft, initialQuoteId, prices, changesFor }: Props) {
+  const [changeNote, setChangeNote] = useState("");
   const [draft, setDraft] = useState<QuoteDraft>(initialDraft);
   const [step, setStep] = useState(0);
   const [error, setError] = useState<string | null>(null);
-  const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "error">(initialQuoteId ? "saved" : "idle");
+  const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "error">(initialQuoteId && !changesFor ? "saved" : "idle");
   const [submitting, startSubmitting] = useTransition();
 
   // Autosave: debounced on every change, run one at a time so the first save's draft id is
@@ -59,9 +66,10 @@ export function QuoteWizard({ initialDraft, initialQuoteId, prices }: Props) {
       untouched.current = false;
       return;
     }
+    if (changesFor) return; // editing a sent quote: only saved when they send the changes
     const t = setTimeout(() => save(draft), 900);
     return () => clearTimeout(t);
-  }, [draft, save]);
+  }, [draft, save, changesFor]);
 
   const estimate = useMemo(() => calculateEstimate(draft, prices), [draft, prices]);
   const update = (patch: Partial<QuoteDraft>) => setDraft((d) => ({ ...d, ...patch }));
@@ -112,19 +120,20 @@ export function QuoteWizard({ initialDraft, initialQuoteId, prices }: Props) {
         return setError(err);
       }
     }
+    if (changesFor && changeNote.trim().length < 3) return setError("Tell us what you'd like changed, so we know what to look at.");
     setError(null);
     startSubmitting(async () => {
       submitted.current = true; // no more autosaves from here
       await saveQueue.current;
       try {
-        const res = await submitQuote(quoteId.current, draft);
+        const res = changesFor ? await requestQuoteChanges(changesFor, draft, changeNote) : await submitQuote(quoteId.current, draft);
         if (res?.error) {
           submitted.current = false;
           setError(res.error);
         }
       } catch {
         submitted.current = false;
-        setError("We couldn't submit your quote. Check your connection and try again.");
+        setError(changesFor ? "We couldn't send your changes. Check your connection and try again." : "We couldn't submit your quote. Check your connection and try again.");
       }
     });
   }
@@ -420,7 +429,24 @@ export function QuoteWizard({ initialDraft, initialQuoteId, prices }: Props) {
                   Your requirements may need a custom quote. We&apos;ll confirm the price once we&apos;ve reviewed them.
                 </p>
               )}
-              <p className="text-sm text-ink-muted">{DISCLAIMER}</p>
+              {changesFor ? (
+                <div>
+                  <Label htmlFor="changeNote">What would you like changed?</Label>
+                  <Textarea
+                    id="changeNote"
+                    rows={4}
+                    maxLength={2000}
+                    value={changeNote}
+                    onChange={(e) => setChangeNote(e.target.value)}
+                    placeholder="e.g. I'd like yearly hosting instead, and can we add a booking form?"
+                  />
+                  <p className="mt-1 text-xs text-ink-muted">
+                    We&apos;ll review your changes and send you an updated quote. Nothing is agreed or billed until you accept it.
+                  </p>
+                </div>
+              ) : (
+                <p className="text-sm text-ink-muted">{DISCLAIMER}</p>
+              )}
             </div>
           )}
 
@@ -445,7 +471,7 @@ export function QuoteWizard({ initialDraft, initialQuoteId, prices }: Props) {
               </Button>
             ) : (
               <Button type="button" className="whitespace-nowrap" onClick={submit} disabled={submitting}>
-                {submitting ? "Submitting…" : "Submit quote request"}
+                {changesFor ? (submitting ? "Sending…" : "Send changes for review") : submitting ? "Submitting…" : "Submit quote request"}
               </Button>
             )}
           </div>

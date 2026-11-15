@@ -4,7 +4,7 @@ import { ActionForm, SubmitButton } from "@/components/forms";
 import { Button, Card, PageHeader, StatusBadge, formatDate } from "@/components/ui";
 import { db } from "@/lib/db";
 import { requireAdmin } from "@/lib/dal";
-import { advanceRenewal, daysUntil } from "@/lib/hosting";
+import { advanceRenewal, daysUntil, hostingBillingState } from "@/lib/hosting";
 import { effectiveStatus } from "@/lib/invoice";
 import { formatGBP } from "@/lib/money";
 import { invoiceNextPeriod, updateHostingPlan } from "../../_actions/hosting";
@@ -28,6 +28,15 @@ export default async function AdminHostingPlan({ params }: PageProps<"/admin/hos
   if (!plan) notFound();
 
   const days = daysUntil(plan.renewalDate);
+  const billing = hostingBillingState(plan);
+  const automatic = billing === "active" || billing === "past_due";
+  const BILLING_TEXT = {
+    manual: "Invoiced each period. The client can switch to automatic card payments from their portal.",
+    active: "Automatic card payments (Stripe). Each payment is recorded as a paid invoice below.",
+    past_due: "Automatic card payments, but the last payment failed. Stripe is retrying and the client has been asked to update their card.",
+    cancelling: `Cancelled by the client. Ends on ${formatDate(plan.cancelAt)} and won't renew.`,
+    cancelled: "Ended. No further payments.",
+  } as const;
 
   return (
     <>
@@ -66,21 +75,34 @@ export default async function AdminHostingPlan({ params }: PageProps<"/admin/hos
         </Card>
 
         <div className="space-y-6">
+          <Card className={billing === "past_due" || billing === "cancelling" ? "border-warning/40" : undefined}>
+            <h2 className="font-semibold">Billing</h2>
+            <p className="mt-2 text-sm">{BILLING_TEXT[billing]}</p>
+            {automatic && (
+              <p className="mt-2 text-xs text-ink-muted">
+                Changing the price or interval here doesn&apos;t change the card subscription. Ask the client to cancel and set up
+                payments again, or change it in Stripe.
+              </p>
+            )}
+          </Card>
           <Card>
             <h2 className="font-semibold">Renewal</h2>
             <p className="mt-2 text-2xl font-semibold">{formatDate(plan.renewalDate)}</p>
             <p className={days < 0 ? "text-sm text-danger" : "text-sm text-ink-muted"}>
               {days < 0 ? `${-days} days overdue` : `in ${days} days`}
             </p>
-            <p className="mt-4 text-sm text-ink-muted">
-              Creates a draft invoice for {formatGBP(plan.price)} covering {formatDate(plan.renewalDate)} –{" "}
-              {formatDate(advanceRenewal(plan.renewalDate, plan.interval))}, and moves the renewal date forward.
-            </p>
-            {plan.status === "ACTIVE" && (
-              <form action={invoiceNextPeriod.bind(null, plan.id)} className="mt-4">
-                <Button>Invoice next period</Button>
-              </form>
+            {billing === "manual" && plan.status === "ACTIVE" && (
+              <>
+                <p className="mt-4 text-sm text-ink-muted">
+                  Creates a draft invoice for {formatGBP(plan.price)} covering {formatDate(plan.renewalDate)} –{" "}
+                  {formatDate(advanceRenewal(plan.renewalDate, plan.interval))}, and moves the renewal date forward.
+                </p>
+                <form action={invoiceNextPeriod.bind(null, plan.id)} className="mt-4">
+                  <Button>Invoice next period</Button>
+                </form>
+              </>
             )}
+            {automatic && <p className="mt-4 text-sm text-ink-muted">Charged automatically on this date.</p>}
           </Card>
           <Card>
             <h2 className="mb-3 font-semibold">Invoices</h2>

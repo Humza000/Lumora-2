@@ -12,7 +12,7 @@ import { projectProgress } from "@/lib/progress";
 
 export default async function PortalHome() {
   const user = await requireClient();
-  const [projects, invoices, quotes] = await Promise.all([
+  const [projects, invoices, quotes, hostingToStart] = await Promise.all([
     db.project.findMany({
       where: { clientId: user.id, status: { not: "COMPLETED" } },
       include: { milestones: { select: { status: true, title: true }, orderBy: { order: "asc" } } },
@@ -23,8 +23,14 @@ export default async function PortalHome() {
       orderBy: { dueDate: "asc" },
     }),
     db.quote.findMany({
-      where: { userId: user.id, status: { in: ["DRAFT", "SUBMITTED", "REVIEWING"] } },
-      select: { status: true },
+      where: { userId: user.id, status: { in: ["DRAFT", "SUBMITTED", "REVIEWING", "CHANGES_REQUESTED", "SENT"] } },
+      select: { id: true, status: true, price: true },
+      orderBy: { sentAt: "desc" },
+    }),
+    // Launched sites whose hosting plan is waiting for its first card payment (see awaitingFirstPayment).
+    db.hostingPlan.findFirst({
+      where: { clientId: user.id, planKey: { not: null }, stripeSubscriptionId: null, status: "ACTIVE", cancelAt: null, invoices: { none: {} } },
+      select: { planName: true, domain: true },
     }),
   ]);
 
@@ -33,9 +39,12 @@ export default async function PortalHome() {
     verified: Boolean(user.emailVerified),
     unpaidInvoices: invoices.length,
     draftQuotes: quotes.filter((q) => q.status === "DRAFT").length,
-    quotesInReview: quotes.filter((q) => q.status !== "DRAFT").length,
+    hostingToStart: hostingToStart ? 1 : 0,
+    quotesToRespond: quotes.filter((q) => q.status === "SENT").length,
+    quotesInReview: quotes.filter((q) => q.status === "SUBMITTED" || q.status === "REVIEWING" || q.status === "CHANGES_REQUESTED").length,
     activeProjects: projects.length,
   });
+  const offer = quotes.find((q) => q.status === "SENT");
   const lead = projects[0];
   const nextMilestone = lead?.milestones.find((m) => m.status !== "DONE");
 
@@ -73,6 +82,30 @@ export default async function PortalHome() {
           </ul>
           <ButtonLink href={invoices.length === 1 ? `/portal/invoices/${invoices[0].id}` : "/portal/invoices"} className="mt-4">
             {invoices.length === 1 ? "View & pay" : "View invoices"}
+          </ButtonLink>
+        </NextStep>
+      )}
+
+      {step === "hosting" && hostingToStart && (
+        <NextStep title="Your site is live: start your hosting plan">
+          <p className="text-sm text-ink-muted">
+            {hostingToStart.domain} has launched. Choose monthly or yearly and make your first {hostingToStart.planName} payment by card; it
+            then renews automatically.
+          </p>
+          <ButtonLink href="/portal/hosting" className="mt-4">
+            Start your plan
+          </ButtonLink>
+        </NextStep>
+      )}
+
+      {step === "respond" && offer && (
+        <NextStep title="Your quote is ready">
+          <p className="text-sm text-ink-muted">
+            We&apos;ve confirmed your price{offer.price !== null ? <> of <strong className="text-ink">{formatGBP(offer.price)}</strong></> : null}.
+            Have a look at the details, then accept, request changes or decline. Nothing starts until you accept.
+          </p>
+          <ButtonLink href={`/portal/quotes/${offer.id}`} className="mt-4">
+            View your quote
           </ButtonLink>
         </NextStep>
       )}

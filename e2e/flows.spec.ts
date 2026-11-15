@@ -13,6 +13,15 @@ const ADMIN = { email: process.env.ADMIN_EMAIL ?? "admin@lumoradesign.uk", passw
 const run = Date.now();
 const client = { name: "E2E Tester", email: `e2e+${run}@example.com`, password: "E2eTestPass123", business: `E2E Bakery ${run}` };
 let createdInvoiceId = "";
+let createdPlanId = "";
+
+/** Posts a Stripe event to the webhook, signed with STRIPE_WEBHOOK_SECRET exactly as Stripe would. */
+async function stripeEvent(page: Page, type: string, object: Record<string, unknown>) {
+  const payload = JSON.stringify({ id: `evt_${type}_${Date.now()}`, object: "event", type, data: { object } });
+  const signature = Stripe.webhooks.generateTestHeaderString({ payload, secret: process.env.STRIPE_WEBHOOK_SECRET! });
+  const res = await page.request.post("/api/stripe/webhook", { data: payload, headers: { "stripe-signature": signature, "content-type": "application/json" } });
+  expect(res.status()).toBe(200);
+}
 let createdProjectPath = "";
 
 async function login(page: Page, email: string, password: string) {
@@ -160,20 +169,139 @@ test.describe.serial("Lumora end-to-end", () => {
     await expect(page.getByRole("heading", { name: "Link expired" })).toBeVisible();
   });
 
-  test("admin accepts quote → project; posts update; invoices; hosting", async ({ page }) => {
+  test("quote: admin sends → client requests changes → declines → accepts (deposit) → waits for payment → work starts", async ({ page, browser }) => {
     test.skip(!ADMIN.password, "ADMIN_PASSWORD not set");
     await login(page, ADMIN.email, ADMIN.password);
     await expect(page).toHaveURL(/\/admin$/);
 
-    // Quote review → accept
+    // Admin confirms the details and sends the quote
     await page.goto("/admin/quotes");
     await page.getByRole("link", { name: client.name }).first().click();
+    await expect(page).toHaveURL(/\/admin\/quotes\/\w+$/);
     await expect(page.getByText(client.business).first()).toBeVisible();
-    await page.getByRole("button", { name: "Accept & create project" }).click();
-    await expect(page).toHaveURL(/\/admin\/projects\/\w+/);
+    const quoteUrl = page.url();
+    await expect(page.getByLabel("Project price (£)")).toHaveValue("100.00"); // what the wizard showed
+    await expect(page.getByLabel("Hosting & care plan")).toHaveValue("hosting_standard");
+    await page.getByLabel("Project price (£)").fill("3000");
+    await page.getByLabel("Message to the client").fill("Thanks for the details. Here is your confirmed price.");
+    await page.getByRole("button", { name: "Send quote to client" }).click();
+    await expect(page.getByText(`${client.email} has been emailed a link`)).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Waiting for the client" })).toBeVisible();
+    expect(readFileSync(DEV_LOG, "utf8")).toContain("Subject: Your quote from Lumora is ready");
+
+    // Client (own browser session) sees it as their next step, reads it and declines
+    const ctx = await browser.newContext();
+    const c = await ctx.newPage();
+    await login(c, client.email, client.password);
+    await expect(c.getByRole("heading", { name: "Your quote is ready" })).toBeVisible();
+    await c.getByRole("link", { name: "View your quote" }).click();
+    await expect(c).toHaveURL(/\/portal\/quotes\/\w+$/);
+    await expect(c.getByText("£3,000.00", { exact: true })).toBeVisible();
+    await expect(c.getByText("Hosting (Standard care, £10/month) only starts when your site goes live.")).toBeVisible();
+    await expect(c.getByText("Here is your confirmed price.")).toBeVisible();
+    await expect(c.getByText("Pay in full: £3,000.00")).toBeVisible();
+    await expect(c.getByText("Pay a 50% deposit: £1,500.00")).toBeVisible();
+    await expect(c.getByText("Work starts as soon as that invoice is paid.")).toBeVisible();
+
+    // Request changes: the wizard opens with their answers; they edit one and say what they want
+    await c.getByRole("link", { name: "Request changes" }).click();
+    await expect(c).toHaveURL(/\/quote\?changes=\w+$/);
+    await expect(c.getByRole("heading", { name: "Change your quote" })).toBeVisible();
+    await c.getByRole("button", { name: "Continue →" }).click();
+    await expect(c.getByLabel("How many pages?")).toHaveValue("7");
+    await c.getByLabel("How many pages?").fill("9");
+    for (let i = 0; i < 3; i++) await c.getByRole("button", { name: "Continue →" }).click();
+    await c.getByRole("button", { name: "Send changes for review" }).click();
+    await expect(c.locator("p[role=alert]")).toContainText("what you'd like changed"); // a note is required
+    await c.getByLabel("What would you like changed?").fill("Two more pages for our catering menus, please.");
+    await c.getByRole("button", { name: "Send changes for review" }).click();
+    await expect(c).toHaveURL(/\/portal\/quotes\/\w+\?changes=1/);
+    await expect(c.getByText(/we've got your changes/)).toBeVisible();
+    await expect(c.getByRole("button", { name: "Accept quote" })).toHaveCount(0); // not acceptable while we re-price it
+
+    // Admin sees the note and exactly what changed, re-prices and sends it again
+    await page.goto(quoteUrl);
+    await expect(page.getByRole("heading", { name: "Client requested changes" })).toBeVisible();
+    await expect(page.getByText("Two more pages for our catering menus, please.")).toBeVisible();
+    await expect(page.locator("dd", { hasText: /7\s*→\s*9/ })).toBeVisible();
+    expect(readFileSync(DEV_LOG, "utf8")).toContain(`Subject: Changes requested by ${client.name}`);
+    await page.getByLabel("Project price (£)").fill("3200");
+    await page.getByRole("button", { name: "Send updated quote" }).click();
+    await expect(page.getByText(`${client.email} has been emailed a link`)).toBeVisible();
+
+    // Client declines the updated quote
+    await c.reload();
+    await expect(c.getByText("£3,200.00", { exact: true })).toBeVisible();
+    await c.getByRole("link", { name: "Decline quote" }).click();
+    await c.getByLabel("Reason (optional)").fill("A bit over my budget.");
+    await c.getByRole("button", { name: "Yes, decline quote" }).click();
+    await expect(c.getByText("You've declined this quote")).toBeVisible();
+    await expect(c.getByRole("button", { name: "Accept quote" })).toHaveCount(0);
+    await c.goto("/portal/projects");
+    await expect(c.getByRole("link", { name: /E2E Bakery/ })).toHaveCount(0); // declining creates nothing
+
+    // Admin sees the reason, lowers the price, asks for a deposit and sends it again
+    await page.goto(quoteUrl);
+    await expect(page.getByRole("heading", { name: "Declined by the client" })).toBeVisible();
+    await expect(page.getByText("A bit over my budget.")).toBeVisible();
+    expect(readFileSync(DEV_LOG, "utf8")).toContain(`Subject: Quote declined by ${client.name}`);
+    await page.getByLabel("Project price (£)").fill("2500");
+    await page.getByRole("button", { name: "Send updated quote" }).click();
+    await expect(page.getByText(`${client.email} has been emailed a link`)).toBeVisible();
+    // While it's with the client it can't be accepted on their behalf, only withdrawn
+    await expect(page.getByRole("button", { name: "Withdraw quote" })).toBeVisible();
+
+    // Client accepts → lands on the new project, with the deposit invoice issued automatically
+    await c.goto("/portal/quotes");
+    await expect(c.getByText("Awaiting your reply")).toBeVisible();
+    await c.getByRole("link", { name: "View & respond" }).click();
+    await expect(c.getByText("£2,500.00", { exact: true })).toBeVisible();
+    await c.getByLabel(/Pay a 50% deposit: £1,250\.00/).check();
+    await c.getByRole("button", { name: "Accept quote" }).click();
+    await expect(c).toHaveURL(/\/portal\/projects\/\w+\?accepted=1/);
+    await expect(c.getByText(/Quote accepted, thank you!/)).toBeVisible();
+    await expect(c.getByText("Discovery & planning")).toBeVisible();
+    // The project waits for the website payment before work starts
+    await expect(c.getByText("Waiting for payment")).toBeVisible();
+    await expect(c.getByRole("link", { name: /View & pay invoice LUM-\d{4}-\d{4} \(£1,250\.00\)/ })).toBeVisible();
+    createdProjectPath = new URL(c.url()).pathname;
+    const log = readFileSync(DEV_LOG, "utf8");
+    expect(log).toMatch(/Subject: Quote accepted: E2E Tester|Subject: Quote accepted: E2E Bakery/);
+    expect(log).toMatch(new RegExp(`To: ${client.email.replace(/[.+]/g, "\\$&")}\\s+\\[email:dev\\] Subject: Invoice LUM-`));
+    // The accepted quote can't be answered twice
+    await c.goBack();
+    await c.reload();
+    await expect(c.getByRole("button", { name: "Accept quote" })).toHaveCount(0);
+    await expect(c.getByRole("link", { name: "View your project" })).toBeVisible();
+
+    // Admin: the quote links to the project and the invoice
+    await page.goto(quoteUrl);
+    await expect(page.getByRole("heading", { name: "Accepted by the client" })).toBeVisible();
+    await expect(page.getByText(/£1,250\.00, sent/)).toBeVisible();
+    await expect(page.getByText("A 50% deposit now, balance before launch")).toBeVisible();
+    await expect(page.getByRole("button", { name: /Send (updated )?quote/ })).toHaveCount(0);
+
+    // Payment received (here: marked paid by the admin) → the project starts automatically
+    await page.goto(new URL(createdProjectPath.replace("/portal/", "/admin/"), page.url()).toString());
+    await expect(page.getByText(/Waiting for payment of invoice/)).toBeVisible();
+    await expect(page.getByRole("button", { name: "Mark as launched" })).toHaveCount(0); // can't launch unpaid work
+    await page.getByRole("link", { name: /LUM-\d{4}-\d{4}/ }).first().click();
+    await page.getByRole("button", { name: "Mark as paid" }).click();
+    await expect(page.getByRole("button", { name: "Mark unpaid" })).toBeVisible();
+    await c.goto(createdProjectPath);
+    await expect(c.getByText("Payment received, thank you! Work on your website has started.")).toBeVisible();
+    await expect(c.getByText("Waiting for payment")).toHaveCount(0);
+    await expect(c.getByText("Planning", { exact: true })).toBeVisible();
+    await ctx.close();
+  });
+
+  test("admin runs the project: posts update; invoices; hosting", async ({ page }) => {
+    test.skip(!createdProjectPath, "depends on the quote test");
+    await login(page, ADMIN.email, ADMIN.password);
+    await expect(page).toHaveURL(/\/admin$/);
+    const projectUrl = new URL(createdProjectPath.replace("/portal/", "/admin/"), page.url()).toString();
+    await page.goto(projectUrl);
     await expect(page.getByText("Discovery & planning")).toBeVisible();
-    const projectUrl = page.url();
-    createdProjectPath = new URL(projectUrl).pathname.replace("/admin/", "/portal/");
 
     // Progress a milestone and post an update
     await page.getByLabel("Milestone status").first().selectOption("DONE");
@@ -216,13 +344,18 @@ test.describe.serial("Lumora end-to-end", () => {
     expect(pdf.headers()["content-type"]).toBe("application/pdf");
 
     // Hosting plan
+    // Hosting plan added by hand (not linked to the project), invoiced each period
     await page.goto(projectUrl);
-    await page.getByRole("link", { name: "Add", exact: true }).click();
+    const addHref = await page.getByRole("link", { name: "Add", exact: true }).getAttribute("href");
+    await page.goto(addHref!.replace(/&project=\w+/, ""));
+    await page.getByLabel("Plan name").fill("Legacy care");
     await page.getByLabel("Domain").fill(`e2e-${run}.example`);
     await page.getByLabel("Hosting provider").fill("Vercel");
     await page.getByLabel("Next renewal date").fill(new Date(Date.now() + 5 * 86400_000).toISOString().slice(0, 10));
     await page.getByRole("button", { name: "Add plan" }).click();
     await expect(page).toHaveURL(/\/admin\/hosting\/\w+$/);
+    createdPlanId = new URL(page.url()).pathname.split("/").pop() ?? "";
+    await expect(page.getByText(/Invoiced each period/)).toBeVisible();
     await page.goto("/admin");
     await expect(page.getByRole("link", { name: `e2e-${run}.example` })).toBeVisible(); // in renewals widget
   });
@@ -250,7 +383,8 @@ test.describe.serial("Lumora end-to-end", () => {
 
     // …and the original tab stays signed in
     await page.goto("/portal/invoices");
-    await page.getByRole("link", { name: /LUM-/ }).first().click();
+    await expect(page.getByRole("link", { name: /LUM-/ })).toHaveCount(2); // deposit (on acceptance, paid) + the admin's invoice
+    await page.goto(`/portal/invoices/${createdInvoiceId}`);
     await expect(page.getByText("£1,500.00").first()).toBeVisible();
     const stripeKey = process.env.STRIPE_SECRET_KEY ?? "";
     if (!stripeKey) {
@@ -283,9 +417,120 @@ test.describe.serial("Lumora end-to-end", () => {
       expect(readFileSync(DEV_LOG, "utf8")).toContain(`Subject: Payment received: invoice LUM-`);
     }
 
+    // Hosting: the plan shows in their portal, paid by invoice until they switch to card
+    await page.getByRole("link", { name: "Hosting", exact: true }).click();
+    await expect(page).toHaveURL(/\/portal\/hosting$/);
+    await expect(page.getByText("Paid by invoice")).toBeVisible();
+    await expect(page.getByText(/your first card payment is on/)).toBeVisible(); // renewal is 5 days away: no double charge
+    await expect(page.getByRole("button", { name: "Set up automatic payments" })).toBeVisible();
+
+    // They can cancel (with a confirmation step) and change their mind
+    await page.getByRole("link", { name: "Cancel plan" }).click();
+    await expect(page.getByText(/Hosting and care continue until/)).toBeVisible();
+    await page.getByRole("button", { name: "Yes, cancel my plan" }).click();
+    await expect(page.getByText(/Your plan has been cancelled/)).toBeVisible();
+    await expect(page.getByText("Cancelled, ends soon")).toBeVisible();
+    expect(readFileSync(DEV_LOG, "utf8")).toMatch(/Subject: Your .+ plan has been cancelled/);
+    expect(readFileSync(DEV_LOG, "utf8")).toContain(`Subject: Hosting cancelled: e2e-${run}.example`);
+    await page.getByRole("button", { name: "Keep my plan after all" }).click();
+    await expect(page.getByText(/your plan will carry on as normal/)).toBeVisible();
+    await expect(page.getByText("Paid by invoice")).toBeVisible();
+
+    if (process.env.STRIPE_WEBHOOK_SECRET) {
+      // Automatic card billing, driven by Stripe's (signed) events
+      const sub = `sub_e2e_${run}`;
+      const meta = { hostingPlanId: createdPlanId };
+      await stripeEvent(page, "checkout.session.completed", { id: `cs_e2e_sub_${run}`, object: "checkout.session", mode: "subscription", subscription: sub, customer: `cus_e2e_${run}`, metadata: meta });
+      await page.reload();
+      await expect(page.getByText("Automatic payments on")).toBeVisible();
+      await expect(page.getByRole("button", { name: "Update card & receipts" })).toBeVisible();
+
+      // Each automatic payment becomes a numbered, paid invoice in their portal
+      const start = Math.floor(Date.now() / 1000);
+      await stripeEvent(page, "invoice.paid", {
+        id: `in_e2e_${run}`, object: "invoice", amount_paid: 4900,
+        parent: { type: "subscription_details", subscription_details: { subscription: sub, metadata: meta } },
+        lines: { object: "list", data: [{ period: { start, end: start + 30 * 86400 } }] },
+      });
+      await page.goto("/portal/invoices");
+      await expect(page.getByRole("row", { name: /£49\.00.*Paid/ })).toBeVisible();
+
+      // Cancelled from Stripe's side (e.g. the billing page): ends at the period end, emails sent
+      const periodEnd = start + 30 * 86400;
+      await stripeEvent(page, "customer.subscription.updated", {
+        id: sub, object: "subscription", status: "active", cancel_at: null, cancel_at_period_end: true, metadata: meta,
+        items: { object: "list", data: [{ current_period_end: periodEnd }] },
+      });
+      await page.goto("/portal/hosting");
+      await expect(page.getByText("Cancelled, ends soon")).toBeVisible();
+
+      // When the period ends Stripe deletes the subscription: the plan has ended
+      await stripeEvent(page, "customer.subscription.deleted", {
+        id: sub, object: "subscription", status: "canceled", cancel_at: periodEnd, cancel_at_period_end: true, metadata: meta,
+        items: { object: "list", data: [{ current_period_end: periodEnd }] },
+      });
+      await page.reload();
+      await expect(page.getByText("Ended", { exact: true })).toBeVisible();
+    }
+
     // The seeded demo client's project must not be visible
     await page.goto("/portal/projects");
     await expect(page.getByText("Demo Coffee Co.")).toHaveCount(0);
+  });
+
+  test("launch: admin marks the project as launched → client starts hosting by card, monthly or yearly", async ({ page, browser }) => {
+    test.skip(!createdProjectPath, "depends on the quote test");
+    await login(page, ADMIN.email, ADMIN.password);
+    await expect(page).toHaveURL(/\/admin$/);
+    const projectUrl = new URL(createdProjectPath.replace("/portal/", "/admin/"), page.url()).toString();
+    await page.goto(projectUrl);
+    await expect(page.getByText(/starts Standard care, £10\/month/)).toBeVisible(); // from the accepted quote
+    const domain = `live-${run}.example`;
+    await page.getByLabel("Live domain").fill(domain);
+    await page.getByRole("button", { name: "Mark as launched" }).click();
+    await expect(page.getByText(`${client.email} has been emailed to start their hosting plan`)).toBeVisible();
+    await expect(page.getByText("Completed", { exact: true }).first()).toBeVisible();
+    await expect(page.getByText("100%")).toBeVisible();
+    await expect(page.getByRole("button", { name: "Mark as launched" })).toHaveCount(0);
+    expect(readFileSync(DEV_LOG, "utf8")).toContain("Subject: Your website is live: start your Standard care plan");
+    const planHref = await page.getByRole("link", { name: domain }).getAttribute("href");
+    const planId = planHref!.split("/").pop()!;
+
+    // Client: the plan is waiting for its first payment, with a monthly / yearly choice
+    const ctx = await browser.newContext();
+    const c = await ctx.newPage();
+    await login(c, client.email, client.password);
+    await expect(c).toHaveURL(/\/portal$/);
+    await c.goto("/portal/hosting");
+    const card = c.locator(`[data-plan="${domain}"]`);
+    await expect(card.getByRole("heading", { name: "Standard care" })).toBeVisible();
+    await expect(card.getByText("Ready to start")).toBeVisible();
+    await expect(card.getByText("Monthly: £10.00/month")).toBeVisible();
+    await expect(card.getByText("Yearly: £100.00/year")).toBeVisible();
+    await expect(card.getByText("Saves £20.00 a year")).toBeVisible();
+    await expect(card.getByLabel(/Monthly: £10\.00/)).toBeChecked(); // what they were quoted
+    await expect(card.getByRole("button", { name: "Pay first payment & save card" })).toBeVisible();
+
+    if (process.env.STRIPE_WEBHOOK_SECRET) {
+      // Stripe confirms the first payment and saved card (signed events): the plan renews automatically from here
+      const sub = `sub_e2e_live_${run}`;
+      const meta = { hostingPlanId: planId };
+      await stripeEvent(c, "checkout.session.completed", { id: `cs_e2e_live_${run}`, object: "checkout.session", mode: "subscription", subscription: sub, customer: `cus_e2e_${run}`, metadata: meta });
+      const start = Math.floor(Date.now() / 1000);
+      await stripeEvent(c, "invoice.paid", {
+        id: `in_e2e_live_${run}`, object: "invoice", amount_paid: 1000,
+        parent: { type: "subscription_details", subscription_details: { subscription: sub, metadata: meta } },
+        lines: { object: "list", data: [{ period: { start, end: start + 30 * 86400 } }] },
+      });
+      await c.reload();
+      await expect(card.getByText("Automatic payments on")).toBeVisible();
+      await expect(card.getByText("£10.00 is taken automatically every month")).toBeVisible();
+      await expect(card.getByRole("button", { name: "Update card & receipts" })).toBeVisible();
+      await expect(card.getByRole("link", { name: "Cancel plan" })).toBeVisible();
+      await c.goto("/portal/invoices");
+      await expect(c.getByRole("row", { name: /£10\.00.*Paid/ })).toBeVisible();
+    }
+    await ctx.close();
   });
 
   test("another client cannot open the e2e client's invoice or project", async ({ page }) => {

@@ -2,6 +2,7 @@ import { SelectField, TextAreaField, TextField } from "@/components/forms";
 import { dateInputValue } from "@/components/ui";
 
 export const PROJECT_STATUS_OPTIONS = [
+  { value: "AWAITING_PAYMENT", label: "Waiting for payment" },
   { value: "PLANNING", label: "Planning" },
   { value: "IN_PROGRESS", label: "In progress" },
   { value: "REVIEW", label: "In review" },

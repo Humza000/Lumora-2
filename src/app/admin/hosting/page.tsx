@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Badge, ButtonLink, Card, EmptyState, PageHeader, StatusBadge, Table, Td, Th, formatDate } from "@/components/ui";
 import { db } from "@/lib/db";
 import { requireAdmin } from "@/lib/dal";
-import { daysUntil, monthlyValue } from "@/lib/hosting";
+import { daysUntil, hostingBillingState, monthlyValue } from "@/lib/hosting";
 import { formatGBP } from "@/lib/money";
 
 export const metadata = { title: "Hosting & maintenance" };
@@ -71,10 +71,13 @@ export default async function AdminHosting() {
                   </Td>
                   <Td>
                     {formatGBP(p.price)}/{p.interval === "MONTHLY" ? "mo" : "yr"}
+                    <p className="text-xs text-ink-muted">
+                      {{ manual: "Invoiced", active: "Card, automatic", past_due: "Card: payment failed", cancelling: "Cancelled, ending", cancelled: "Ended" }[hostingBillingState(p)]}
+                    </p>
                   </Td>
                   <Td>
                     {formatDate(p.renewalDate)}{" "}
-                    {p.status === "ACTIVE" && days < 0 && <Badge tone="danger">Overdue</Badge>}
+                    {p.status === "ACTIVE" && !p.stripeSubscriptionId && !p.cancelAt && days < 0 && <Badge tone="danger">Overdue</Badge>}
                     {p.status === "ACTIVE" && days >= 0 && days <= 14 && <Badge tone="warning">{days}d</Badge>}
                   </Td>
                   <Td>

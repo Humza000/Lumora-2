@@ -39,6 +39,7 @@ model ClientProfile {
   company String?
   phone   String?
   address String?
+  stripeCustomerId String? @unique // set when they first pay by card subscription
 }
 
 enum TokenType {
@@ -62,6 +63,8 @@ enum QuoteStatus {
   DRAFT
   SUBMITTED
   REVIEWING
+  SENT // confirmed quote sent to the client, waiting for them to accept or decline
+  CHANGES_REQUESTED // the client edited their answers and asked for an updated quote
   ACCEPTED
   DECLINED
 }
@@ -80,6 +83,24 @@ model Quote {
   updatedAt   DateTime    @updatedAt
   project     Project?
   invoices    Invoice[]
+
+  // The confirmed quote the admin sends back for the client to accept or decline.
+  price              Int? // final one-off project price, pence
+  hostingPlanKey     String?
+  hostingBilling     String? // "monthly" | "yearly"
+  hostingPrice       Int? // pence per billing period
+  message            String?
+  projectTitle       String?
+  projectDescription String?
+  startDate          DateTime?
+  dueDate            DateTime?
+  defaultMilestones  Boolean   @default(true)
+  invoiceOnAccept    String? // "full" | "deposit": what the client chose to pay when accepting
+  changeRequest      String? // the client's note when they asked for changes
+  previousAnswers    Json? // answers before the client's latest edit
+  sentAt             DateTime?
+  respondedAt        DateTime?
+  declineReason      String?
 }
 
 model PricingItem {
@@ -93,6 +114,7 @@ model PricingItem {
 }
 
 enum ProjectStatus {
+  AWAITING_PAYMENT // accepted, waiting for the website invoice to be paid
   PLANNING
   IN_PROGRESS
   REVIEW
@@ -176,6 +198,7 @@ model Invoice {
   notes           String?
   paidAt          DateTime?
   stripeSessionId String?       @unique
+  stripeInvoiceId String?       @unique // automatic hosting payments: the Stripe invoice it records
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
   lines           InvoiceLine[]
@@ -216,12 +239,17 @@ model HostingPlan {
   domain      String
   provider    String
   planName    String
+  planKey     String? // catalogue plan (pricing.ts HOSTING_PLANS), lets the client pick monthly or yearly
   includesMaintenance Boolean @default(true)
   price       Int
   interval    HostingInterval @default(MONTHLY)
   renewalDate DateTime
   status      HostingStatus   @default(ACTIVE)
   notes       String?
+  // Automatic card billing (Stripe subscription). renewalDate tracks the next charge while active.
+  stripeSubscriptionId String?  @unique
+  subscriptionStatus   String? // Stripe's status: active, trialing, past_due, canceled…
+  cancelAt             DateTime? // set when the client has cancelled: hosting runs until this date
   createdAt   DateTime        @default(now())
   updatedAt   DateTime        @updatedAt
   invoices    Invoice[]

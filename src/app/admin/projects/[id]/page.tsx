@@ -6,10 +6,12 @@ import { db } from "@/lib/db";
 import { requireAdmin } from "@/lib/dal";
 import { formatGBP } from "@/lib/money";
 import { projectProgress } from "@/lib/progress";
+import { hostingFromQuote, offerHosting } from "@/lib/quote-offer";
 import {
   addMilestone,
   deleteMilestone,
   deleteUpdate,
+  launchProject,
   moveMilestone,
   postUpdate,
   setMilestoneStatus,
@@ -18,9 +20,10 @@ import {
 import { ProjectFields } from "../project-fields";
 import { MilestoneStatus } from "./milestone-status";
 
-export default async function AdminProject({ params }: PageProps<"/admin/projects/[id]">) {
+export default async function AdminProject({ params, searchParams }: PageProps<"/admin/projects/[id]">) {
   await requireAdmin();
   const { id } = await params;
+  const { launched, email } = await searchParams;
   const [project, clients] = await Promise.all([
     db.project.findUnique({
       where: { id },
@@ -30,12 +33,14 @@ export default async function AdminProject({ params }: PageProps<"/admin/project
         updates: { orderBy: { createdAt: "desc" } },
         invoices: { orderBy: { createdAt: "desc" } },
         hostingPlans: true,
-        quote: { select: { id: true } },
+        quote: { select: { id: true, hostingPlanKey: true, hostingBilling: true, hostingPrice: true } },
       },
     }),
     db.user.findMany({ where: { role: "CLIENT" }, select: { id: true, name: true }, orderBy: { name: "asc" } }),
   ]);
   if (!project) notFound();
+  const hosting = project.quote && project.hostingPlans.length === 0 ? hostingFromQuote(project.quote) : null;
+  const unpaid = project.invoices.find((i) => i.status === "SENT" || i.status === "OVERDUE");
 
   return (
     <>
@@ -64,6 +69,22 @@ export default async function AdminProject({ params }: PageProps<"/admin/project
           actions={<StatusBadge status={project.status} />}
         />
       </div>
+
+      {launched && (
+        <p role="status" className="mb-6 rounded-xl border border-success/25 bg-success/10 px-4 py-3 text-sm text-success">
+          {launched === "hosting"
+            ? email === "failed"
+              ? `Project launched and the hosting plan was created, but the email to ${project.client.email} couldn't be delivered. They can still start it from their portal.`
+              : `Project launched. ${project.client.email} has been emailed to start their hosting plan by card; it then renews automatically.`
+            : "Project marked as launched."}
+        </p>
+      )}
+      {project.status === "AWAITING_PAYMENT" && (
+        <p className="mb-6 rounded-xl border border-warning/40 bg-warning/5 px-4 py-3 text-sm">
+          Waiting for payment{unpaid ? <> of invoice <Link href={`/admin/invoices/${unpaid.id}`} className="font-medium text-brand-light hover:underline">{unpaid.number}</Link> ({formatGBP(unpaid.total)})</> : null}.
+          The project moves to Planning automatically when it&apos;s paid.
+        </p>
+      )}
 
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="space-y-6 lg:col-span-2">
@@ -141,6 +162,25 @@ export default async function AdminProject({ params }: PageProps<"/admin/project
         </div>
 
         <div className="space-y-6">
+          {project.status !== "COMPLETED" && project.status !== "AWAITING_PAYMENT" && (
+            <Card>
+              <h2 className="font-semibold">Launch</h2>
+              <p className="mt-1 mb-4 text-sm text-ink-muted">
+                {hosting
+                  ? `Marks the project as launched and starts ${offerHosting(project.quote!)}: the client is emailed to make their first payment by card, then it renews automatically.`
+                  : "Marks the project as launched, completes the milestones and tells the client."}
+              </p>
+              <ActionForm action={launchProject.bind(null, project.id)}>
+                {hosting && (
+                  <>
+                    <TextField label="Live domain" name="domain" placeholder="example.co.uk" required />
+                    <TextField label="Hosting provider" name="provider" defaultValue="Vercel" />
+                  </>
+                )}
+                <SubmitButton pendingText="Launching…">Mark as launched</SubmitButton>
+              </ActionForm>
+            </Card>
+          )}
           <Card>
             <h2 className="mb-4 font-semibold">Project details</h2>
             <ActionForm action={updateProject.bind(null, project.id)}>

@@ -8,6 +8,7 @@ import { requireAdmin } from "@/lib/dal";
 import { emails } from "@/lib/email";
 import { calculateTotals } from "@/lib/invoice";
 import { nextInvoiceNumber } from "@/lib/invoice-number";
+import { startProjectIfPaid } from "@/lib/project-payment";
 import { fieldError, fromZodError, formToObject, type ActionState } from "@/lib/action-state";
 import { optionalText, pence, requiredDate } from "@/lib/validation";
 
@@ -122,6 +123,7 @@ export async function setInvoiceStatus(invoiceId: string, status: "PAID" | "VOID
     where: { id: invoiceId },
     data: { status, paidAt: status === "PAID" ? (invoice.paidAt ?? new Date()) : null },
   });
+  if (status === "PAID") await startProjectIfPaid(invoice.projectId);
   revalidatePath(`/admin/invoices/${invoiceId}`);
   revalidatePath("/admin/invoices");
 }

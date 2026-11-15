@@ -5,7 +5,9 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { requireAdmin } from "@/lib/dal";
+import { emails } from "@/lib/email";
 import { DEFAULT_MILESTONES } from "@/lib/progress";
+import { hostingFromQuote } from "@/lib/quote-offer";
 import { fromZodError, formToObject, type ActionState } from "@/lib/action-state";
 import { optionalDate, optionalText } from "@/lib/validation";
 
@@ -13,7 +15,7 @@ const projectSchema = z.object({
   title: z.string().trim().min(2, "Enter a title").max(150),
   description: optionalText(),
   clientId: z.string().min(1, "Choose a client"),
-  status: z.enum(["PLANNING", "IN_PROGRESS", "REVIEW", "COMPLETED", "ON_HOLD"]),
+  status: z.enum(["AWAITING_PAYMENT", "PLANNING", "IN_PROGRESS", "REVIEW", "COMPLETED", "ON_HOLD"]),
   startDate: optionalDate,
   dueDate: optionalDate,
 });
@@ -110,4 +112,50 @@ export async function deleteUpdate(updateId: string) {
   await requireAdmin();
   const u = await db.projectUpdate.delete({ where: { id: updateId } });
   refresh(u.projectId);
+}
+
+const launchSchema = z.object({
+  domain: z.string().trim().max(253).optional().default(""),
+  provider: z.string().trim().max(100).optional().default(""),
+});
+
+/**
+ * The site is live: marks the project completed, tells the client, and (if their accepted quote
+ * includes paid hosting) creates the hosting plan and asks them to start it by card.
+ */
+export async function launchProject(projectId: string, _: ActionState, fd: FormData): Promise<ActionState> {
+  await requireAdmin();
+  const parsed = launchSchema.safeParse(formToObject(fd));
+  if (!parsed.success) return fromZodError(parsed.error);
+  const project = await db.project.findUnique({
+    where: { id: projectId },
+    include: { client: { select: { name: true, email: true } }, quote: true, hostingPlans: { select: { id: true } } },
+  });
+  if (!project || project.status === "COMPLETED") return { error: "This project has already been launched." };
+
+  const hosting = project.quote && project.hostingPlans.length === 0 ? hostingFromQuote(project.quote) : null;
+  if (hosting && parsed.data.domain.length < 3) return { fieldErrors: { domain: ["Enter the live domain, e.g. example.co.uk"] } };
+
+  await db.$transaction([
+    db.project.update({ where: { id: projectId }, data: { status: "COMPLETED" } }),
+    db.milestone.updateMany({ where: { projectId, status: { not: "DONE" } }, data: { status: "DONE", completedAt: new Date() } }),
+    db.projectUpdate.create({
+      data: {
+        projectId,
+        body: hosting
+          ? `Your website is live! The last step is to start your ${hosting.planName} plan from the Hosting page.`
+          : "Your website is live! Thank you for working with us.",
+      },
+    }),
+    ...(hosting
+      ? [
+          db.hostingPlan.create({
+            data: { ...hosting, clientId: project.clientId, projectId, domain: parsed.data.domain, provider: parsed.data.provider || "Vercel", renewalDate: new Date() },
+          }),
+        ]
+      : []),
+  ]);
+  const emailed = hosting ? await emails.hostingStarted(project.client.email, project.client.name, hosting.planName, parsed.data.domain) : true;
+  refresh(projectId);
+  redirect(`/admin/projects/${projectId}?launched=${hosting ? "hosting" : "1"}${emailed ? "" : "&email=failed"}`);
 }

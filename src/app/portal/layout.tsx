@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { DashboardShell } from "@/components/dashboard-shell";
 import { TabSessionGuard } from "@/components/tab-session";
 import { requireClient } from "@/lib/dal";
+import { db } from "@/lib/db";
 
 export const metadata: Metadata = { title: { default: "Client portal", template: "%s | Lumora portal" }, robots: { index: false } };
 
@@ -14,9 +15,12 @@ const NAV = [
 
 export default async function PortalLayout({ children }: LayoutProps<"/portal">) {
   const user = await requireClient("/portal");
+  // Only clients with a hosting plan see the Hosting page.
+  const hasHosting = (await db.hostingPlan.count({ where: { clientId: user.id } })) > 0;
+  const nav = hasHosting ? [...NAV, { href: "/portal/hosting", label: "Hosting" }] : NAV;
   return (
     <TabSessionGuard>
-      <DashboardShell nav={NAV} user={user} homeHref="/portal">
+      <DashboardShell nav={nav} user={user} homeHref="/portal">
         {children}
       </DashboardShell>
     </TabSessionGuard>

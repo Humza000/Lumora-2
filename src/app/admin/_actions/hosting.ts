@@ -58,6 +58,8 @@ export async function updateHostingPlan(planId: string, _: ActionState, fd: Form
 export async function invoiceNextPeriod(planId: string) {
   await requireAdmin();
   const plan = await db.hostingPlan.findUniqueOrThrow({ where: { id: planId } });
+  // Card subscriptions bill themselves, and cancelled plans don't renew: never invoice those.
+  if ((plan.stripeSubscriptionId && plan.subscriptionStatus !== "canceled") || plan.cancelAt) redirect(`/admin/hosting/${plan.id}`);
   const periodEnd = advanceRenewal(plan.renewalDate, plan.interval);
   const fmt = (d: Date) => d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
 

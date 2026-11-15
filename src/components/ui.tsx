@@ -115,6 +115,8 @@ const STATUS_TONES: Record<string, keyof typeof tones> = {
   REVIEWING: "warning",
   ACCEPTED: "success",
   DECLINED: "danger",
+  CHANGES_REQUESTED: "warning",
+  AWAITING_PAYMENT: "warning",
   PLANNING: "neutral",
   IN_PROGRESS: "brand",
   REVIEW: "warning",
@@ -131,12 +133,15 @@ const STATUS_TONES: Record<string, keyof typeof tones> = {
   CANCELLED: "neutral",
 };
 
+const STATUS_LABELS: Record<string, string> = { AWAITING_PAYMENT: "Waiting for payment" };
+
 export function humanize(value: string) {
+  if (STATUS_LABELS[value]) return STATUS_LABELS[value];
   return value.charAt(0) + value.slice(1).toLowerCase().replace(/_/g, " ");
 }
 
-export function StatusBadge({ status }: { status: string }) {
-  return <Badge tone={STATUS_TONES[status] ?? "neutral"}>{humanize(status)}</Badge>;
+export function StatusBadge({ status, label }: { status: string; label?: string }) {
+  return <Badge tone={STATUS_TONES[status] ?? "neutral"}>{label ?? humanize(status)}</Badge>;
 }
 
 export function ProgressBar({ value, label }: { value: number; label?: string }) {

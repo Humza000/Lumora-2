@@ -1,17 +1,23 @@
 // Pure logic for the client portal overview (no server-only, unit tested).
 
-export type NextStep = "verify" | "pay" | "draft" | "review" | "project" | "start";
+export type NextStep = "verify" | "pay" | "hosting" | "respond" | "draft" | "review" | "project" | "start";
 
 /** The single most useful thing to show a client first on their overview. */
 export function portalNextStep(s: {
   verified: boolean;
   unpaidInvoices: number;
+  /** Hosting plans waiting for their first payment (site launched). */
+  hostingToStart?: number;
+  /** Confirmed quotes waiting for the client to accept or decline. */
+  quotesToRespond?: number;
   draftQuotes: number;
   quotesInReview: number;
   activeProjects: number;
 }): NextStep {
   if (!s.verified) return "verify";
   if (s.unpaidInvoices > 0) return "pay";
+  if ((s.hostingToStart ?? 0) > 0) return "hosting";
+  if ((s.quotesToRespond ?? 0) > 0) return "respond";
   if (s.draftQuotes > 0) return "draft";
   if (s.quotesInReview > 0) return "review";
   if (s.activeProjects > 0) return "project";
@@ -24,6 +30,10 @@ export function quoteStatusNote(status: string): string | null {
     case "SUBMITTED":
     case "REVIEWING":
       return "We're reviewing this and usually reply within 2 working days.";
+    case "CHANGES_REQUESTED":
+      return "We've got your changes and will send you an updated quote, usually within 2 working days.";
+    case "SENT":
+      return "Your quote is ready. Open it to accept, request changes or decline.";
     case "ACCEPTED":
       return "Accepted. Follow progress under Projects.";
     case "DECLINED":

@@ -70,6 +70,15 @@ async function send(to: string, subject: string, html: string): Promise<boolean>
   }
 }
 
+const longDate = (d: Date) => d.toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
+
+/** Notice to ADMIN_NOTIFY_EMAIL about a hosting plan. */
+function admin(subject: string, body: string, planId: string) {
+  const to = process.env.ADMIN_NOTIFY_EMAIL;
+  if (!to) return Promise.resolve(true);
+  return send(to, subject, layout(subject, body, { label: "Open plan", href: appUrl(`/admin/hosting/${planId}`) }));
+}
+
 export const emails = {
   verifyEmail(to: string, name: string, token: string, next?: string) {
     const href = appUrl(`/verify-email?token=${token}${next ? `&next=${encodeURIComponent(next)}` : ""}`);
@@ -141,6 +150,80 @@ ${estimate.customQuote ? "<p>Your requirements may need a custom quote.</p>" : "
     );
   },
 
+  /** Client: the confirmed quote is ready to accept or decline. */
+  quoteOfferSent(to: string, name: string, quoteId: string, price: number, hosting: string | null, message: string | null) {
+    return send(
+      to,
+      `Your quote from ${site.name} is ready`,
+      layout(
+        `Your quote is ready, ${esc(name)}`,
+        `<p>We've reviewed your requirements and confirmed your quote.</p>
+<p>Project price: <strong>${formatGBP(price)}</strong>${hosting ? `<br>Hosting & care: ${esc(hosting)}` : ""}</p>
+${message ? `<p style="white-space:pre-line">${esc(message)}</p>` : ""}
+<p>Open it in your portal to see the full details. You can <strong>accept</strong> it, <strong>request changes</strong> or decline.</p>
+<p>When you accept, your project is set up and we email your website invoice; you choose to pay in full or a 50% deposit, and work starts once it's paid.${hosting && /\d/.test(hosting) ? " Hosting starts when your site goes live, renews automatically, and you can cancel it any time." : ""} Nothing is billed until you accept.</p>`,
+        { label: "View your quote", href: appUrl(`/portal/quotes/${quoteId}`) },
+      ),
+    );
+  },
+
+  adminQuoteAccepted(quoteId: string, clientName: string, projectTitle: string, price: number, invoiceNumber: string | null) {
+    const to = process.env.ADMIN_NOTIFY_EMAIL;
+    if (!to) return Promise.resolve(true);
+    return send(
+      to,
+      `Quote accepted: ${projectTitle}`,
+      layout(
+        "Quote accepted",
+        `<p>${esc(clientName)} accepted the quote for <strong>${formatGBP(price)}</strong>. The project <strong>${esc(projectTitle)}</strong> has been created.</p>
+<p>${invoiceNumber ? `Invoice ${esc(invoiceNumber)} was issued and emailed to them automatically. The project is waiting for payment and moves to Planning when it's paid.` : "No invoice was needed."}</p>`,
+        { label: "Open quote", href: appUrl(`/admin/quotes/${quoteId}`) },
+      ),
+    );
+  },
+
+  adminQuoteChangesRequested(quoteId: string, clientName: string, note: string) {
+    const to = process.env.ADMIN_NOTIFY_EMAIL;
+    if (!to) return Promise.resolve(true);
+    return send(
+      to,
+      `Changes requested by ${clientName}`,
+      layout(
+        "Quote changes requested",
+        `<p>${esc(clientName)} edited their answers and asked for an updated quote:</p><p style="white-space:pre-line">${esc(note)}</p><p>Open the quote to see what they changed, then adjust it and send it again.</p>`,
+        { label: "Open quote", href: appUrl(`/admin/quotes/${quoteId}`) },
+      ),
+    );
+  },
+
+  /** Client: the site is live and their hosting plan is ready to start. */
+  hostingStarted(to: string, name: string, planName: string, domain: string) {
+    return send(
+      to,
+      `Your website is live: start your ${planName} plan`,
+      layout(
+        `Your site is live, ${esc(name)}`,
+        `<p><strong>${esc(domain)}</strong> has launched. The last step is to start your ${esc(planName)} plan.</p>
+<p>Choose monthly or yearly and make your first payment by card. Your card is saved securely by Stripe, so the plan then renews automatically; there are no invoices to pay by hand. You can update your card or cancel from your portal at any time.</p>`,
+        { label: "Start your plan", href: appUrl("/portal/hosting") },
+      ),
+    );
+  },
+
+  adminQuoteDeclined(quoteId: string, clientName: string, reason: string | null) {
+    const to = process.env.ADMIN_NOTIFY_EMAIL;
+    if (!to) return Promise.resolve(true);
+    return send(
+      to,
+      `Quote declined by ${clientName}`,
+      layout(
+        "Quote declined",
+        `<p>${esc(clientName)} declined the quote.</p>${reason ? `<p>Their reason:</p><p style="white-space:pre-line">${esc(reason)}</p>` : "<p>They didn't give a reason.</p>"}<p>You can change the quote and send it again.</p>`,
+        { label: "Open quote", href: appUrl(`/admin/quotes/${quoteId}`) },
+      ),
+    );
+  },
+
   invoiceSent(to: string, name: string, invoiceId: string, number: string, total: number, dueDate: Date) {
     return send(
       to,
@@ -164,6 +247,48 @@ ${estimate.customQuote ? "<p>Your requirements may need a custom quote.</p>" : "
         { label: "View invoice", href: appUrl(`/portal/invoices/${invoiceId}`) },
       ),
     );
+  },
+
+  /** Client confirmation that their hosting plan will end (they keep it until then). */
+  hostingCancelled(to: string, name: string, planName: string, domain: string, endsOn: Date) {
+    return send(
+      to,
+      `Your ${planName} plan has been cancelled`,
+      layout(
+        `Hi ${esc(name)}`,
+        `<p>As requested, your ${esc(planName)} plan for <strong>${esc(domain)}</strong> has been cancelled. You won't be charged again.</p><p>Hosting and care continue until <strong>${longDate(endsOn)}</strong>, the end of the period you've already paid for. Changed your mind? You can keep your plan from your portal before then.</p>`,
+        { label: "View your plan", href: appUrl("/portal/hosting") },
+      ),
+    );
+  },
+
+  /** Client: an automatic hosting payment failed. */
+  hostingPaymentFailed(to: string, name: string, planName: string, domain: string, amount: number) {
+    return send(
+      to,
+      `We couldn't take your hosting payment`,
+      layout(
+        `Hi ${esc(name)}`,
+        `<p>Your ${formatGBP(amount)} payment for the ${esc(planName)} plan (${esc(domain)}) didn't go through. We'll try again automatically over the next few days.</p><p>To avoid any interruption, please check or update your card.</p>`,
+        { label: "Update your card", href: appUrl("/portal/hosting") },
+      ),
+    );
+  },
+
+  adminHostingSubscribed(planId: string, clientName: string, domain: string, planName: string) {
+    return admin(`Automatic payments set up: ${domain}`, `<p>${esc(clientName)} set up automatic card payments for ${esc(planName)} (${esc(domain)}).</p>`, planId);
+  },
+
+  adminHostingCancelled(planId: string, clientName: string, domain: string, endsOn: Date) {
+    return admin(`Hosting cancelled: ${domain}`, `<p>${esc(clientName)} cancelled hosting for ${esc(domain)}. It ends on <strong>${longDate(endsOn)}</strong> and won't renew.</p>`, planId);
+  },
+
+  adminHostingResumed(planId: string, clientName: string, domain: string) {
+    return admin(`Hosting kept: ${domain}`, `<p>${esc(clientName)} changed their mind and kept hosting for ${esc(domain)}. It will renew as normal.</p>`, planId);
+  },
+
+  adminHostingPaymentFailed(planId: string, clientName: string, domain: string, amount: number) {
+    return admin(`Payment failed: ${domain}`, `<p>An automatic ${formatGBP(amount)} hosting payment from ${esc(clientName)} (${esc(domain)}) failed. Stripe will retry, and the client has been asked to update their card.</p>`, planId);
   },
 
   /** Lets the Lumora team know an invoice was paid online. */

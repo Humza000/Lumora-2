@@ -12,6 +12,16 @@ describe("portalNextStep", () => {
     expect(portalNextStep({ ...base, unpaidInvoices: 1, draftQuotes: 1, quotesInReview: 1, activeProjects: 1 })).toBe("pay");
   });
 
+  it("asks for a reply to a confirmed quote before drafts and reviews", () => {
+    expect(portalNextStep({ ...base, quotesToRespond: 1, draftQuotes: 1, quotesInReview: 1, activeProjects: 1 })).toBe("respond");
+    expect(portalNextStep({ ...base, unpaidInvoices: 1, quotesToRespond: 1 })).toBe("pay");
+  });
+
+  it("asks a launched client to start their hosting plan right after unpaid invoices", () => {
+    expect(portalNextStep({ ...base, hostingToStart: 1, quotesToRespond: 1, activeProjects: 1 })).toBe("hosting");
+    expect(portalNextStep({ ...base, unpaidInvoices: 1, hostingToStart: 1 })).toBe("pay");
+  });
+
   it("then drafts, quotes in review, active projects", () => {
     expect(portalNextStep({ ...base, draftQuotes: 1, quotesInReview: 1, activeProjects: 1 })).toBe("draft");
     expect(portalNextStep({ ...base, quotesInReview: 1, activeProjects: 1 })).toBe("review");
@@ -27,6 +37,8 @@ describe("quoteStatusNote", () => {
   it("explains statuses clients see and stays quiet for drafts", () => {
     expect(quoteStatusNote("SUBMITTED")).toMatch(/2 working days/);
     expect(quoteStatusNote("REVIEWING")).toMatch(/2 working days/);
+    expect(quoteStatusNote("SENT")).toMatch(/accept, request changes or decline/);
+    expect(quoteStatusNote("CHANGES_REQUESTED")).toMatch(/updated quote/);
     expect(quoteStatusNote("ACCEPTED")).toMatch(/Projects/);
     expect(quoteStatusNote("DRAFT")).toBeNull();
   });

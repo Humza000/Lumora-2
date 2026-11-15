@@ -13,13 +13,13 @@ export default async function AdminOverview() {
 
   const [newQuotes, activeProjects, unpaid, renewals, activePlans] = await Promise.all([
     db.quote.findMany({
-      where: { status: { in: ["SUBMITTED", "REVIEWING"] } },
+      where: { status: { in: ["SUBMITTED", "REVIEWING", "CHANGES_REQUESTED"] } },
       include: { user: { select: { name: true } } },
       orderBy: { submittedAt: "desc" },
       take: 5,
     }),
     db.project.findMany({
-      where: { status: { in: ["PLANNING", "IN_PROGRESS", "REVIEW"] } },
+      where: { status: { in: ["AWAITING_PAYMENT", "PLANNING", "IN_PROGRESS", "REVIEW"] } },
       include: { client: { select: { name: true } }, milestones: { select: { status: true } } },
       orderBy: { dueDate: "asc" },
     }),

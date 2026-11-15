@@ -43,13 +43,17 @@ Decisions: self-signup is required before submitting a quote (with email verific
 | Client portal | Quotes list with status | ✅ Done |
 | Client portal | Invoices list/detail, PDF download, Stripe "Pay now" | ✅ Done |
 | Admin | Overview: quotes to review, active projects, outstanding £, hosting MRR, renewals due | ✅ Done |
-| Admin | Quote review: status, notes, **accept → project** with default milestone plan | ✅ Done |
+| Admin | Quote review: status, notes, **send confirmed quote** (price, hosting, message, dates, invoice on acceptance) | ✅ Done |
+| Portal | Client **accepts (full or 50% deposit), requests changes or declines** the quote; accepting creates the project and issues the website invoice | ✅ Done |
+| Projects | **Waiting for payment** until the website invoice is paid, then work starts automatically | ✅ Done |
+| Launch | **Mark as launched** creates the hosting plan from the quote; client starts it by card (monthly or yearly) and it renews automatically | ✅ Done |
 | Admin | Clients: list, invite, edit, resend invite, per-client history | ✅ Done |
 | Admin | Projects: CRUD, milestones (add/reorder/status/remove), client updates | ✅ Done |
 | Invoicing | Sequential numbers (LUM-YYYY-NNNN, allocated on send), issue/due dates, line items, VAT 0/5/20%, notes | ✅ Done |
 | Invoicing | Draft → Sent → Paid/Overdue/Void, edit drafts, PDF, Stripe webhook, paid date | ✅ Done |
 | Hosting & maintenance | Plans per client/project (domain, provider, plan, price, monthly/annual, renewal, status, notes) | ✅ Done |
 | Hosting & maintenance | Renewal alerts, MRR, "Invoice next period" (draft invoice + roll renewal date) | ✅ Done |
+| Hosting & maintenance | Automatic card billing (Stripe subscriptions) chosen by the client in their portal; client can cancel (ends at period end) and undo | ✅ Done |
 | Portfolio | Admin CRUD (publish/feature/order) | ✅ Done |
 | Email | Basic transactional: verification, invite, quote received, admin new-quote alert, invoice sent | ✅ Done |
 | Quality | Unit tests (pricing, invoices, hosting, money, redirects) and E2E journeys | ✅ Done |
@@ -61,9 +65,8 @@ Decisions: self-signup is required before submitting a quote (with email verific
 | Messaging / comments per project | Client ↔ admin threads on the project page; email notification |
 | File sharing | Uploads on projects (S3/R2/Vercel Blob); until then, share externally |
 | Testimonials management | Admin CRUD (reviews currently live in `src/lib/content.ts`, shown above the FAQs) |
-| Recurring / automated billing | Stripe subscriptions for hosting plans, auto-invoice on renewal |
 | Email notification polish | Branded templates (React Email), milestone-complete & update emails, overdue reminders |
-| Proposal documents | Turn an accepted quote into a formal proposal with e-sign/accept |
+| Proposal documents | PDF version of the sent quote, e-signature |
 | Portfolio images | Image upload instead of URLs |
 
 ### Out of scope (removed)
