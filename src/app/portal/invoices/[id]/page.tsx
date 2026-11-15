@@ -6,6 +6,7 @@ import { buttonClass } from "@/components/ui";
 import { db } from "@/lib/db";
 import { requireClient } from "@/lib/dal";
 import { formatGBP } from "@/lib/money";
+import { withQuote } from "@/lib/invoice-quote";
 import { payInvoice } from "../actions";
 
 export default async function PortalInvoice({ params, searchParams }: PageProps<"/portal/invoices/[id]">) {
@@ -40,7 +41,7 @@ export default async function PortalInvoice({ params, searchParams }: PageProps<
           </ActionForm>
         )}
       </div>
-      <InvoiceView invoice={invoice} />
+      <InvoiceView invoice={await withQuote(invoice)} />
     </>
   );
 }

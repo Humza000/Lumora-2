@@ -151,7 +151,7 @@ export default async function AdminProject({ params }: PageProps<"/admin/project
           <Card>
             <div className="mb-3 flex items-center justify-between">
               <h2 className="font-semibold">Invoices</h2>
-              <ButtonLink href={`/admin/invoices/new?client=${project.client.id}&project=${project.id}`} variant="secondary" size="sm">
+              <ButtonLink href={`/admin/invoices/new?client=${project.client.id}&project=${project.id}${project.quote ? `&quote=${project.quote.id}` : ""}`} variant="secondary" size="sm">
                 New
               </ButtonLink>
             </div>

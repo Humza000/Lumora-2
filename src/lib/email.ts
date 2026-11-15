@@ -152,4 +152,31 @@ ${estimate.customQuote ? "<p>Your requirements may need a custom quote.</p>" : "
       ),
     );
   },
+
+  /** Payment confirmation to the client, sent when Stripe confirms an invoice is paid. */
+  invoicePaid(to: string, name: string, invoiceId: string, number: string, total: number) {
+    return send(
+      to,
+      `Payment received: invoice ${number}`,
+      layout(
+        `Thank you, ${esc(name)}`,
+        `<p>We've received your payment of <strong>${formatGBP(total)}</strong> for invoice ${esc(number)}. No further action is needed.</p><p>You can download a copy of the paid invoice from your portal at any time.</p>`,
+        { label: "View invoice", href: appUrl(`/portal/invoices/${invoiceId}`) },
+      ),
+    );
+  },
+
+  /** Lets the Lumora team know an invoice was paid online. */
+  adminInvoicePaid(invoiceId: string, number: string, clientName: string, total: number) {
+    const to = process.env.ADMIN_NOTIFY_EMAIL;
+    if (!to) return Promise.resolve(true);
+    return send(
+      to,
+      `Paid: invoice ${number} (${formatGBP(total)})`,
+      layout("Invoice paid online", `<p>${esc(clientName)} paid invoice ${esc(number)} for <strong>${formatGBP(total)}</strong> via Stripe.</p>`, {
+        label: "Open invoice",
+        href: appUrl(`/admin/invoices/${invoiceId}`),
+      }),
+    );
+  },
 };

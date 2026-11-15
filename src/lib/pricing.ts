@@ -277,3 +277,43 @@ export function formatEstimate(min: number, max: number) {
   if (min === max) return `From ${formatGBP(min, { whole: true })}`;
   return `${formatGBP(min, { whole: true })} – ${formatGBP(max, { whole: true })}`;
 }
+
+export type QuoteSummary = {
+  /** e.g. "Business website" */
+  packageName: string | null;
+  /** e.g. "Standard care, £10/month" or "No hosting required" */
+  hosting: string | null;
+  /** e.g. "Standard care, billed yearly": for invoices, where line items carry the prices. */
+  hostingPlanName: string | null;
+  features: string[];
+  /** Suggested invoice lines (pence): the package build, then the first hosting period if any. */
+  lines: { description: string; quantity: number; unitPrice: number }[];
+};
+
+/**
+ * What a client picked in the quote wizard, for invoices. `stored` is the quote's saved estimate:
+ * new quotes store the starting price in both columns, which is used for the build line so the
+ * invoice matches what the client was shown; otherwise current prices are used.
+ */
+export function summariseQuote(answers: unknown, prices: PriceMap = DEFAULT_PRICES, stored?: { min: number; max: number }): QuoteSummary {
+  const parsed = quoteDraftSchema.safeParse(answers);
+  const a = parsed.success ? parsed.data : {};
+  const e = calculateEstimate(a, prices);
+  const build = stored && stored.min === stored.max && stored.min > 0 ? stored.min : e.oneTime;
+  const lines: QuoteSummary["lines"] = [];
+  if (e.projectType) lines.push({ description: `${e.projectType.label}: website design & build`, quantity: 1, unitPrice: build });
+  if (e.hostingPlan && e.hostingPrice > 0) {
+    lines.push({
+      description: `${e.hostingPlan.label}: hosting & care (first ${e.hostingPeriod}, billed ${e.hostingBilling})`,
+      quantity: 1,
+      unitPrice: e.hostingPrice,
+    });
+  }
+  return {
+    packageName: e.projectType?.label ?? null,
+    hosting: e.hostingPlan ? (e.hostingPrice > 0 ? `${e.hostingPlan.label}, ${formatHosting(e)}` : e.hostingPlan.label) : null,
+    hostingPlanName: e.hostingPlan ? (e.hostingPrice > 0 ? `${e.hostingPlan.label}, billed ${e.hostingBilling}` : e.hostingPlan.label) : null,
+    features: featuresForType(a.projectType, a.features).map(featureLabel),
+    lines,
+  };
+}

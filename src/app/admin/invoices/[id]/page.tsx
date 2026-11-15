@@ -6,6 +6,7 @@ import { Button, Card, PageHeader, buttonClass } from "@/components/ui";
 import { db } from "@/lib/db";
 import { requireAdmin } from "@/lib/dal";
 import { effectiveStatus } from "@/lib/invoice";
+import { withQuote } from "@/lib/invoice-quote";
 import { deleteDraftInvoice, sendInvoice, setInvoiceStatus, updateInvoice } from "../../_actions/invoices";
 import { InvoiceForm } from "../invoice-form";
 import { invoiceFormOptions } from "../options";
@@ -13,7 +14,7 @@ import { invoiceFormOptions } from "../options";
 export default async function AdminInvoice({ params, searchParams }: PageProps<"/admin/invoices/[id]">) {
   await requireAdmin();
   const { id } = await params;
-  const { edit, sent } = await searchParams;
+  const { edit, sent, email } = await searchParams;
   const invoice = await db.invoice.findUnique({ where: { id }, include: invoiceViewInclude });
   if (!invoice) notFound();
 
@@ -86,9 +87,15 @@ export default async function AdminInvoice({ params, searchParams }: PageProps<"
         )}
       </div>
 
-      {sent && invoice.status === "SENT" && (
+      {sent && invoice.status === "SENT" && email !== "failed" && (
         <p role="status" className="mb-4 rounded-xl border border-success/25 bg-success/10 px-4 py-3 text-sm text-success">
-          Invoice {invoice.number} sent to {invoice.client.email}.
+          Invoice {invoice.number} sent. {invoice.client.email} has been emailed a link to view and pay it.
+        </p>
+      )}
+      {sent && invoice.status === "SENT" && email === "failed" && (
+        <p role="alert" className="mb-4 rounded-xl border border-warning/30 bg-warning/10 px-4 py-3 text-sm text-warning">
+          Invoice {invoice.number} is issued and visible in the client&apos;s portal, but the notification email to{" "}
+          {invoice.client.email} couldn&apos;t be sent. Check the email settings (SMTP_*), or let them know directly.
         </p>
       )}
       {isDraft && (
@@ -97,7 +104,7 @@ export default async function AdminInvoice({ params, searchParams }: PageProps<"
           the client a link to view and pay.
         </p>
       )}
-      <InvoiceView invoice={invoice} />
+      <InvoiceView invoice={await withQuote(invoice)} />
     </>
   );
 }

@@ -2,6 +2,7 @@ import { invoiceViewInclude } from "@/components/invoice-view";
 import { db } from "@/lib/db";
 import { getCurrentUser } from "@/lib/dal";
 import { renderInvoicePdf } from "@/lib/invoice-pdf";
+import { withQuote } from "@/lib/invoice-quote";
 
 export async function GET(_req: Request, ctx: RouteContext<"/api/invoices/[id]/pdf">) {
   const user = await getCurrentUser();
@@ -15,7 +16,7 @@ export async function GET(_req: Request, ctx: RouteContext<"/api/invoices/[id]/p
   });
   if (!invoice) return new Response("Not found", { status: 404 });
 
-  const pdf = await renderInvoicePdf(invoice);
+  const pdf = await renderInvoicePdf(await withQuote(invoice));
   return new Response(new Uint8Array(pdf), {
     headers: {
       "Content-Type": "application/pdf",

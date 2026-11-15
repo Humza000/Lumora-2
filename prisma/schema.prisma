@@ -79,6 +79,7 @@ model Quote {
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
   project     Project?
+  invoices    Invoice[]
 }
 
 model PricingItem {
@@ -162,6 +163,9 @@ model Invoice {
   project         Project?      @relation(fields: [projectId], references: [id], onDelete: SetNull)
   hostingPlanId   String?
   hostingPlan     HostingPlan?  @relation(fields: [hostingPlanId], references: [id], onDelete: SetNull)
+  // The quote this invoice bills for: shows the package and hosting plan the client picked.
+  quoteId         String?
+  quote           Quote?        @relation(fields: [quoteId], references: [id], onDelete: SetNull)
   status          InvoiceStatus @default(DRAFT)
   issueDate       DateTime      @default(now())
   dueDate         DateTime

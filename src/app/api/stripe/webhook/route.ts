@@ -1,5 +1,6 @@
 import type Stripe from "stripe";
 import { db } from "@/lib/db";
+import { emails } from "@/lib/email";
 import { getStripe } from "@/lib/stripe";
 
 // Stripe → POST /api/stripe/webhook. Configure in the Stripe dashboard (or `stripe listen`)
@@ -21,17 +22,24 @@ export async function POST(req: Request) {
     const session = event.data.object;
     const invoiceId = session.metadata?.invoiceId;
     if (invoiceId && session.payment_status === "paid") {
-      const invoice = await db.invoice.findUnique({ where: { id: invoiceId } });
+      const invoice = await db.invoice.findUnique({ where: { id: invoiceId }, include: { client: { select: { name: true, email: true } } } });
       if (invoice && invoice.status !== "PAID") {
         if (session.amount_total !== invoice.total) {
           // Leave unpaid for manual review in the admin rather than silently accepting.
           console.error(`[stripe] amount mismatch for ${invoice.number}: paid ${session.amount_total}, expected ${invoice.total}`);
           return Response.json({ received: true });
         }
-        await db.invoice.update({
-          where: { id: invoice.id },
+        // Conditional update: if Stripe retries the event, only the first delivery sends emails.
+        const { count } = await db.invoice.updateMany({
+          where: { id: invoice.id, status: { not: "PAID" } },
           data: { status: "PAID", paidAt: new Date(), stripeSessionId: session.id },
         });
+        if (count === 1) {
+          await Promise.all([
+            emails.invoicePaid(invoice.client.email, invoice.client.name, invoice.id, invoice.number ?? "", invoice.total),
+            emails.adminInvoicePaid(invoice.id, invoice.number ?? "", invoice.client.name, invoice.total),
+          ]);
+        }
       }
     }
   }

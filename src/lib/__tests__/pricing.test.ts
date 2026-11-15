@@ -8,6 +8,7 @@ import {
   formatHosting,
   hostingPrices,
   quoteAnswersSchema,
+  summariseQuote,
 } from "../pricing";
 
 describe("starting prices", () => {
@@ -139,5 +140,39 @@ describe("quoteAnswersSchema", () => {
 
   it("requires goals of at least 10 characters", () => {
     expect(quoteAnswersSchema.safeParse({ ...valid, goals: "short" }).success).toBe(false);
+  });
+});
+
+describe("summariseQuote", () => {
+  const answers = {
+    projectType: "type_business",
+    features: ["business_maps", "shop_cart"],
+    hostingPlan: "hosting_standard",
+    hostingBilling: "yearly",
+  };
+
+  it("describes the package, hosting and features the client picked", () => {
+    const q = summariseQuote(answers);
+    expect(q.packageName).toBe("Business website");
+    expect(q.hosting).toBe("Standard care, £100/year");
+    expect(q.hostingPlanName).toBe("Standard care, billed yearly");
+    expect(q.features).toEqual(["Google Maps"]); // options from another type are dropped
+  });
+
+  it("suggests invoice lines for the build and the first hosting period", () => {
+    expect(summariseQuote(answers).lines).toEqual([
+      { description: "Business website: website design & build", quantity: 1, unitPrice: 10000 },
+      { description: "Standard care: hosting & care (first year, billed yearly)", quantity: 1, unitPrice: 10000 },
+    ]);
+  });
+
+  it("bills the price the client was quoted, and skips hosting they don't need", () => {
+    const q = summariseQuote({ projectType: "type_business", hostingPlan: "hosting_none" }, DEFAULT_PRICES, { min: 9000, max: 9000 });
+    expect(q.lines).toEqual([{ description: "Business website: website design & build", quantity: 1, unitPrice: 9000 }]);
+    expect(q.hosting).toBe("No hosting required");
+  });
+
+  it("copes with empty or invalid answers", () => {
+    expect(summariseQuote(null)).toEqual({ packageName: null, hosting: null, hostingPlanName: null, features: [], lines: [] });
   });
 });

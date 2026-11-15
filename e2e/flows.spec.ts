@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
 import { expect, test, type Page } from "@playwright/test";
+import Stripe from "stripe";
 
 // Full journeys against a seeded dev DB:
 //   npm run db:seed && npm run dev > .e2e-dev.log 2>&1   (or let Playwright start it)
@@ -184,6 +185,14 @@ test.describe.serial("Lumora end-to-end", () => {
     // Create invoice for the project
     await page.getByRole("link", { name: "New", exact: true }).click();
     await expect(page).toHaveURL(/\/admin\/invoices\/new/);
+    // Pre-filled from what the client picked in the quote wizard
+    await expect(page.getByLabel("Client (by email)")).toHaveValue(/.+/);
+    await expect(page.locator("dd", { hasText: "Business website" })).toBeVisible();
+    await expect(page.locator("dd", { hasText: "Standard care, £10/month" })).toBeVisible();
+    await expect(page.getByLabel("Description").first()).toHaveValue("Business website: website design & build");
+    await expect(page.getByLabel("Description").nth(1)).toHaveValue(/Standard care: hosting & care \(first month/);
+    // Bill a deposit instead
+    await page.getByLabel("Remove line").last().click();
     await page.getByLabel("Description").fill("Website deposit (50%)");
     await page.getByLabel("Unit price").fill("1250.00");
     await page.getByLabel("VAT").selectOption("20");
@@ -193,6 +202,11 @@ test.describe.serial("Lumora end-to-end", () => {
     await expect(page.getByText("This is a draft")).toBeVisible();
     await page.getByRole("button", { name: "Send to client" }).click();
     await expect(page.getByText(/Invoice LUM-\d{4}-\d{4} sent/)).toBeVisible();
+    await expect(page.getByText(`${client.email} has been emailed`)).toBeVisible();
+    // The invoice shows what the client picked
+    await expect(page.getByText("Package:")).toBeVisible();
+    await expect(page.getByText("Standard care, billed monthly")).toBeVisible();
+    expect(readFileSync(DEV_LOG, "utf8")).toMatch(new RegExp(`To: ${client.email.replace(/[.+]/g, "\\$&")}\\s+\\[email:dev\\] Subject: Invoice LUM-`));
 
     // PDF renders
     const invoiceId = new URL(page.url()).pathname.split("/").pop();
@@ -238,9 +252,36 @@ test.describe.serial("Lumora end-to-end", () => {
     await page.goto("/portal/invoices");
     await page.getByRole("link", { name: /LUM-/ }).first().click();
     await expect(page.getByText("£1,500.00").first()).toBeVisible();
-    // No Stripe keys locally → friendly error rather than a crash
-    await page.getByRole("button", { name: /Pay £1,500.00 now/ }).click();
-    await expect(page.locator("p[role=alert]")).toContainText(/Online payments aren't available|can't be paid/);
+    const stripeKey = process.env.STRIPE_SECRET_KEY ?? "";
+    if (!stripeKey) {
+      // No Stripe keys → friendly error rather than a crash
+      await page.getByRole("button", { name: /Pay £1,500.00 now/ }).click();
+      await expect(page.locator("p[role=alert]")).toContainText(/Online payments aren't available|can't be paid/);
+    } else if (stripeKey.startsWith("sk_test_") && process.env.STRIPE_WEBHOOK_SECRET) {
+      // Test-mode Stripe: "Pay now" opens Stripe Checkout for the right amount…
+      await expect(page).toHaveURL(new RegExp(`/portal/invoices/${createdInvoiceId}$`));
+      const invoiceUrl = page.url();
+      await page.getByRole("button", { name: /Pay £1,500.00 now/ }).click();
+      await expect(page).toHaveURL(/checkout\.stripe\.com/, { timeout: 30_000 });
+      // …and when Stripe reports the payment (a signed webhook, as Stripe would send it), the invoice is paid.
+      const invoiceId = createdInvoiceId;
+      const payload = JSON.stringify({
+        id: `evt_e2e_${run}`,
+        object: "event",
+        type: "checkout.session.completed",
+        data: { object: { id: `cs_test_e2e_${run}`, object: "checkout.session", payment_status: "paid", amount_total: 150000, metadata: { invoiceId } } },
+      });
+      const signature = Stripe.webhooks.generateTestHeaderString({ payload, secret: process.env.STRIPE_WEBHOOK_SECRET });
+      const res = await page.request.post("/api/stripe/webhook", { data: payload, headers: { "stripe-signature": signature, "content-type": "application/json" } });
+      expect(res.status()).toBe(200);
+      // A forged (unsigned) event is rejected
+      const forged = await page.request.post("/api/stripe/webhook", { data: payload, headers: { "stripe-signature": "t=1,v1=bad" } });
+      expect(forged.status()).toBe(400);
+      await page.goto(invoiceUrl);
+      await expect(page.getByText("Paid", { exact: true }).first()).toBeVisible();
+      await expect(page.getByRole("button", { name: /Pay £1,500.00 now/ })).toHaveCount(0);
+      expect(readFileSync(DEV_LOG, "utf8")).toContain(`Subject: Payment received: invoice LUM-`);
+    }
 
     // The seeded demo client's project must not be visible
     await page.goto("/portal/projects");

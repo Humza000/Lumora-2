@@ -1,6 +1,7 @@
 import "server-only";
 import { Document, Page, StyleSheet, Text, View, renderToBuffer } from "@react-pdf/renderer";
 import type { InvoiceForView } from "@/components/invoice-view";
+import { invoiceDetails } from "./invoice-details";
 import { formatGBP } from "./money";
 import { site } from "./site";
 
@@ -61,12 +62,12 @@ function InvoicePdf({ invoice }: { invoice: InvoiceForView }) {
               <Text style={s.muted}>Due date: </Text>
               {d(invoice.dueDate)}
             </Text>
-            {invoice.project ? (
-              <Text>
-                <Text style={s.muted}>Project: </Text>
-                {invoice.project.title}
+            {invoiceDetails(invoice).map((d) => (
+              <Text key={d.label}>
+                <Text style={s.muted}>{d.label}: </Text>
+                {d.value}
               </Text>
-            ) : null}
+            ))}
           </View>
         </View>
 

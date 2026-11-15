@@ -13,10 +13,12 @@ function createClient() {
 }
 
 // In development, reuse one client across hot reloads (avoids exhausting connections),
-// but replace it when `prisma generate` produced a new client (schema changed), so
+// but use a fresh one when `prisma generate` produced a new client (schema changed), so
 // new fields work without restarting the dev server.
+// The old client is NOT disconnected: separately bundled code (e.g. a route handler) can load
+// its own copy of the generated client while other modules still hold the old one, and with a
+// driver adapter a disconnected client fails every later query ("connection closed").
 const reusable = globalForPrisma.prisma && globalForPrisma.prismaCtor === PrismaClient;
-if (globalForPrisma.prisma && !reusable) void globalForPrisma.prisma.$disconnect().catch(() => {});
 
 export const db = reusable ? globalForPrisma.prisma! : createClient();
 

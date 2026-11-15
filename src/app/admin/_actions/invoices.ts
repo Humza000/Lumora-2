@@ -22,6 +22,7 @@ const invoiceSchema = z
     clientId: z.string().min(1, "Choose a client"),
     projectId: z.string().optional().transform((v) => v || null),
     hostingPlanId: z.string().optional().transform((v) => v || null),
+    quoteId: z.string().optional().transform((v) => v || null),
     issueDate: requiredDate,
     dueDate: requiredDate,
     vatRate: z.coerce.number().int().min(0).max(100),
@@ -41,7 +42,7 @@ const invoiceSchema = z
   .refine((v) => v.dueDate >= v.issueDate, { path: ["dueDate"], message: "Due date must be on or after the issue date" });
 
 async function parseInvoice(fd: FormData) {
-  const parsed = invoiceSchema.safeParse(formToObject(fd));
+  const parsed = invoiceSchema.safeParse(formToObject(fd)); // unknown fields (e.g. `intent`) are ignored
   if (!parsed.success) return { error: fromZodError(parsed.error) } as const;
   const data = parsed.data;
 
@@ -53,6 +54,9 @@ async function parseInvoice(fd: FormData) {
   }
   if (data.hostingPlanId && !(await db.hostingPlan.findFirst({ where: { id: data.hostingPlanId, clientId: data.clientId } }))) {
     return { error: fieldError("hostingPlanId", "That plan belongs to a different client") } as const;
+  }
+  if (data.quoteId && !(await db.quote.findFirst({ where: { id: data.quoteId, userId: data.clientId } }))) {
+    return { error: fieldError("quoteId", "That quote belongs to a different client") } as const;
   }
   return { data, totals: calculateTotals(data.lines, data.vatRate) } as const;
 }
@@ -66,7 +70,23 @@ export async function createInvoice(_: ActionState, fd: FormData): Promise<Actio
   const invoice = await db.invoice.create({
     data: { ...data, ...res.totals, status: "DRAFT", lines: { create: lines } },
   });
+  // "Create & send to client": issue it straight away instead of leaving a draft.
+  if (fd.get("intent") === "send") redirect(await issueAndEmail(invoice.id));
   redirect(`/admin/invoices/${invoice.id}`);
+}
+
+/**
+ * Allocates the sequential invoice number, marks the draft SENT and emails the client a link to
+ * view and pay it. Returns the admin URL to show next, flagging if the email couldn't be sent.
+ */
+async function issueAndEmail(invoiceId: string) {
+  const existing = await db.invoice.findUniqueOrThrow({ where: { id: invoiceId }, include: { client: true } });
+  const invoice = await db.$transaction(async (tx) => {
+    const number = existing.number ?? (await nextInvoiceNumber(tx, existing.issueDate));
+    return tx.invoice.update({ where: { id: invoiceId, status: "DRAFT" }, data: { number, status: "SENT" } });
+  });
+  const emailed = await emails.invoiceSent(existing.client.email, existing.client.name, invoice.id, invoice.number!, invoice.total, invoice.dueDate);
+  return `/admin/invoices/${invoiceId}?sent=1${emailed ? "" : "&email=failed"}`;
 }
 
 export async function updateInvoice(invoiceId: string, _: ActionState, fd: FormData): Promise<ActionState> {
@@ -88,17 +108,10 @@ export async function updateInvoice(invoiceId: string, _: ActionState, fd: FormD
 /** Allocates the sequential invoice number, marks as SENT and emails the client. */
 export async function sendInvoice(invoiceId: string): Promise<ActionState> {
   await requireAdmin();
-  const existing = await db.invoice.findUnique({ where: { id: invoiceId }, include: { client: true } });
+  const existing = await db.invoice.findUnique({ where: { id: invoiceId } });
   if (!existing || existing.status !== "DRAFT") return { error: "Only draft invoices can be sent." };
-
-  const invoice = await db.$transaction(async (tx) => {
-    const number = existing.number ?? (await nextInvoiceNumber(tx, existing.issueDate));
-    return tx.invoice.update({ where: { id: invoiceId, status: "DRAFT" }, data: { number, status: "SENT" } });
-  });
-
-  await emails.invoiceSent(existing.client.email, existing.client.name, invoice.id, invoice.number!, invoice.total, invoice.dueDate);
   // The send form disappears once the invoice isn't a draft, so confirm via the URL.
-  redirect(`/admin/invoices/${invoiceId}?sent=1`);
+  redirect(await issueAndEmail(invoiceId));
 }
 
 export async function setInvoiceStatus(invoiceId: string, status: "PAID" | "VOID" | "OVERDUE" | "SENT") {

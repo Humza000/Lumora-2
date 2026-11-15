@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { logout } from "@/app/(auth)/actions";
 import { Logo } from "./logo";
+import { buttonClass, cn } from "./ui";
 import { LogoutButton } from "./tab-session";
 import { SideNav, type NavItem } from "./side-nav";
 
@@ -46,6 +47,12 @@ export function DashboardShell({
             <LogoutButton action={logout} className="rounded-lg px-2 py-1 text-sm whitespace-nowrap text-ink-muted transition-colors hover:text-brand-light" />
           </div>
         </div>
+        <div className="hidden px-3 pb-4 md:block">
+          <Link href="/" className={cn(buttonClass("secondary", "sm"), "w-full justify-start gap-2 px-3.5 py-2.5")}>
+            <HouseIcon />
+            Back to homepage
+          </Link>
+        </div>
         <SideNav items={nav} />
         <div className="hidden border-t border-line/60 p-4 md:mt-auto md:block">
           <div className="flex items-center gap-3 rounded-xl p-2 transition-colors hover:bg-ink/[0.035]">
@@ -57,11 +64,7 @@ export function DashboardShell({
               <p className="truncate text-xs text-ink-muted">{user.email}</p>
             </div>
           </div>
-          <div className="mt-2 flex items-center justify-between gap-2 px-2">
-            <Link href="/" className="flex items-center gap-1.5 text-sm text-ink-muted transition-colors hover:text-brand-light">
-              <HouseIcon />
-              Homepage
-            </Link>
+          <div className="mt-2 px-2">
             <LogoutButton action={logout} className="text-sm text-ink-muted transition-colors hover:text-brand-light" />
           </div>
         </div>

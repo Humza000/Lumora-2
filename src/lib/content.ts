@@ -52,7 +52,7 @@ export const faqs = [
   },
   {
     q: "Do you provide hosting and ongoing maintenance?",
-    a: `Yes, and it's optional. Basic hosting (hosting and SSL certificate) is ${from("hosting_basic")}/month, Standard care (adds regular backups and software updates) is ${from("hosting_standard")}/month, and Premium care (adds small content updates and priority support) is ${from("hosting_premium")}/month. Pay yearly instead and you get two months free (${from("hosting_basic_yearly")}, ${from("hosting_standard_yearly")} or ${from("hosting_premium_yearly")} a year). These plans are separate from the one-time cost of building your website, or you can arrange your own hosting.`,
+    a: "Yes, and it's optional. We offer hosting and care plans covering technical support, security and software updates, backups, bug fixes and small content changes. You can pay monthly or yearly (paying yearly works out cheaper), or host the website yourself if you prefer.",
   },
   {
     q: "How does pricing work?",

@@ -1,6 +1,7 @@
 import { formatDate, StatusBadge } from "./ui";
 import { formatGBP } from "@/lib/money";
 import { effectiveStatus } from "@/lib/invoice";
+import { invoiceDetails } from "@/lib/invoice-details";
 import { site } from "@/lib/site";
 
 export type InvoiceForView = {
@@ -17,7 +18,10 @@ export type InvoiceForView = {
   lines: { id: string; description: string; quantity: number; unitPrice: number }[];
   client: { name: string; email: string; profile: { company: string | null; address: string | null } | null };
   project: { title: string } | null;
+  hostingPlan: { domain: string } | null;
+  quote: { answers: unknown } | null;
 };
+
 
 export function InvoiceView({ invoice }: { invoice: InvoiceForView }) {
   return (
@@ -55,11 +59,11 @@ export function InvoiceView({ invoice }: { invoice: InvoiceForView }) {
               <span className="text-ink-muted">Paid:</span> {formatDate(invoice.paidAt)}
             </p>
           )}
-          {invoice.project && (
-            <p>
-              <span className="text-ink-muted">Project:</span> {invoice.project.title}
+          {invoiceDetails(invoice).map((d) => (
+            <p key={d.label}>
+              <span className="text-ink-muted">{d.label}:</span> {d.value}
             </p>
-          )}
+          ))}
         </div>
       </div>
 
@@ -107,5 +111,6 @@ export function InvoiceView({ invoice }: { invoice: InvoiceForView }) {
 export const invoiceViewInclude = {
   lines: true,
   project: { select: { title: true } },
+  hostingPlan: { select: { domain: true } },
   client: { select: { name: true, email: true, profile: { select: { company: true, address: true } } } },
 } as const;
