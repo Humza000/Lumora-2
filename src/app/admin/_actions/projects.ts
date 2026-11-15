@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { requireAdmin } from "@/lib/dal";
+import { deleteQuoteAndProject } from "@/lib/delete-records";
 import { emails } from "@/lib/email";
 import { DEFAULT_MILESTONES } from "@/lib/progress";
 import { hostingFromQuote } from "@/lib/quote-offer";
@@ -158,4 +159,17 @@ export async function launchProject(projectId: string, _: ActionState, fd: FormD
   const emailed = hosting ? await emails.hostingStarted(project.client.email, project.client.name, hosting.planName, parsed.data.domain) : true;
   refresh(projectId);
   redirect(`/admin/projects/${projectId}?launched=${hosting ? "hosting" : "1"}${emailed ? "" : "&email=failed"}`);
+}
+
+/** Deletes a project with everything linked to it: the quote it came from, invoices (paid too), hosting plans. */
+export async function deleteProject(projectId: string): Promise<ActionState> {
+  await requireAdmin();
+  const project = await db.project.findUnique({ where: { id: projectId }, select: { quoteId: true } });
+  if (!project) redirect("/admin/projects");
+  const error = await deleteQuoteAndProject({ quoteId: project.quoteId, projectId });
+  if (error) return { error };
+  revalidatePath("/admin/projects");
+  revalidatePath("/admin/quotes");
+  revalidatePath("/admin/invoices");
+  redirect("/admin/projects?deleted=1");
 }

@@ -5,11 +5,10 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { requireAdmin } from "@/lib/dal";
-import { quoteDeleteBlocker } from "@/lib/deletion";
+import { deleteQuoteAndProject } from "@/lib/delete-records";
 import { emails } from "@/lib/email";
 import { HOSTING_BILLING, HOSTING_PLANS } from "@/lib/pricing";
 import { canSendOffer, offerHosting } from "@/lib/quote-offer";
-import { expireCheckoutSessions } from "@/lib/stripe-cleanup";
 import { fromZodError, formToObject, type ActionState } from "@/lib/action-state";
 import { optionalDate, optionalText, pence } from "@/lib/validation";
 
@@ -76,40 +75,13 @@ export async function withdrawQuoteOffer(quoteId: string): Promise<ActionState> 
   redirect(`/admin/quotes/${quoteId}?withdrawn=1`);
 }
 
-/**
- * Deletes a quote and, if it was accepted, its project (milestones, updates) and unpaid invoices.
- * Refused if any of those invoices is paid, or the project has a hosting plan.
- */
+/** Deletes a quote with everything linked to it: project, invoices (paid too), hosting plans (see deleteQuoteAndProject). */
 export async function deleteQuote(quoteId: string): Promise<ActionState> {
   await requireAdmin();
-  const quote = await db.quote.findUnique({
-    where: { id: quoteId },
-    include: { project: { select: { id: true, _count: { select: { hostingPlans: true } } } } },
-  });
+  const quote = await db.quote.findUnique({ where: { id: quoteId }, select: { project: { select: { id: true } } } });
   if (!quote) redirect("/admin/quotes");
-  const projectId = quote.project?.id;
-  const invoiceWhere = { OR: [{ quoteId }, ...(projectId ? [{ projectId }] : [])] };
-  const invoices = await db.invoice.findMany({ where: invoiceWhere, select: { id: true, status: true, stripeSessionId: true } });
-
-  const blocker = quoteDeleteBlocker({
-    paidInvoices: invoices.filter((i) => i.status === "PAID").length,
-    hasHostingPlan: (quote.project?._count.hostingPlans ?? 0) > 0,
-  });
-  if (blocker) return { error: blocker };
-
-  await expireCheckoutSessions(invoices.map((i) => i.stripeSessionId));
-  try {
-    await db.$transaction(async (tx) => {
-      // Re-checked inside the transaction in case one was paid in the meantime.
-      if (await tx.invoice.count({ where: { ...invoiceWhere, status: "PAID" } })) throw new Error("PAID");
-      await tx.invoice.deleteMany({ where: { ...invoiceWhere, status: { not: "PAID" } } });
-      if (projectId) await tx.project.delete({ where: { id: projectId } });
-      await tx.quote.delete({ where: { id: quoteId } });
-    });
-  } catch (err) {
-    if ((err as Error).message === "PAID") return { error: "An invoice for this quote has just been paid, so it can't be deleted." };
-    throw err;
-  }
+  const error = await deleteQuoteAndProject({ quoteId, projectId: quote.project?.id ?? null });
+  if (error) return { error };
   revalidatePath("/admin/quotes");
   revalidatePath("/admin/projects");
   revalidatePath("/admin/invoices");

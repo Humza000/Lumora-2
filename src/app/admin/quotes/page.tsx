@@ -31,7 +31,7 @@ export default async function AdminQuotes({ searchParams }: PageProps<"/admin/qu
       <PageHeader title="Quotes" description="Requests submitted through the quote wizard." />
       {deleted && (
         <p role="status" className="mb-6 rounded-xl border border-success/25 bg-success/10 px-4 py-3 text-sm text-success">
-          Quote deleted, along with any project and unpaid invoices it had.
+          Quote deleted, along with its project, invoices and hosting plans.
         </p>
       )}
       <div className="mb-6 flex flex-wrap gap-2">

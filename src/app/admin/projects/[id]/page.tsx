@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ConfirmSubmit } from "@/components/confirm-button";
 import { ActionForm, SubmitButton, TextAreaField, TextField } from "@/components/forms";
 import { ButtonLink, Card, PageHeader, ProgressBar, StatusBadge, formatDate } from "@/components/ui";
 import { db } from "@/lib/db";
@@ -9,6 +10,7 @@ import { projectProgress } from "@/lib/progress";
 import { hostingFromQuote, offerHosting } from "@/lib/quote-offer";
 import {
   addMilestone,
+  deleteProject,
   deleteMilestone,
   deleteUpdate,
   launchProject,
@@ -66,7 +68,18 @@ export default async function AdminProject({ params, searchParams }: PageProps<"
               )}
             </>
           }
-          actions={<StatusBadge status={project.status} />}
+          actions={
+            <>
+              <StatusBadge status={project.status} />
+              <ActionForm action={deleteProject.bind(null, project.id)} className="space-y-2">
+                <ConfirmSubmit
+                  message={`Delete the project "${project.title}"? Its milestones, updates, ALL its invoices (paid ones too, without refunding them), any hosting plan (card payments are cancelled)${project.quote ? " and the quote it came from" : ""} are deleted too. The client will no longer see any of it.`}
+                >
+                  Delete project
+                </ConfirmSubmit>
+              </ActionForm>
+            </>
+          }
         />
       </div>
 

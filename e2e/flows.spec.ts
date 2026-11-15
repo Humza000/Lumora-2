@@ -547,52 +547,67 @@ test.describe.serial("Lumora end-to-end", () => {
     await page.goto("/admin/clients");
     await expect(page).toHaveURL(/\/portal$/);
   });
-  test("admin deletes: paid records are kept; deleted invoices and plans disappear from the portal", async ({ page, browser }) => {
+  test("admin full deletes: invoice, project, hosting plan, and a paid quote with everything linked; gone from the portal", async ({ page, browser }) => {
     test.skip(!createdProjectPath || !createdPlanId, "depends on the earlier tests");
     page.on("dialog", (d) => d.accept()); // the "are you sure?" confirms
     await login(page, ADMIN.email, ADMIN.password);
     await expect(page).toHaveURL(/\/admin$/);
+    const projectUrl = new URL(createdProjectPath.replace("/portal/", "/admin/"), page.url()).toString();
 
-    // The accepted quote has a paid deposit, so it (and its project) can't be deleted
-    await page.goto(createdQuoteUrl);
-    await page.getByRole("button", { name: "Delete quote" }).click();
-    await expect(page.locator("p[role=alert]")).toHaveText("This quote has paid invoices, so it can't be deleted.");
-
-    // Paid invoices have no delete button
-    await page.goto("/admin/invoices?filter=paid");
-    await page.getByRole("row", { name: new RegExp(client.name) }).first().getByRole("link").first().click();
-    await expect(page).toHaveURL(/\/admin\/invoices\/\w+$/);
-    await expect(page.getByRole("button", { name: /Delete/ })).toHaveCount(0);
-
-    // A sent (unpaid) invoice can be deleted
-    await page.goto(new URL(createdProjectPath.replace("/portal/", "/admin/"), page.url()).toString());
+    // A sent invoice
+    await page.goto(projectUrl);
+    const projectTitle = (await page.getByRole("heading", { level: 1 }).textContent())!.trim();
     await page.getByRole("link", { name: "New", exact: true }).click();
     await page.getByRole("button", { name: "Save draft" }).click();
     await page.getByRole("button", { name: "Send to client" }).click();
     const sent = await page.getByText(/Invoice LUM-\d{4}-\d{4} sent/).textContent();
-    const number = sent!.match(/LUM-\d{4}-\d{4}/)![0];
+    const sentNumber = sent!.match(/LUM-\d{4}-\d{4}/)![0];
     await page.getByRole("button", { name: "Delete invoice" }).click();
     await expect(page).toHaveURL(/\/admin\/invoices\?deleted=1$/);
     await expect(page.getByText("Invoice deleted.")).toBeVisible();
-    await expect(page.getByText(number)).toHaveCount(0);
+    await expect(page.getByText(sentNumber)).toHaveCount(0);
 
-    // The hand-added hosting plan can be deleted; its paid invoices stay
+    // A project made by hand
+    const extra = `Extra project ${run}`;
+    await page.goto("/admin/projects/new");
+    await page.getByLabel("Title").fill(extra);
+    await page.getByLabel("Client", { exact: true }).selectOption({ label: client.name });
+    await page.getByRole("button", { name: "Create project" }).click();
+    await expect(page).toHaveURL(/\/admin\/projects\/\w+$/);
+    await page.getByRole("button", { name: "Delete project" }).click();
+    await expect(page).toHaveURL(/\/admin\/projects\?deleted=1$/);
+    await expect(page.getByText(extra)).toHaveCount(0);
+
+    // The hand-added hosting plan, with its (paid) invoices
     await page.goto(`/admin/hosting/${createdPlanId}`);
     await page.getByRole("button", { name: "Delete plan" }).click();
     await expect(page).toHaveURL(/\/admin\/hosting\?deleted=1$/);
     await expect(page.getByText("Hosting plan deleted.")).toBeVisible();
     await expect(page.getByRole("link", { name: `e2e-${run}.example` })).toHaveCount(0);
 
-    // The client no longer sees either
+    // The accepted quote, although its deposit is paid: project, invoices and launch hosting plan go too
+    await page.goto(createdQuoteUrl);
+    await page.getByRole("button", { name: "Delete quote" }).click();
+    await expect(page).toHaveURL(/\/admin\/quotes\?deleted=1$/);
+    await page.goto(projectUrl);
+    await expect(page.getByRole("heading", { name: "Page not found" })).toBeVisible();
+    await page.goto("/admin/hosting");
+    await expect(page.getByRole("link", { name: `live-${run}.example` })).toHaveCount(0);
+
+    // The client sees none of it any more
     const ctx = await browser.newContext();
     const c = await ctx.newPage();
     await login(c, client.email, client.password);
     await expect(c).toHaveURL(/\/portal$/);
+    await c.goto("/portal/projects");
+    await expect(c.getByText(projectTitle)).toHaveCount(0);
+    await expect(c.getByText(extra)).toHaveCount(0);
     await c.goto("/portal/invoices");
-    await expect(c.getByRole("heading", { name: "Invoices" })).toBeVisible();
-    await expect(c.getByText(number)).toHaveCount(0);
+    await expect(c.getByText(/LUM-\d{4}-\d{4}/)).toHaveCount(0);
     await c.goto("/portal/hosting");
     await expect(c.getByText(`e2e-${run}.example`)).toHaveCount(0);
+    await c.goto(createdProjectPath);
+    await expect(c.getByRole("heading", { name: "Page not found" })).toBeVisible();
     await ctx.close();
   });
 });

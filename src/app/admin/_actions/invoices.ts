@@ -6,7 +6,6 @@ import { z } from "zod";
 import { db } from "@/lib/db";
 import { requireAdmin } from "@/lib/dal";
 import { emails } from "@/lib/email";
-import { canDeleteInvoice } from "@/lib/deletion";
 import { calculateTotals } from "@/lib/invoice";
 import { nextInvoiceNumber } from "@/lib/invoice-number";
 import { startProjectIfPaid } from "@/lib/project-payment";
@@ -130,16 +129,14 @@ export async function setInvoiceStatus(invoiceId: string, status: "PAID" | "VOID
   revalidatePath("/admin/invoices");
 }
 
-/** Deletes any unpaid invoice (it disappears from the client portal). Paid invoices are kept as proof of payment. */
+/** Deletes an invoice, paid or not (it disappears from the client portal). A paid one is not refunded. */
 export async function deleteInvoice(invoiceId: string): Promise<ActionState> {
   await requireAdmin();
-  const invoice = await db.invoice.findUnique({ where: { id: invoiceId } });
-  if (!invoice) redirect("/admin/invoices");
-  if (!canDeleteInvoice(invoice.status)) return { error: "Paid invoices can't be deleted." };
-  await expireCheckoutSessions([invoice.stripeSessionId]);
-  // Conditional delete: if the client paid in the meantime, it stays.
-  const { count } = await db.invoice.deleteMany({ where: { id: invoiceId, status: { not: "PAID" } } });
-  if (count !== 1) return { error: "This invoice has just been paid, so it can't be deleted." };
+  const invoice = await db.invoice.findUnique({ where: { id: invoiceId }, select: { stripeSessionId: true } });
+  if (invoice) {
+    await expireCheckoutSessions([invoice.stripeSessionId]);
+    await db.invoice.deleteMany({ where: { id: invoiceId } });
+  }
   revalidatePath("/admin/invoices");
   redirect("/admin/invoices?deleted=1");
 }

@@ -6,7 +6,6 @@ import { InvoiceView, invoiceViewInclude } from "@/components/invoice-view";
 import { Button, Card, PageHeader, buttonClass } from "@/components/ui";
 import { db } from "@/lib/db";
 import { requireAdmin } from "@/lib/dal";
-import { canDeleteInvoice } from "@/lib/deletion";
 import { effectiveStatus } from "@/lib/invoice";
 import { withQuote } from "@/lib/invoice-quote";
 import { deleteInvoice, sendInvoice, setInvoiceStatus, updateInvoice } from "../../_actions/invoices";
@@ -47,19 +46,17 @@ export default async function AdminInvoice({ params, searchParams }: PageProps<"
       </Link>
 
       <div className="my-6 flex flex-wrap items-start justify-end gap-3">
-        {canDeleteInvoice(invoice.status) && (
-          <ActionForm action={deleteInvoice.bind(null, invoice.id)} className="space-y-2">
-            <ConfirmSubmit
-              message={
-                isDraft
-                  ? "Delete this draft invoice?"
-                  : `Delete invoice ${invoice.number}? The client will no longer see it, and its number won't be reused.`
-              }
-            >
-              {isDraft ? "Delete draft" : "Delete invoice"}
-            </ConfirmSubmit>
-          </ActionForm>
-        )}
+        <ActionForm action={deleteInvoice.bind(null, invoice.id)} className="space-y-2">
+          <ConfirmSubmit
+            message={
+              isDraft
+                ? "Delete this draft invoice?"
+                : `Delete invoice ${invoice.number}? The client will no longer see it, and its number won't be reused.${invoice.status === "PAID" ? " It's paid: deleting it does NOT refund the payment." : ""}`
+            }
+          >
+            {isDraft ? "Delete draft" : "Delete invoice"}
+          </ConfirmSubmit>
+        </ActionForm>
         <a href={`/api/invoices/${invoice.id}/pdf`} target="_blank" className={buttonClass("secondary")}>
           PDF
         </a>

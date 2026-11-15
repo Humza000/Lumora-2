@@ -67,7 +67,7 @@ export default async function AdminHostingPlan({ params }: PageProps<"/admin/hos
               <StatusBadge status={plan.status} />
               <ActionForm action={deleteHostingPlan.bind(null, plan.id)} className="space-y-2">
                 <ConfirmSubmit
-                  message={`Delete the hosting plan for ${plan.domain}?${automatic ? " Their card subscription will be cancelled immediately in Stripe." : ""} Unpaid invoices for it are deleted too; paid ones are kept. The client will no longer see the plan.`}
+                  message={`Delete the hosting plan for ${plan.domain}?${automatic ? " Their card subscription will be cancelled immediately in Stripe." : ""} All its invoices are deleted too (paid ones are not refunded). The client will no longer see the plan.`}
                 >
                   Delete plan
                 </ConfirmSubmit>

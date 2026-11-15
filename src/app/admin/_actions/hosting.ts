@@ -6,8 +6,7 @@ import { z } from "zod";
 import { db } from "@/lib/db";
 import { requireAdmin } from "@/lib/dal";
 import { advanceRenewal } from "@/lib/hosting";
-import { getStripe } from "@/lib/stripe";
-import { expireCheckoutSessions } from "@/lib/stripe-cleanup";
+import { deleteHostingPlans } from "@/lib/delete-records";
 import { fieldError, fromZodError, formToObject, type ActionState } from "@/lib/action-state";
 import { optionalText, pence, requiredDate } from "@/lib/validation";
 
@@ -92,31 +91,11 @@ export async function invoiceNextPeriod(planId: string) {
   redirect(`/admin/invoices/${invoice.id}`);
 }
 
-/**
- * Deletes a hosting plan and its unpaid invoices (paid ones stay, unlinked). If the client pays
- * by card, the Stripe subscription is cancelled first so they're never charged again.
- */
+/** Deletes a hosting plan and all its invoices. A card subscription is cancelled first, so the client isn't charged again. */
 export async function deleteHostingPlan(planId: string): Promise<ActionState> {
   await requireAdmin();
-  const plan = await db.hostingPlan.findUnique({ where: { id: planId } });
-  if (!plan) redirect("/admin/hosting");
-
-  if (plan.stripeSubscriptionId && plan.subscriptionStatus !== "canceled") {
-    try {
-      await getStripe().subscriptions.cancel(plan.stripeSubscriptionId);
-    } catch (err) {
-      // Already cancelled in Stripe is fine; anything else leaves the plan in place.
-      if ((err as { code?: string }).code !== "resource_missing") {
-        console.error("[stripe] couldn't cancel subscription", err);
-        return { error: "Couldn't cancel the card subscription in Stripe, so the plan wasn't deleted. Please try again." };
-      }
-    }
-  }
-
-  const unpaid = { hostingPlanId: planId, status: { not: "PAID" as const } };
-  const invoices = await db.invoice.findMany({ where: unpaid, select: { stripeSessionId: true } });
-  await expireCheckoutSessions(invoices.map((i) => i.stripeSessionId));
-  await db.$transaction([db.invoice.deleteMany({ where: unpaid }), db.hostingPlan.delete({ where: { id: planId } })]);
+  const error = await deleteHostingPlans([planId]);
+  if (error) return { error };
   revalidatePath("/admin/hosting");
   revalidatePath("/admin/invoices");
   redirect("/admin/hosting?deleted=1");

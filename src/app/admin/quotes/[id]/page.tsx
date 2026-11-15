@@ -81,8 +81,8 @@ export default async function AdminQuote({ params, searchParams }: PageProps<"/a
                 <ConfirmSubmit
                   message={
                     quote.project
-                      ? `Delete this quote? This also deletes the project "${quote.project.title}" (milestones and updates) and its unpaid invoices. The client will no longer see any of it.`
-                      : "Delete this quote? The client will no longer see it."
+                      ? `Delete this quote? This also deletes the project "${quote.project.title}", ALL its invoices (paid ones too, without refunding them) and any hosting plan (card payments are cancelled). The client will no longer see any of it.`
+                      : "Delete this quote and any invoices for it? The client will no longer see it."
                   }
                 >
                   Delete quote
