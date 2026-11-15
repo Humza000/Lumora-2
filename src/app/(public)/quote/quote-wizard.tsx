@@ -257,7 +257,7 @@ export function QuoteWizard({ initialDraft, initialQuoteId, prices, changesFor }
             <div className="mt-6">
               <p className="rounded-2xl border border-brand-light/20 bg-brand-soft/60 px-4 py-3 text-sm text-ink">
                 Hosting & care plans are <strong>optional recurring payments</strong>, billed monthly or yearly, and separate
-                from the one-time price of building your website. Paying yearly costs less.
+                from the one-time price of building your website. Paying yearly costs less. Cancel anytime.
               </p>
               <div className="mt-6 flex flex-wrap items-center gap-3">
                 <div className="inline-flex rounded-full border border-line bg-surface-2/70 p-1" role="radiogroup" aria-label="Billing">
