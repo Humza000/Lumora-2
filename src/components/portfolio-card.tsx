@@ -56,7 +56,7 @@ export function PortfolioCard({ item }: { item: Item }) {
             ))}
           </ul>
           <span className="mt-auto inline-flex items-center gap-1.5 pt-6 text-sm font-medium text-brand-light">
-            View case study
+            View project
             <span aria-hidden className="transition-transform duration-300 group-hover:translate-x-1.5">→</span>
           </span>
         </div>
