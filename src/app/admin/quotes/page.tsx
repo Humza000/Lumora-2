@@ -18,7 +18,7 @@ const FILTERS: { key: string; label: string; statuses: QuoteStatus[] }[] = [
 
 export default async function AdminQuotes({ searchParams }: PageProps<"/admin/quotes">) {
   await requireAdmin();
-  const { filter = "open" } = await searchParams;
+  const { filter = "open", deleted } = await searchParams;
   const active = FILTERS.find((f) => f.key === filter) ?? FILTERS[0];
   const quotes = await db.quote.findMany({
     where: { status: { in: active.statuses } },
@@ -29,6 +29,11 @@ export default async function AdminQuotes({ searchParams }: PageProps<"/admin/qu
   return (
     <>
       <PageHeader title="Quotes" description="Requests submitted through the quote wizard." />
+      {deleted && (
+        <p role="status" className="mb-6 rounded-xl border border-success/25 bg-success/10 px-4 py-3 text-sm text-success">
+          Quote deleted, along with any project and unpaid invoices it had.
+        </p>
+      )}
       <div className="mb-6 flex flex-wrap gap-2">
         {FILTERS.map((f) => (
           <Link

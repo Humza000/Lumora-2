@@ -1,6 +1,9 @@
+import type { Metadata } from "next";
 import { FlowBackground } from "@/components/flow-background";
 import { Logo } from "@/components/logo";
 import { MarkTabOnSubmit } from "@/components/tab-session";
+
+export const metadata: Metadata = { robots: { index: false, follow: false } };
 
 export default function AuthLayout({ children }: LayoutProps<"/">) {
   return (

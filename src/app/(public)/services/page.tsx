@@ -1,13 +1,17 @@
 import type { Metadata } from "next";
+import { JsonLd } from "@/components/json-ld";
 import { Reveal, Spotlight } from "@/components/motion";
 import { PageHero } from "@/components/page-hero";
 import { ButtonLink } from "@/components/ui";
 import { services } from "@/lib/content";
+import { breadcrumbJsonLd, pageMetadata, servicesJsonLd } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "Services",
-  description: "Website design, development, e-commerce and hosting & care plans from Lumora.",
-};
+export const metadata: Metadata = pageMetadata({
+  title: "Web Design, Development & E-commerce Services",
+  description:
+    "Custom website design, web development, e-commerce stores and managed hosting & care plans from Lumora. Get an instant estimate online.",
+  path: "/services",
+});
 
 export default function ServicesPage() {
   return (
@@ -47,6 +51,8 @@ export default function ServicesPage() {
           Get an instant quote <span aria-hidden>→</span>
         </ButtonLink>
       </Reveal>
+      <JsonLd data={servicesJsonLd()} />
+      <JsonLd data={breadcrumbJsonLd([{ name: "Home", path: "/" }, { name: "Services", path: "/services" }])} />
     </div>
   );
 }

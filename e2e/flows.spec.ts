@@ -23,6 +23,7 @@ async function stripeEvent(page: Page, type: string, object: Record<string, unkn
   expect(res.status()).toBe(200);
 }
 let createdProjectPath = "";
+let createdQuoteUrl = "";
 
 async function login(page: Page, email: string, password: string) {
   await page.goto("/login");
@@ -180,6 +181,7 @@ test.describe.serial("Lumora end-to-end", () => {
     await expect(page).toHaveURL(/\/admin\/quotes\/\w+$/);
     await expect(page.getByText(client.business).first()).toBeVisible();
     const quoteUrl = page.url();
+    createdQuoteUrl = quoteUrl;
     await expect(page.getByLabel("Project price (£)")).toHaveValue("100.00"); // what the wizard showed
     await expect(page.getByLabel("Hosting & care plan")).toHaveValue("hosting_standard");
     await page.getByLabel("Project price (£)").fill("3000");
@@ -544,5 +546,53 @@ test.describe.serial("Lumora end-to-end", () => {
     await expect(page.getByRole("heading", { name: "Page not found" })).toBeVisible();
     await page.goto("/admin/clients");
     await expect(page).toHaveURL(/\/portal$/);
+  });
+  test("admin deletes: paid records are kept; deleted invoices and plans disappear from the portal", async ({ page, browser }) => {
+    test.skip(!createdProjectPath || !createdPlanId, "depends on the earlier tests");
+    page.on("dialog", (d) => d.accept()); // the "are you sure?" confirms
+    await login(page, ADMIN.email, ADMIN.password);
+    await expect(page).toHaveURL(/\/admin$/);
+
+    // The accepted quote has a paid deposit, so it (and its project) can't be deleted
+    await page.goto(createdQuoteUrl);
+    await page.getByRole("button", { name: "Delete quote" }).click();
+    await expect(page.locator("p[role=alert]")).toHaveText("This quote has paid invoices, so it can't be deleted.");
+
+    // Paid invoices have no delete button
+    await page.goto("/admin/invoices?filter=paid");
+    await page.getByRole("row", { name: new RegExp(client.name) }).first().getByRole("link").first().click();
+    await expect(page).toHaveURL(/\/admin\/invoices\/\w+$/);
+    await expect(page.getByRole("button", { name: /Delete/ })).toHaveCount(0);
+
+    // A sent (unpaid) invoice can be deleted
+    await page.goto(new URL(createdProjectPath.replace("/portal/", "/admin/"), page.url()).toString());
+    await page.getByRole("link", { name: "New", exact: true }).click();
+    await page.getByRole("button", { name: "Save draft" }).click();
+    await page.getByRole("button", { name: "Send to client" }).click();
+    const sent = await page.getByText(/Invoice LUM-\d{4}-\d{4} sent/).textContent();
+    const number = sent!.match(/LUM-\d{4}-\d{4}/)![0];
+    await page.getByRole("button", { name: "Delete invoice" }).click();
+    await expect(page).toHaveURL(/\/admin\/invoices\?deleted=1$/);
+    await expect(page.getByText("Invoice deleted.")).toBeVisible();
+    await expect(page.getByText(number)).toHaveCount(0);
+
+    // The hand-added hosting plan can be deleted; its paid invoices stay
+    await page.goto(`/admin/hosting/${createdPlanId}`);
+    await page.getByRole("button", { name: "Delete plan" }).click();
+    await expect(page).toHaveURL(/\/admin\/hosting\?deleted=1$/);
+    await expect(page.getByText("Hosting plan deleted.")).toBeVisible();
+    await expect(page.getByRole("link", { name: `e2e-${run}.example` })).toHaveCount(0);
+
+    // The client no longer sees either
+    const ctx = await browser.newContext();
+    const c = await ctx.newPage();
+    await login(c, client.email, client.password);
+    await expect(c).toHaveURL(/\/portal$/);
+    await c.goto("/portal/invoices");
+    await expect(c.getByRole("heading", { name: "Invoices" })).toBeVisible();
+    await expect(c.getByText(number)).toHaveCount(0);
+    await c.goto("/portal/hosting");
+    await expect(c.getByText(`e2e-${run}.example`)).toHaveCount(0);
+    await ctx.close();
   });
 });

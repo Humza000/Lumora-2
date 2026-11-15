@@ -4,8 +4,14 @@ import { Reveal } from "@/components/motion";
 import { PageHero } from "@/components/page-hero";
 import { ButtonLink, Card } from "@/components/ui";
 import { site } from "@/lib/site";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = { title: "Contact", description: "Get in touch with Lumora." };
+export const metadata: Metadata = pageMetadata({
+  title: "Contact",
+  description:
+    "Get in touch with Lumora about a new website, e-commerce store or hosting plan. Email us or message us on Instagram.",
+  path: "/contact",
+});
 
 export default function ContactPage() {
   return (

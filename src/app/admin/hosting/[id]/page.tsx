@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ConfirmSubmit } from "@/components/confirm-button";
 import { ActionForm, SubmitButton } from "@/components/forms";
 import { Button, Card, PageHeader, StatusBadge, formatDate } from "@/components/ui";
 import { db } from "@/lib/db";
@@ -7,7 +8,7 @@ import { requireAdmin } from "@/lib/dal";
 import { advanceRenewal, daysUntil, hostingBillingState } from "@/lib/hosting";
 import { effectiveStatus } from "@/lib/invoice";
 import { formatGBP } from "@/lib/money";
-import { invoiceNextPeriod, updateHostingPlan } from "../../_actions/hosting";
+import { deleteHostingPlan, invoiceNextPeriod, updateHostingPlan } from "../../_actions/hosting";
 import { HostingFields } from "../hosting-fields";
 
 export default async function AdminHostingPlan({ params }: PageProps<"/admin/hosting/[id]">) {
@@ -61,7 +62,18 @@ export default async function AdminHostingPlan({ params }: PageProps<"/admin/hos
               )}
             </>
           }
-          actions={<StatusBadge status={plan.status} />}
+          actions={
+            <>
+              <StatusBadge status={plan.status} />
+              <ActionForm action={deleteHostingPlan.bind(null, plan.id)} className="space-y-2">
+                <ConfirmSubmit
+                  message={`Delete the hosting plan for ${plan.domain}?${automatic ? " Their card subscription will be cancelled immediately in Stripe." : ""} Unpaid invoices for it are deleted too; paid ones are kept. The client will no longer see the plan.`}
+                >
+                  Delete plan
+                </ConfirmSubmit>
+              </ActionForm>
+            </>
+          }
         />
       </div>
 

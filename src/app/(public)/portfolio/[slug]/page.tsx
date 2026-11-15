@@ -2,20 +2,34 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { cache } from "react";
+import { JsonLd } from "@/components/json-ld";
 import { getMockup } from "@/components/mockups";
 import { BrowserFrame, PhoneFrame } from "@/components/mockups/frames";
 import { Reveal } from "@/components/motion";
 import { Badge, ButtonLink, Card, Eyebrow } from "@/components/ui";
+import { buildSafe } from "@/lib/build-safe";
 import { db } from "@/lib/db";
 import { readStats } from "@/lib/portfolio";
+import { breadcrumbJsonLd, ORG_ID, pageMetadata } from "@/lib/seo";
+import { appUrl } from "@/lib/site";
 
-async function getItem(slug: string) {
-  return db.portfolioItem.findFirst({ where: { slug, published: true } });
+// Case studies are pre-built at deploy and served from the CDN; see the note on the home page.
+// New slugs are built on first visit, then cached.
+export const revalidate = 3600;
+
+export async function generateStaticParams() {
+  const items = await buildSafe(() => db.portfolioItem.findMany({ where: { published: true }, select: { slug: true } }), []);
+  return items.map((i) => ({ slug: i.slug }));
 }
+
+// cache(): generateMetadata and the page share one query.
+const getItem = cache((slug: string) => db.portfolioItem.findFirst({ where: { slug, published: true } }));
 
 export async function generateMetadata({ params }: PageProps<"/portfolio/[slug]">): Promise<Metadata> {
   const item = await getItem((await params).slug);
-  return item ? { title: `${item.title}: case study`, description: item.summary } : {};
+  if (!item) return {};
+  return pageMetadata({ title: `${item.title}: website case study`, description: item.summary, path: `/portfolio/${item.slug}`, ogType: "article" });
 }
 
 function Section({ eyebrow, title, children }: { eyebrow: string; title: string; children: React.ReactNode }) {
@@ -48,6 +62,24 @@ export default async function CaseStudyPage({ params }: PageProps<"/portfolio/[s
     ["Location", item.location],
     ["Year", item.year?.toString()],
   ].filter((m): m is [string, string] => Boolean(m[1]));
+
+  const path = `/portfolio/${item.slug}`;
+  const caseStudyLd = {
+    "@context": "https://schema.org",
+    "@type": "CreativeWork",
+    "@id": appUrl(`${path}#work`),
+    name: item.title,
+    headline: `${item.title}: website case study`,
+    description: item.summary,
+    url: appUrl(path),
+    genre: item.sector,
+    keywords: [item.sector, ...item.services].join(", "),
+    ...(item.year ? { dateCreated: String(item.year) } : {}),
+    ...(item.location ? { locationCreated: { "@type": "Place", name: item.location } } : {}),
+    creator: { "@id": ORG_ID },
+    publisher: { "@id": ORG_ID },
+    inLanguage: "en-GB",
+  };
 
   return (
     <article className="relative isolate mx-auto max-w-6xl px-4 py-20 sm:px-6">
@@ -245,6 +277,14 @@ export default async function CaseStudyPage({ params }: PageProps<"/portfolio/[s
           </ButtonLink>
         </div>
       </Reveal>
+      <JsonLd data={caseStudyLd} />
+      <JsonLd
+        data={breadcrumbJsonLd([
+          { name: "Home", path: "/" },
+          { name: "Portfolio", path: "/portfolio" },
+          { name: item.title, path },
+        ])}
+      />
     </article>
   );
 }

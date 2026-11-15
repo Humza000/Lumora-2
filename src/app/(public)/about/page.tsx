@@ -2,11 +2,14 @@ import type { Metadata } from "next";
 import { Reveal } from "@/components/motion";
 import { PageHero } from "@/components/page-hero";
 import { ButtonLink, Card } from "@/components/ui";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "About",
-  description: "Lumora is a boutique web design and development studio for ambitious brands.",
-};
+  description:
+    "Lumora is a boutique UK web design and development studio building premium, fast, conversion-focused websites for ambitious businesses.",
+  path: "/about",
+});
 
 const values = [
   { title: "Quality over quantity", description: "We take on a limited number of projects so each one gets our full attention." },

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ConfirmSubmit } from "@/components/confirm-button";
 import { ActionForm, SelectField, SubmitButton, TextAreaField, TextField } from "@/components/forms";
 import { Card, PageHeader, StatusBadge, dateInputValue, formatDate } from "@/components/ui";
 import { db } from "@/lib/db";
@@ -8,7 +9,7 @@ import { getPriceMap } from "@/lib/prices";
 import { formatGBP, penceToPounds } from "@/lib/money";
 import { HOSTING_PLANS, PROJECT_TYPES, calculateEstimate, featureLabel, formatEstimate, formatHosting, quoteDraftSchema } from "@/lib/pricing";
 import { answerChanges, canSendOffer, offerHosting } from "@/lib/quote-offer";
-import { sendQuoteOffer, updateQuoteReview, withdrawQuoteOffer } from "../../_actions/quotes";
+import { deleteQuote, sendQuoteOffer, updateQuoteReview, withdrawQuoteOffer } from "../../_actions/quotes";
 
 export default async function AdminQuote({ params, searchParams }: PageProps<"/admin/quotes/[id]">) {
   await requireAdmin();
@@ -73,7 +74,22 @@ export default async function AdminQuote({ params, searchParams }: PageProps<"/a
         <PageHeader
           title={`Quote: ${a.businessName || quote.user.name}`}
           description={`Submitted ${formatDate(quote.submittedAt)}`}
-          actions={<StatusBadge status={quote.status} />}
+          actions={
+            <>
+              <StatusBadge status={quote.status} />
+              <ActionForm action={deleteQuote.bind(null, quote.id)} className="space-y-2">
+                <ConfirmSubmit
+                  message={
+                    quote.project
+                      ? `Delete this quote? This also deletes the project "${quote.project.title}" (milestones and updates) and its unpaid invoices. The client will no longer see any of it.`
+                      : "Delete this quote? The client will no longer see it."
+                  }
+                >
+                  Delete quote
+                </ConfirmSubmit>
+              </ActionForm>
+            </>
+          }
         />
       </div>
 

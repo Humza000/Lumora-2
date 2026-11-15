@@ -1,23 +1,30 @@
+import type { Metadata } from "next";
 import Link from "next/link";
-import { connection } from "next/server";
 import { FaqSection } from "@/components/faq";
 import { FlowBackground } from "@/components/flow-background";
 import { Reveal, Spotlight } from "@/components/motion";
 import { PortfolioCard } from "@/components/portfolio-card";
 import { ButtonLink, Eyebrow } from "@/components/ui";
+import { buildSafe } from "@/lib/build-safe";
 import { db } from "@/lib/db";
 import { process, services } from "@/lib/content";
+import { pageMetadata } from "@/lib/seo";
 import { site } from "@/lib/site";
+
+export const metadata: Metadata = pageMetadata({ description: site.description, path: "/" });
+
+// Pre-built and served from the CDN (no database on the visitor's request). Rebuilt in the
+// background at most hourly, and immediately when the portfolio is edited in the admin
+// (revalidatePath in admin/_actions/portfolio.ts).
+export const revalidate = 3600;
 
 const SECTORS = ["Fitness", "E-commerce", "Legal", "Hospitality", "Healthcare", "Trades", "Professional services", "Retail"];
 
 export default async function HomePage() {
-  await connection();
-  const featured = await db.portfolioItem.findMany({
-    where: { published: true, featured: true },
-    orderBy: { sortOrder: "asc" },
-    take: 3,
-  });
+  const featured = await buildSafe(
+    () => db.portfolioItem.findMany({ where: { published: true, featured: true }, orderBy: { sortOrder: "asc" }, take: 3 }),
+    [],
+  );
 
   return (
     <>

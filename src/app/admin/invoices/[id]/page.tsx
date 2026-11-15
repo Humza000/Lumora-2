@@ -1,13 +1,15 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ConfirmSubmit } from "@/components/confirm-button";
 import { ActionForm, SubmitButton } from "@/components/forms";
 import { InvoiceView, invoiceViewInclude } from "@/components/invoice-view";
 import { Button, Card, PageHeader, buttonClass } from "@/components/ui";
 import { db } from "@/lib/db";
 import { requireAdmin } from "@/lib/dal";
+import { canDeleteInvoice } from "@/lib/deletion";
 import { effectiveStatus } from "@/lib/invoice";
 import { withQuote } from "@/lib/invoice-quote";
-import { deleteDraftInvoice, sendInvoice, setInvoiceStatus, updateInvoice } from "../../_actions/invoices";
+import { deleteInvoice, sendInvoice, setInvoiceStatus, updateInvoice } from "../../_actions/invoices";
 import { InvoiceForm } from "../invoice-form";
 import { invoiceFormOptions } from "../options";
 
@@ -45,6 +47,19 @@ export default async function AdminInvoice({ params, searchParams }: PageProps<"
       </Link>
 
       <div className="my-6 flex flex-wrap items-start justify-end gap-3">
+        {canDeleteInvoice(invoice.status) && (
+          <ActionForm action={deleteInvoice.bind(null, invoice.id)} className="space-y-2">
+            <ConfirmSubmit
+              message={
+                isDraft
+                  ? "Delete this draft invoice?"
+                  : `Delete invoice ${invoice.number}? The client will no longer see it, and its number won't be reused.`
+              }
+            >
+              {isDraft ? "Delete draft" : "Delete invoice"}
+            </ConfirmSubmit>
+          </ActionForm>
+        )}
         <a href={`/api/invoices/${invoice.id}/pdf`} target="_blank" className={buttonClass("secondary")}>
           PDF
         </a>
@@ -53,11 +68,6 @@ export default async function AdminInvoice({ params, searchParams }: PageProps<"
             <Link href={`/admin/invoices/${invoice.id}?edit=1`} className={buttonClass("secondary")}>
               Edit
             </Link>
-            <form action={deleteDraftInvoice.bind(null, invoice.id)}>
-              <Button variant="ghost" className="text-danger">
-                Delete draft
-              </Button>
-            </form>
             <ActionForm action={sendInvoice.bind(null, invoice.id)} className="space-y-2">
               <SubmitButton pendingText="Sending…">Send to client</SubmitButton>
             </ActionForm>

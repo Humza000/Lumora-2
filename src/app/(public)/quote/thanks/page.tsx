@@ -6,7 +6,7 @@ import { requireClient } from "@/lib/dal";
 import { calculateEstimate, formatEstimate, formatHosting, quoteDraftSchema } from "@/lib/pricing";
 import { getPriceMap } from "@/lib/prices";
 
-export const metadata: Metadata = { title: "Quote received" };
+export const metadata: Metadata = { title: "Quote received", robots: { index: false } };
 
 export default async function QuoteThanksPage({ searchParams }: PageProps<"/quote/thanks">) {
   const user = await requireClient();

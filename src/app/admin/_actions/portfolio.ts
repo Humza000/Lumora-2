@@ -61,6 +61,8 @@ const itemSchema = z.object({
 const refresh = () => {
   revalidatePath("/");
   revalidatePath("/portfolio", "layout");
+  revalidatePath("/sitemap.xml");
+  revalidatePath("/llms.txt");
   revalidatePath("/admin/portfolio");
 };
 

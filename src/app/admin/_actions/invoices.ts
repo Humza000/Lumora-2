@@ -6,9 +6,11 @@ import { z } from "zod";
 import { db } from "@/lib/db";
 import { requireAdmin } from "@/lib/dal";
 import { emails } from "@/lib/email";
+import { canDeleteInvoice } from "@/lib/deletion";
 import { calculateTotals } from "@/lib/invoice";
 import { nextInvoiceNumber } from "@/lib/invoice-number";
 import { startProjectIfPaid } from "@/lib/project-payment";
+import { expireCheckoutSessions } from "@/lib/stripe-cleanup";
 import { fieldError, fromZodError, formToObject, type ActionState } from "@/lib/action-state";
 import { optionalText, pence, requiredDate } from "@/lib/validation";
 
@@ -128,9 +130,16 @@ export async function setInvoiceStatus(invoiceId: string, status: "PAID" | "VOID
   revalidatePath("/admin/invoices");
 }
 
-export async function deleteDraftInvoice(invoiceId: string) {
+/** Deletes any unpaid invoice (it disappears from the client portal). Paid invoices are kept as proof of payment. */
+export async function deleteInvoice(invoiceId: string): Promise<ActionState> {
   await requireAdmin();
-  // Issued invoices must be voided, never deleted, to keep numbering auditable.
-  await db.invoice.deleteMany({ where: { id: invoiceId, status: "DRAFT" } });
-  redirect("/admin/invoices");
+  const invoice = await db.invoice.findUnique({ where: { id: invoiceId } });
+  if (!invoice) redirect("/admin/invoices");
+  if (!canDeleteInvoice(invoice.status)) return { error: "Paid invoices can't be deleted." };
+  await expireCheckoutSessions([invoice.stripeSessionId]);
+  // Conditional delete: if the client paid in the meantime, it stays.
+  const { count } = await db.invoice.deleteMany({ where: { id: invoiceId, status: { not: "PAID" } } });
+  if (count !== 1) return { error: "This invoice has just been paid, so it can't be deleted." };
+  revalidatePath("/admin/invoices");
+  redirect("/admin/invoices?deleted=1");
 }

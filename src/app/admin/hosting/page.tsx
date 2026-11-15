@@ -7,8 +7,9 @@ import { formatGBP } from "@/lib/money";
 
 export const metadata = { title: "Hosting & maintenance" };
 
-export default async function AdminHosting() {
+export default async function AdminHosting({ searchParams }: PageProps<"/admin/hosting">) {
   await requireAdmin();
+  const { deleted } = await searchParams;
   const plans = await db.hostingPlan.findMany({
     include: { client: { select: { name: true } } },
     orderBy: [{ status: "asc" }, { renewalDate: "asc" }],
@@ -25,6 +26,11 @@ export default async function AdminHosting() {
         description="Client hosting and care plans, renewals and recurring revenue."
         actions={<ButtonLink href="/admin/hosting/new">Add plan</ButtonLink>}
       />
+      {deleted && (
+        <p role="status" className="mb-6 rounded-xl border border-success/25 bg-success/10 px-4 py-3 text-sm text-success">
+          Hosting plan deleted.
+        </p>
+      )}
       <div className="mb-6 grid gap-4 sm:grid-cols-3">
         <Card>
           <p className="text-sm text-ink-muted">Active plans</p>

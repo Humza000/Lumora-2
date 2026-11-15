@@ -51,7 +51,12 @@ async function invoicePaidByCheckout(session: Stripe.Checkout.Session) {
   const invoiceId = session.metadata?.invoiceId;
   if (!invoiceId || session.payment_status !== "paid") return;
   const invoice = await db.invoice.findUnique({ where: { id: invoiceId }, include: { client: { select: { name: true, email: true } } } });
-  if (!invoice || invoice.status === "PAID") return;
+  if (!invoice) {
+    // The admin deleted the invoice while the client had the payment page open: refund or re-issue by hand.
+    console.error(`[stripe] payment ${session.id} (${session.amount_total} pence) is for invoice ${invoiceId}, which no longer exists`);
+    return;
+  }
+  if (invoice.status === "PAID") return;
   if (session.amount_total !== invoice.total) {
     // Leave unpaid for manual review in the admin rather than silently accepting.
     console.error(`[stripe] amount mismatch for ${invoice.number}: paid ${session.amount_total}, expected ${invoice.total}`);

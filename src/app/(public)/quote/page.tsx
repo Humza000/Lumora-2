@@ -8,7 +8,7 @@ import { EMPTY_DRAFT, featuresForType, quoteDraftSchema } from "@/lib/pricing";
 import { QuoteWizard } from "./quote-wizard";
 import { Eyebrow } from "@/components/ui";
 
-export const metadata: Metadata = { title: "Get a quote" };
+export const metadata: Metadata = { title: "Get a quote", robots: { index: false } };
 
 export default async function QuotePage({ searchParams }: PageProps<"/quote">) {
   const user = await requireVerifiedClient("/quote");

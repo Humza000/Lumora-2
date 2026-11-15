@@ -1,4 +1,5 @@
 import { faqs, reviews } from "@/lib/content";
+import { JsonLd } from "./json-ld";
 import { Reveal } from "./motion";
 import { Eyebrow } from "./ui";
 
@@ -63,7 +64,7 @@ export function FaqSection() {
           </Reveal>
         ))}
       </div>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />
+      <JsonLd data={jsonLd} />
     </section>
   );
 }

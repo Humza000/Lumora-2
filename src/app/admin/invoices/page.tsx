@@ -19,7 +19,7 @@ const FILTERS: { key: string; label: string; where: Prisma.InvoiceWhereInput }[]
 
 export default async function AdminInvoices({ searchParams }: PageProps<"/admin/invoices">) {
   await requireAdmin();
-  const { filter = "all" } = await searchParams;
+  const { filter = "all", deleted } = await searchParams;
   const active = FILTERS.find((f) => f.key === filter) ?? FILTERS[0];
 
   const yearStart = new Date(new Date().getFullYear(), 0, 1);
@@ -36,6 +36,11 @@ export default async function AdminInvoices({ searchParams }: PageProps<"/admin/
   return (
     <>
       <PageHeader title="Invoices" actions={<ButtonLink href="/admin/invoices/new">New invoice</ButtonLink>} />
+      {deleted && (
+        <p role="status" className="mb-6 rounded-xl border border-success/25 bg-success/10 px-4 py-3 text-sm text-success">
+          Invoice deleted.
+        </p>
+      )}
       <div className="mb-6 grid gap-4 sm:grid-cols-2">
         <Card>
           <p className="text-sm text-ink-muted">Outstanding</p>
