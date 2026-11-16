@@ -11,8 +11,13 @@ import {
 } from "react";
 
 /**
- * Fades + lifts children in when scrolled into view. Styles live in globals.css
- * ([data-reveal]); reduced-motion users get the content immediately.
+ * Fades + lifts children in. Styles live in globals.css ([data-reveal]); reduced-motion users
+ * get the content immediately.
+ *
+ * The server renders "load", a CSS-only entrance, so nothing waits for JavaScript to become
+ * visible. After hydration, elements still below the screen are held back ("wait") and revealed
+ * when scrolled to ("in"). The attribute is set on the DOM directly: React never changes the
+ * prop, so it leaves our value alone on re-render.
  */
 export function Reveal<T extends ElementType = "div">({
   as,
@@ -22,15 +27,15 @@ export function Reveal<T extends ElementType = "div">({
 }: { as?: T; delay?: number } & ComponentPropsWithoutRef<T>) {
   const Tag = (as ?? "div") as ElementType;
   const ref = useRef<HTMLElement>(null);
-  const [shown, setShown] = useState(false);
 
   useEffect(() => {
     const el = ref.current;
-    if (!el) return;
+    if (!el || el.getBoundingClientRect().top < window.innerHeight) return; // already on screen
+    el.dataset.reveal = "wait";
     const io = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
-          setShown(true);
+          el.dataset.reveal = "in";
           io.disconnect();
         }
       },
@@ -43,7 +48,7 @@ export function Reveal<T extends ElementType = "div">({
   return (
     <Tag
       ref={ref}
-      data-reveal={shown ? "in" : ""}
+      data-reveal="load"
       style={{ "--reveal-delay": `${delay}ms`, ...style } as CSSProperties}
       {...props}
     />

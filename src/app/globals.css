@@ -229,20 +229,40 @@ body {
 
 /* ---------- Scroll reveal (driven by <Reveal>) ---------- */
 
-/* Fade + slide up. Uses `top`, not `transform`, so text stays sharp while it moves (see fade-in). */
+/*
+ * Fade + slide up. Uses `top`, not `transform`, so text stays sharp while it moves (see fade-in).
+ * "load" is what the server sends: a CSS-only entrance, so content appears as soon as the page
+ * paints instead of staying invisible until the JavaScript has downloaded and run (slow on phones).
+ * Once running, <Reveal> switches anything still below the screen to "wait" and then "in".
+ */
 [data-reveal] {
   position: relative;
+}
+
+[data-reveal="load"] {
+  animation: reveal-in 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: var(--reveal-delay, 0ms);
+}
+
+[data-reveal="wait"] {
   top: 18px;
   opacity: 0;
+}
+
+[data-reveal="in"] {
+  top: 0;
+  opacity: 1;
   transition:
     opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1),
     top 0.8s cubic-bezier(0.16, 1, 0.3, 1);
   transition-delay: var(--reveal-delay, 0ms);
 }
 
-[data-reveal="in"] {
-  top: 0;
-  opacity: 1;
+@keyframes reveal-in {
+  from {
+    opacity: 0;
+    top: 18px;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -250,8 +270,10 @@ body {
   *::before,
   *::after {
     animation-duration: 0.001ms !important;
+    animation-delay: 0s !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
+    transition-delay: 0s !important;
   }
   [data-reveal] {
     top: 0;

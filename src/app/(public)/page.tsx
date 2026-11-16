@@ -128,7 +128,7 @@ export default async function HomePage() {
       {/* Process */}
       <section className="relative isolate mt-36 overflow-hidden border-y border-line/50 py-28">
         <div className="absolute inset-0 -z-10 bg-gradient-to-b from-brand-soft/60 via-canvas to-canvas" aria-hidden />
-        <div className="absolute top-0 left-1/2 -z-10 h-72 w-[50rem] -translate-x-1/2 rounded-full bg-brand/25 blur-[120px]" aria-hidden />
+        <div className="absolute -top-40 left-1/2 -z-10 h-[38rem] w-[70rem] -translate-x-1/2 bg-[radial-gradient(closest-side,color-mix(in_oklab,var(--brand)_22%,transparent),transparent)]" aria-hidden />
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <Reveal>
             <Eyebrow>How it works</Eyebrow>
@@ -162,7 +162,7 @@ export default async function HomePage() {
           <div className="group relative isolate overflow-hidden rounded-[2rem] border border-brand-light/20 px-8 py-20 text-center md:px-16">
             <div className="absolute inset-0 -z-10 bg-gradient-to-br from-brand via-brand-deep to-ink" aria-hidden />
             <div
-              className="absolute -top-32 left-1/2 -z-10 h-80 w-80 -translate-x-1/2 rounded-full bg-brand-tint/30 blur-[100px] transition-transform duration-1000 group-hover:scale-125"
+              className="absolute -top-56 left-1/2 -z-10 h-[32rem] w-[32rem] -translate-x-1/2 bg-[radial-gradient(closest-side,color-mix(in_oklab,var(--brand-tint)_28%,transparent),transparent)] transition-transform duration-1000 group-hover:scale-125"
               aria-hidden
             />
             <h2 className="font-display text-4xl font-semibold tracking-tight text-white md:text-6xl">

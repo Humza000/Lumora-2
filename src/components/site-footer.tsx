@@ -9,7 +9,7 @@ export function SiteFooter() {
   return (
     <footer className="relative mt-32 overflow-hidden border-t border-line/60">
       <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-brand-light/50 to-transparent" aria-hidden />
-      <div className="absolute -top-40 left-1/2 h-80 w-[60rem] -translate-x-1/2 rounded-full bg-brand/20 blur-[120px]" aria-hidden />
+      <div className="absolute -top-72 left-1/2 h-[36rem] w-[80rem] -translate-x-1/2 bg-[radial-gradient(closest-side,color-mix(in_oklab,var(--brand)_18%,transparent),transparent)]" aria-hidden />
       <div className="relative mx-auto grid max-w-6xl gap-10 px-4 py-16 sm:px-6 md:grid-cols-4">
         <div className="md:col-span-2">
           <Logo />

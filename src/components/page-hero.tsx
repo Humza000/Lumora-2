@@ -6,7 +6,7 @@ import { Eyebrow } from "./ui";
 export function PageHero({ eyebrow, title, children }: { eyebrow: string; title: ReactNode; children?: ReactNode }) {
   return (
     <section className="relative isolate">
-      <div className="absolute -top-40 left-1/4 -z-10 h-96 w-96 rounded-full bg-brand/30 blur-[120px]" aria-hidden />
+      <div className="absolute inset-x-0 -top-72 -z-10 h-[40rem] bg-[radial-gradient(20rem_circle_at_calc(25%_+_12rem)_50%,color-mix(in_oklab,var(--brand)_26%,transparent),transparent)]" aria-hidden />
       <Reveal>
         <Eyebrow>{eyebrow}</Eyebrow>
       </Reveal>

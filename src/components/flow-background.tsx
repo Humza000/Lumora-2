@@ -1,18 +1,21 @@
 /**
  * Soft, flowing lavender background: a smooth mesh gradient, slowly drifting
  * light blobs and silky wave ribbons. Place inside a `relative isolate` parent.
+ *
+ * Phones get the mesh and still ribbons only: huge animated blurs are the most
+ * expensive thing a mobile GPU can be asked to draw and made the page stutter.
  */
 export function FlowBackground({ waves = true }: { waves?: boolean }) {
   return (
     <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden" aria-hidden>
       <div className="bg-mesh absolute inset-0" />
-      <div className="animate-aurora absolute top-[-15%] left-[-10%] h-[36rem] w-[36rem] rounded-full bg-brand-tint/45 blur-[110px]" />
-      <div className="animate-aurora absolute top-[0%] right-[-12%] h-[32rem] w-[32rem] rounded-full bg-brand/25 blur-[120px] [animation-delay:-7s]" />
-      <div className="animate-aurora absolute bottom-[-25%] left-[35%] h-[26rem] w-[26rem] rounded-full bg-brand-soft blur-[100px] [animation-delay:-13s]" />
+      <div className="animate-aurora absolute hidden md:block top-[-15%] left-[-10%] h-[36rem] w-[36rem] rounded-full bg-brand-tint/45 blur-[110px]" />
+      <div className="animate-aurora absolute hidden md:block top-[0%] right-[-12%] h-[32rem] w-[32rem] rounded-full bg-brand/25 blur-[120px] [animation-delay:-7s]" />
+      <div className="animate-aurora absolute hidden md:block bottom-[-25%] left-[35%] h-[26rem] w-[26rem] rounded-full bg-brand-soft blur-[100px] [animation-delay:-13s]" />
 
       {waves && (
         <svg
-          className="animate-drift absolute -right-[8%] bottom-[-8%] h-[75%] w-[75%] opacity-70 [mask-image:linear-gradient(to_right,transparent,#000_40%),linear-gradient(to_top,#000_70%,transparent)] [mask-composite:intersect]"
+          className="md:animate-drift absolute -right-[8%] bottom-[-8%] h-[75%] w-[75%] opacity-70 [mask-image:linear-gradient(to_right,transparent,#000_40%),linear-gradient(to_top,#000_70%,transparent)] [mask-composite:intersect]"
           viewBox="0 0 1200 600"
           preserveAspectRatio="none"
           fill="none"
