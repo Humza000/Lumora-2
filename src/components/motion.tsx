@@ -11,8 +11,8 @@ import {
 } from "react";
 
 /**
- * Fades + lifts children in. Styles live in globals.css ([data-reveal]); reduced-motion users
- * get the content immediately.
+ * Fades + lifts children in as they are scrolled to. Styles live in globals.css ([data-reveal]);
+ * reduced-motion users get the content immediately.
  *
  * The server renders "load", a CSS-only entrance, so nothing waits for JavaScript to become
  * visible. After hydration, elements still below the screen are held back ("wait") and revealed
