@@ -7,7 +7,7 @@ export const services = [
   {
     title: "Website design",
     description: "Distinctive, on-brand designs built around your customers and engineered to convert visitors into enquiries.",
-    points: ["Bespoke or refined-template design", "Mobile-first and accessible", "Conversion-focused layouts"],
+    points: ["Bespoke design, made for your brand", "Mobile-first and accessible", "Conversion-focused layouts"],
   },
   {
     title: "Development",
