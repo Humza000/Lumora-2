@@ -1,5 +1,15 @@
 import { describe, expect, it } from "vitest";
-import { answerChanges, canRespond, canSendOffer, hostingFromQuote, offerHosting, offerInvoiceAmount, offerInvoiceLines } from "../quote-offer";
+import {
+  answerChanges,
+  balanceInvoiceLines,
+  canRespond,
+  canSendOffer,
+  hostingFromQuote,
+  offerHosting,
+  offerInvoiceAmount,
+  offerInvoiceLines,
+  websiteBalance,
+} from "../quote-offer";
 
 const offer = { price: 25000, hostingPlanKey: "hosting_standard", hostingBilling: "monthly", hostingPrice: 1000 };
 
@@ -68,5 +78,35 @@ describe("answerChanges", () => {
 
   it("copes with missing or unreadable answers", () => {
     expect(answerChanges(null, base)).toEqual([]);
+  });
+});
+
+describe("websiteBalance", () => {
+  const inv = (subtotal: number, status: string, hostingPlanId: string | null = null) => ({ subtotal, status, hostingPlanId });
+
+  it("leaves half to invoice after a deposit, and counts the unpaid part", () => {
+    expect(websiteBalance(25000, [inv(12500, "PAID")])).toEqual({ toInvoice: 12500, unpaid: 0 });
+    expect(websiteBalance(25000, [inv(12500, "PAID"), inv(12500, "SENT")])).toEqual({ toInvoice: 0, unpaid: 12500 });
+    expect(websiteBalance(25000, [inv(12500, "PAID"), inv(12500, "PAID")])).toEqual({ toInvoice: 0, unpaid: 0 });
+  });
+
+  it("ignores void and hosting invoices, and never goes below zero", () => {
+    expect(websiteBalance(25000, [inv(12500, "PAID"), inv(12500, "VOID"), inv(1000, "PAID", "plan")])).toEqual({ toInvoice: 12500, unpaid: 0 });
+    expect(websiteBalance(25000, [inv(30000, "PAID")]).toInvoice).toBe(0);
+  });
+
+  it("an odd price: deposit plus balance add up to the full price", () => {
+    const deposit = offerInvoiceAmount(25001, "deposit");
+    const { toInvoice } = websiteBalance(25001, [inv(deposit, "PAID")]);
+    expect(deposit + toInvoice).toBe(25001);
+  });
+});
+
+describe("balanceInvoiceLines", () => {
+  it("bills the balance as one line, or nothing", () => {
+    expect(balanceInvoiceLines(12500, "Business website")).toEqual([
+      { description: "Business website: website design & build (balance)", quantity: 1, unitPrice: 12500 },
+    ]);
+    expect(balanceInvoiceLines(0, null)).toEqual([]);
   });
 });

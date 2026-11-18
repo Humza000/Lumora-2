@@ -294,6 +294,27 @@ test.describe.serial("Lumora end-to-end", () => {
     await expect(c.getByText("Payment received, thank you! Work on your website has started.")).toBeVisible();
     await expect(c.getByText("Waiting for payment")).toHaveCount(0);
     await expect(c.getByText("Planning", { exact: true })).toBeVisible();
+
+    // Admin: the balance (the other 50%) is due before launch
+    const adminProjectUrl = new URL(createdProjectPath.replace("/portal/", "/admin/"), page.url()).toString();
+    await page.goto(adminProjectUrl);
+    await expect(page.getByText(/balance of £1,250\.00 hasn.t been invoiced yet/)).toBeVisible();
+    await expect(page.getByText("Send the balance invoice (£1,250.00) before launching.")).toBeVisible();
+    await expect(page.getByRole("button", { name: "Mark as launched" })).toHaveCount(0);
+    await page.getByRole("button", { name: "Create & send balance invoice" }).click();
+    await expect(page.getByText(`Balance invoice sent to ${client.email}.`)).toBeVisible();
+    await expect(page.getByText("£1,250.00 of the website price is still unpaid. Launch once it's paid.")).toBeVisible();
+    await expect(page.getByRole("button", { name: "Create & send balance invoice" })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Mark as launched" })).toHaveCount(0);
+    // The client is emailed, and the balance is paid (here: marked paid by the admin) → launch is possible
+    await c.goto("/portal/invoices");
+    await expect(c.getByRole("row", { name: /£1,250\.00/ })).toHaveCount(2); // deposit + balance
+    await page.getByRole("link", { name: /LUM-\d{4}-\d{4}/ }).first().click();
+    await expect(page.getByText("(balance)")).toBeVisible();
+    await page.getByRole("button", { name: "Mark as paid" }).click();
+    await expect(page.getByRole("button", { name: "Mark unpaid" })).toBeVisible();
+    await page.goto(adminProjectUrl);
+    await expect(page.getByRole("button", { name: "Mark as launched" })).toBeVisible();
     await ctx.close();
   });
 
@@ -385,7 +406,7 @@ test.describe.serial("Lumora end-to-end", () => {
 
     // …and the original tab stays signed in
     await page.goto("/portal/invoices");
-    await expect(page.getByRole("link", { name: /LUM-/ })).toHaveCount(2); // deposit (on acceptance, paid) + the admin's invoice
+    await expect(page.getByRole("link", { name: /LUM-/ })).toHaveCount(3); // deposit (on acceptance, paid) + balance (paid) + the admin's invoice
     await page.goto(`/portal/invoices/${createdInvoiceId}`);
     await expect(page.getByText("£1,500.00").first()).toBeVisible();
     const stripeKey = process.env.STRIPE_SECRET_KEY ?? "";
@@ -485,6 +506,13 @@ test.describe.serial("Lumora end-to-end", () => {
     await login(page, ADMIN.email, ADMIN.password);
     await expect(page).toHaveURL(/\/admin$/);
     const projectUrl = new URL(createdProjectPath.replace("/portal/", "/admin/"), page.url()).toString();
+    if (createdInvoiceId) {
+      // The invoice the admin test billed against the quote must be paid too, or launch is blocked.
+      await page.goto(`/admin/invoices/${createdInvoiceId}`);
+      const markPaid = page.getByRole("button", { name: "Mark as paid" });
+      if (await markPaid.count()) await markPaid.click();
+      await expect(page.getByRole("button", { name: "Mark unpaid" })).toBeVisible();
+    }
     await page.goto(projectUrl);
     await expect(page.getByText(/starts Standard care, £10\/month/)).toBeVisible(); // from the accepted quote
     const domain = `live-${run}.example`;

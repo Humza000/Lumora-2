@@ -7,8 +7,12 @@ import { db } from "@/lib/db";
 import { requireAdmin } from "@/lib/dal";
 import { deleteQuoteAndProject } from "@/lib/delete-records";
 import { emails } from "@/lib/email";
+import { calculateTotals } from "@/lib/invoice";
+import { nextInvoiceNumber } from "@/lib/invoice-number";
+import { formatGBP } from "@/lib/money";
+import { summariseQuote } from "@/lib/pricing";
 import { DEFAULT_MILESTONES } from "@/lib/progress";
-import { hostingFromQuote } from "@/lib/quote-offer";
+import { balanceInvoiceLines, hostingFromQuote, websiteBalance } from "@/lib/quote-offer";
 import { fromZodError, formToObject, type ActionState } from "@/lib/action-state";
 import { optionalDate, optionalText } from "@/lib/validation";
 
@@ -134,6 +138,17 @@ export async function launchProject(projectId: string, _: ActionState, fd: FormD
   });
   if (!project || project.status === "COMPLETED") return { error: "This project has already been launched." };
 
+  // A quote accepted with a deposit has its balance due before launch.
+  if (project.quote?.invoiceOnAccept) {
+    const balance = websiteBalance(project.quote.price, await quoteInvoices(project.quote.id));
+    if (balance.toInvoice > 0) {
+      return { error: `The website balance of ${formatGBP(balance.toInvoice)} hasn't been invoiced yet. Send the balance invoice first.` };
+    }
+    if (balance.unpaid > 0) {
+      return { error: `${formatGBP(balance.unpaid)} of the website price is still unpaid. Launch once it's paid (or mark the invoice as paid).` };
+    }
+  }
+
   const hosting = project.quote && project.hostingPlans.length === 0 ? hostingFromQuote(project.quote) : null;
   if (hosting && parsed.data.domain.length < 3) return { fieldErrors: { domain: ["Enter the live domain, e.g. example.co.uk"] } };
 
@@ -159,6 +174,49 @@ export async function launchProject(projectId: string, _: ActionState, fd: FormD
   const emailed = hosting ? await emails.hostingStarted(project.client.email, project.client.name, hosting.planName, parsed.data.domain) : true;
   refresh(projectId);
   redirect(`/admin/projects/${projectId}?launched=${hosting ? "hosting" : "1"}${emailed ? "" : "&email=failed"}`);
+}
+
+/** The invoices that bill a quote (website and hosting), for `websiteBalance`. */
+function quoteInvoices(quoteId: string) {
+  return db.invoice.findMany({ where: { quoteId }, select: { subtotal: true, status: true, hostingPlanId: true } });
+}
+
+/**
+ * After a 50% deposit: issues (numbers, sends and emails) the invoice for the rest of the website
+ * price. Does nothing if the balance has already been invoiced.
+ */
+export async function sendBalanceInvoice(projectId: string): Promise<ActionState> {
+  await requireAdmin();
+  const project = await db.project.findUnique({
+    where: { id: projectId },
+    include: { client: { select: { name: true, email: true } }, quote: { select: { id: true, price: true, answers: true } } },
+  });
+  if (!project?.quote) return { error: "This project has no accepted quote to bill." };
+  const quote = project.quote;
+  const { toInvoice } = websiteBalance(quote.price, await quoteInvoices(quote.id));
+  const lines = balanceInvoiceLines(toInvoice, summariseQuote(quote.answers).packageName);
+  if (lines.length === 0) return { error: "The website price has already been invoiced in full." };
+
+  const now = new Date();
+  const invoice = await db.$transaction(async (tx) =>
+    tx.invoice.create({
+      data: {
+        clientId: project.clientId,
+        projectId: project.id,
+        quoteId: quote.id,
+        number: await nextInvoiceNumber(tx, now),
+        status: "SENT",
+        issueDate: now,
+        dueDate: new Date(now.getTime() + 14 * 86400_000),
+        vatRate: 0,
+        ...calculateTotals(lines, 0),
+        lines: { create: lines },
+      },
+    }),
+  );
+  const emailed = await emails.invoiceSent(project.client.email, project.client.name, invoice.id, invoice.number!, invoice.total, invoice.dueDate);
+  refresh(projectId);
+  redirect(`/admin/projects/${projectId}?balance=sent${emailed ? "" : "&email=failed"}`);
 }
 
 /** Deletes a project with everything linked to it: the quote it came from, invoices (paid too), hosting plans. */

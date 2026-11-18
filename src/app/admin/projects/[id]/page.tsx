@@ -7,7 +7,7 @@ import { db } from "@/lib/db";
 import { requireAdmin } from "@/lib/dal";
 import { formatGBP } from "@/lib/money";
 import { projectProgress } from "@/lib/progress";
-import { hostingFromQuote, offerHosting } from "@/lib/quote-offer";
+import { hostingFromQuote, offerHosting, websiteBalance } from "@/lib/quote-offer";
 import {
   addMilestone,
   deleteProject,
@@ -16,6 +16,7 @@ import {
   launchProject,
   moveMilestone,
   postUpdate,
+  sendBalanceInvoice,
   setMilestoneStatus,
   updateProject,
 } from "../../_actions/projects";
@@ -25,7 +26,7 @@ import { MilestoneStatus } from "./milestone-status";
 export default async function AdminProject({ params, searchParams }: PageProps<"/admin/projects/[id]">) {
   await requireAdmin();
   const { id } = await params;
-  const { launched, email } = await searchParams;
+  const { launched, balance: balanceSent, email } = await searchParams;
   const [project, clients] = await Promise.all([
     db.project.findUnique({
       where: { id },
@@ -35,7 +36,7 @@ export default async function AdminProject({ params, searchParams }: PageProps<"
         updates: { orderBy: { createdAt: "desc" } },
         invoices: { orderBy: { createdAt: "desc" } },
         hostingPlans: true,
-        quote: { select: { id: true, hostingPlanKey: true, hostingBilling: true, hostingPrice: true } },
+        quote: { select: { id: true, price: true, invoiceOnAccept: true, hostingPlanKey: true, hostingBilling: true, hostingPrice: true } },
       },
     }),
     db.user.findMany({ where: { role: "CLIENT" }, select: { id: true, name: true }, orderBy: { name: "asc" } }),
@@ -43,6 +44,12 @@ export default async function AdminProject({ params, searchParams }: PageProps<"
   if (!project) notFound();
   const hosting = project.quote && project.hostingPlans.length === 0 ? hostingFromQuote(project.quote) : null;
   const unpaid = project.invoices.find((i) => i.status === "SENT" || i.status === "OVERDUE");
+  // After a 50% deposit the balance is due before launch (checked again in launchProject).
+  const quoteId = project.quote?.id;
+  const balance = project.quote?.invoiceOnAccept
+    ? websiteBalance(project.quote.price, project.invoices.filter((i) => i.quoteId === quoteId))
+    : null;
+  const launchBlocked = Boolean(balance && (balance.toInvoice > 0 || balance.unpaid > 0));
 
   return (
     <>
@@ -91,6 +98,24 @@ export default async function AdminProject({ params, searchParams }: PageProps<"
               : `Project launched. ${project.client.email} has been emailed to start their hosting plan by card; it then renews automatically.`
             : "Project marked as launched."}
         </p>
+      )}
+      {balanceSent && (
+        <p role="status" className="mb-6 rounded-xl border border-success/25 bg-success/10 px-4 py-3 text-sm text-success">
+          {email === "failed"
+            ? `Balance invoice created, but the email to ${project.client.email} couldn't be delivered. They can still pay it from their portal.`
+            : `Balance invoice sent to ${project.client.email}.`}
+        </p>
+      )}
+      {balance && balance.toInvoice > 0 && project.status !== "AWAITING_PAYMENT" && (
+        <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-warning/40 bg-warning/5 px-4 py-3 text-sm">
+          <p>
+            The client paid a 50% deposit. The balance of <strong>{formatGBP(balance.toInvoice)}</strong> hasn&apos;t been
+            invoiced yet, and is due before launch.
+          </p>
+          <ActionForm action={sendBalanceInvoice.bind(null, project.id)}>
+            <SubmitButton size="sm" pendingText="Sending…">Create &amp; send balance invoice</SubmitButton>
+          </ActionForm>
+        </div>
       )}
       {project.status === "AWAITING_PAYMENT" && (
         <p className="mb-6 rounded-xl border border-warning/40 bg-warning/5 px-4 py-3 text-sm">
@@ -183,15 +208,24 @@ export default async function AdminProject({ params, searchParams }: PageProps<"
                   ? `Marks the project as launched and starts ${offerHosting(project.quote!)}: the client is emailed to make their first payment by card, then it renews automatically.`
                   : "Marks the project as launched, completes the milestones and tells the client."}
               </p>
-              <ActionForm action={launchProject.bind(null, project.id)}>
-                {hosting && (
-                  <>
-                    <TextField label="Live domain" name="domain" placeholder="example.co.uk" required />
-                    <TextField label="Hosting provider" name="provider" defaultValue="Vercel" />
-                  </>
-                )}
-                <SubmitButton pendingText="Launching…">Mark as launched</SubmitButton>
-              </ActionForm>
+              {launchBlocked && balance && (
+                <p className="mb-4 rounded-xl border border-warning/40 bg-warning/5 px-3 py-2 text-sm">
+                  {balance.toInvoice > 0
+                    ? `Send the balance invoice (${formatGBP(balance.toInvoice)}) before launching.`
+                    : `${formatGBP(balance.unpaid)} of the website price is still unpaid. Launch once it's paid.`}
+                </p>
+              )}
+              {!launchBlocked && (
+                <ActionForm action={launchProject.bind(null, project.id)}>
+                  {hosting && (
+                    <>
+                      <TextField label="Live domain" name="domain" placeholder="example.co.uk" required />
+                      <TextField label="Hosting provider" name="provider" defaultValue="Vercel" />
+                    </>
+                  )}
+                  <SubmitButton pendingText="Launching…">Mark as launched</SubmitButton>
+                </ActionForm>
+              )}
             </Card>
           )}
           <Card>

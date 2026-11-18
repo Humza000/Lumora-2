@@ -49,6 +49,28 @@ export function offerInvoiceLines(price: number | null, choice: PaymentChoice, p
 }
 
 /**
+ * Where payment for the website stands, from the accepted price and the invoices that bill the
+ * quote (hosting and void invoices don't count). After a 50% deposit, `toInvoice` is the balance
+ * still to be invoiced; `unpaid` is what has been invoiced (drafts included) but not paid yet.
+ * Amounts are compared before VAT, in pence.
+ */
+export function websiteBalance(
+  price: number | null,
+  invoices: { subtotal: number; status: string; hostingPlanId: string | null }[],
+) {
+  const website = invoices.filter((i) => !i.hostingPlanId && i.status !== "VOID");
+  const invoiced = website.reduce((sum, i) => sum + i.subtotal, 0);
+  const unpaid = website.filter((i) => i.status !== "PAID").reduce((sum, i) => sum + i.subtotal, 0);
+  return { toInvoice: Math.max(0, (price ?? 0) - invoiced), unpaid };
+}
+
+/** Lines of the invoice for the rest of the website price after a deposit. */
+export function balanceInvoiceLines(amount: number, packageName: string | null): LineInput[] {
+  if (amount <= 0) return [];
+  return [{ description: `${packageName ?? "Website"}: website design & build (balance)`, quantity: 1, unitPrice: amount }];
+}
+
+/**
  * The hosting plan to create when the project launches, from the accepted quote. Null when the
  * client chose no (or free) hosting.
  */
