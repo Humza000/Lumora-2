@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { ClearGuestDraft } from "@/components/quote-wizard";
 import { ButtonLink } from "@/components/ui";
 import { db } from "@/lib/db";
 import { requireClient } from "@/lib/dal";
@@ -8,7 +9,7 @@ import { getPriceMap } from "@/lib/prices";
 
 export const metadata: Metadata = { title: "Quote received", robots: { index: false } };
 
-export default async function QuoteThanksPage({ searchParams }: PageProps<"/quote/thanks">) {
+export default async function QuoteThanksPage({ searchParams }: PageProps<"/portal/quote/thanks">) {
   const user = await requireClient();
   const { id } = await searchParams;
   const quote = typeof id === "string" ? await db.quote.findFirst({ where: { id, userId: user.id } }) : null;
@@ -17,7 +18,8 @@ export default async function QuoteThanksPage({ searchParams }: PageProps<"/quot
   const estimate = calculateEstimate(answers.success ? answers.data : {}, await getPriceMap());
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-24 text-center sm:px-6">
+    <div className="mx-auto max-w-2xl px-4 py-12 text-center sm:px-6">
+      <ClearGuestDraft />
       <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-brand to-brand-strong text-2xl text-on-brand shadow-[0_0_40px_color-mix(in_oklab,var(--brand)_70%,transparent)]" aria-hidden>
         ✓
       </div>
@@ -34,6 +36,11 @@ export default async function QuoteThanksPage({ searchParams }: PageProps<"/quot
         . We&apos;ll review your requirements and confirm the final price before any work begins, usually within 2 working
         days.
       </p>
+      {!user.emailVerified && (
+        <p className="mt-4 text-sm text-ink-muted">
+          We&apos;ve also sent a link to <strong className="text-ink">{user.email}</strong> to confirm your email address.
+        </p>
+      )}
       <ol className="mx-auto mt-10 max-w-md space-y-4 text-left text-sm">
         {[
           ["We review your request", "A real person reads every answer, usually within 2 working days."],

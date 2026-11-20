@@ -15,10 +15,10 @@ export default async function PortalQuotes({ searchParams }: PageProps<"/portal/
 
   return (
     <>
-      <PageHeader title="Quotes" actions={<ButtonLink href="/quote">New quote</ButtonLink>} />
+      <PageHeader title="Quotes" actions={<ButtonLink href="/portal/quote">New quote</ButtonLink>} />
       {submitted && <p className="mb-6 rounded-xl border border-success/25 bg-success/10 px-4 py-3 text-sm text-success">Quote submitted, thank you!</p>}
       {quotes.length === 0 ? (
-        <EmptyState title="No quotes yet" description="Answer a few questions to get an instant estimate." action={<ButtonLink href="/quote">Get a quote</ButtonLink>} />
+        <EmptyState title="No quotes yet" description="Answer a few questions to get an instant estimate." action={<ButtonLink href="/portal/quote">Get a quote</ButtonLink>} />
       ) : (
         <div className="space-y-4">
           {quotes.map((q) => {
@@ -60,7 +60,7 @@ export default async function PortalQuotes({ searchParams }: PageProps<"/portal/
                     </ButtonLink>
                   )}
                   {q.status === "DRAFT" && (
-                    <ButtonLink href="/quote" variant="secondary" size="sm">
+                    <ButtonLink href="/portal/quote" variant="secondary" size="sm">
                       Continue
                     </ButtonLink>
                   )}

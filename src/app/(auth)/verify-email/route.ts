@@ -10,7 +10,7 @@ const SIGNED_IN = "#signed-in";
 // GET /verify-email?token=...&next=...: consumes the token, marks the email verified, refreshes the session.
 export async function GET(req: NextRequest) {
   const token = req.nextUrl.searchParams.get("token") ?? "";
-  const next = clientNext(req.nextUrl.searchParams.get("next"), "/quote");
+  const next = clientNext(req.nextUrl.searchParams.get("next"), "/portal");
   const to = (path: string) => NextResponse.redirect(new URL(path, req.url));
 
   const userId = token ? await consumeToken(token, "EMAIL_VERIFICATION") : null;

@@ -178,7 +178,7 @@ export default async function PortalQuote({ params, searchParams }: PageProps<"/
                     <p className="mt-1 text-xs text-ink-muted">
                       Edit your answers and tell us what to change. We&apos;ll send you an updated quote.
                     </p>
-                    <ButtonLink href={`/quote?changes=${quote.id}`} variant="secondary" className="mt-3 w-full">
+                    <ButtonLink href={`/portal/quote?changes=${quote.id}`} variant="secondary" className="mt-3 w-full">
                       Request changes
                     </ButtonLink>
                     <ButtonLink href={`/portal/quotes/${quote.id}?decline=1`} variant="ghost" className="mt-2 w-full">

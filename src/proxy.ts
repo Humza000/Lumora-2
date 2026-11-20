@@ -6,21 +6,27 @@ export async function proxy(req: NextRequest) {
   const { pathname, search } = req.nextUrl;
   const session = await decryptSession(req.cookies.get(SESSION_COOKIE)?.value);
 
-  const needsAuth =
-    pathname.startsWith("/admin") || pathname.startsWith("/portal") || pathname.startsWith("/quote");
+  const isQuote = pathname === "/quote" || pathname.startsWith("/quote/");
+  const needsAuth = pathname.startsWith("/admin") || pathname.startsWith("/portal");
 
   if (needsAuth && !session) {
-    const target = pathname.startsWith("/quote") ? "/signup" : "/login";
-    const url = new URL(target, req.url);
+    const url = new URL("/login", req.url);
     url.searchParams.set("next", pathname + search);
     return NextResponse.redirect(url);
+  }
+
+  // Guests use the public quote wizard (and sign up on its last step); signed-in clients use the
+  // same wizard inside their portal.
+  if (isQuote && session) {
+    const target = session.role === "ADMIN" ? "/admin" : `/portal${pathname}${search}`;
+    return NextResponse.redirect(new URL(target, req.url));
   }
 
   if (session) {
     if (pathname.startsWith("/admin") && session.role !== "ADMIN") {
       return NextResponse.redirect(new URL("/portal", req.url));
     }
-    if ((pathname.startsWith("/portal") || pathname.startsWith("/quote")) && session.role === "ADMIN") {
+    if (pathname.startsWith("/portal") && session.role === "ADMIN") {
       return NextResponse.redirect(new URL("/admin", req.url));
     }
   }

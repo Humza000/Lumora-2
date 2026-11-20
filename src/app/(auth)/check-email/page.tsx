@@ -13,7 +13,7 @@ export default async function CheckEmailPage({ searchParams }: PageProps<"/check
   if (!user) redirect("/login");
   const { error, next: rawNext } = await searchParams;
   const next = clientNext(rawNext, "");
-  if (user.emailVerified) redirect(user.role === "ADMIN" ? "/admin" : next || "/quote");
+  if (user.emailVerified) redirect(user.role === "ADMIN" ? "/admin" : next || "/portal");
 
   return (
     <>
@@ -37,7 +37,7 @@ export default async function CheckEmailPage({ searchParams }: PageProps<"/check
       )}
       <p className="mt-2 text-sm text-ink-muted">
         We sent a verification link to <strong className="text-ink">{user.email}</strong>. Click it to confirm your
-        address, then you can start your quote. It can take a minute to arrive, so check your spam folder too.
+        address, then you can carry on in your portal. It can take a minute to arrive, so check your spam folder too.
       </p>
       <ActionForm action={resendVerification} className="mt-6">
         <input type="hidden" name="next" value={next} />

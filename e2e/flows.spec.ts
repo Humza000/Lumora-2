@@ -36,10 +36,11 @@ async function login(page: Page, email: string, password: string) {
 async function emailLink(email: string, path: "verify-email" | "reset-password") {
   const pattern = new RegExp(`(http://\\S+/${path}\\?token=[^\\s"]+)`);
   for (let i = 0; i < 20; i++) {
+    // Newest email to this address that contains such a link (others, e.g. "quote received", may follow it).
     const log = readFileSync(DEV_LOG, "utf8");
-    const idx = log.lastIndexOf(`To: ${email}`);
-    if (idx !== -1) {
-      const m = log.slice(idx).match(pattern);
+    for (let idx = log.lastIndexOf(`To: ${email}`); idx !== -1; idx = log.lastIndexOf(`To: ${email}`, idx - 1)) {
+      const next = log.indexOf("To: ", idx + 4);
+      const m = log.slice(idx, next === -1 ? undefined : next).match(pattern);
       if (m) return m[1];
     }
     await new Promise((r) => setTimeout(r, 500));
@@ -67,24 +68,10 @@ test.describe.serial("Lumora end-to-end", () => {
     await expect(page).toHaveURL(/\/portfolio\/miso-house$/);
   });
 
-  test("quote requires an account: signup → verify → wizard → submit", async ({ page }) => {
+  test("guest quote: wizard without an account → sign up on the last step → sent → verify", async ({ page }) => {
     await page.goto("/quote");
-    await expect(page).toHaveURL(/\/signup\?next=%2Fquote/);
-
-    await page.getByLabel("Your name").fill(client.name);
-    await page.getByLabel("Email").fill(client.email);
-    await page.getByLabel("Password").fill(client.password);
-    await page.getByRole("button", { name: "Create account" }).click();
-    await expect(page).toHaveURL(/\/check-email/);
-
-    // Unverified users can't use the wizard
-    await page.goto("/quote");
-    await expect(page).toHaveURL(/\/check-email/);
-
-    verifyLink = await emailLink(client.email, "verify-email");
-    expect(verifyLink).toContain("next=%2Fquote"); // sends them back to where they started
-    await page.goto(verifyLink);
-    await expect(page).toHaveURL(/\/quote$/);
+    await expect(page).toHaveURL(/\/quote$/); // no account needed to start
+    await expect(page.getByRole("heading", { level: 1 })).toContainText("scope your project");
 
     // Step 1: project type (starting prices)
     await expect(page.getByText("From £400")).toBeVisible(); // web app is not capped below e-commerce
@@ -124,15 +111,43 @@ test.describe.serial("Lumora end-to-end", () => {
     await expect(page.getByText("One-time development cost")).toBeVisible();
     await expect(page.getByText("Monthly hosting cost")).toBeVisible();
     await expect(page.getByText("This is an indicative estimate. We'll review your requirements").first()).toBeVisible();
-    await page.getByRole("button", { name: "Submit quote request" }).click();
-    await expect(page).toHaveURL(/\/quote\/thanks/);
+    // Answers are kept on this device across a reload
+    await page.reload();
+    await expect(page.locator("aside").getByText("From £100")).toBeVisible();
+    for (let i = 0; i < 4; i++) await page.getByRole("button", { name: "Continue →" }).click();
+    await expect(page.getByText(client.business)).toBeVisible();
+
+    // Last step: create the account and send the quote in one go
+    await page.getByLabel("Your name").fill(client.name);
+    await page.getByLabel("Email").fill(ADMIN.email); // taken
+    await page.getByLabel("Password").fill(client.password);
+    await page.getByRole("button", { name: "Create account & send quote" }).click();
+    await expect(page.locator("p[role=alert]")).toContainText("already exists");
+    await page.getByLabel("Your name").fill(client.name); // the form is reset after each attempt
+    await page.getByLabel("Email").fill(client.email);
+    await page.getByLabel("Password").fill(client.password);
+    await page.getByRole("button", { name: "Create account & send quote" }).click();
+    await expect(page).toHaveURL(/\/portal\/quote\/thanks/);
     await expect(page.getByRole("heading", { name: /got your request/ })).toBeVisible();
     await expect(page.getByText("From £100")).toBeVisible(); // matches what was shown in the wizard
     await expect(page.getByText("£10/month")).toBeVisible();
+    await expect(page.getByText(/sent a link to .* to confirm your email/)).toBeVisible();
+
+    // The verification email goes out alongside and leads to the portal
+    verifyLink = await emailLink(client.email, "verify-email");
+    expect(verifyLink).toContain("next=%2Fportal");
+    await page.goto(verifyLink);
+    await expect(page).toHaveURL(/\/portal$/);
 
     // Clicking the verification link again is harmless, not an "invalid link" error
     await page.goto(verifyLink);
-    await expect(page).toHaveURL(/\/quote$/);
+    await expect(page).toHaveURL(/\/portal$/);
+
+    // Signed in, "Get a quote" opens the wizard inside the portal, with a fresh start
+    await page.goto("/quote");
+    await expect(page).toHaveURL(/\/portal\/quote$/);
+    await expect(page.getByRole("heading", { name: /scope your project/ })).toBeVisible();
+    await expect(page.getByText("Create account & send quote")).toHaveCount(0);
 
     // Client can't reach admin
     await page.goto("/admin");

@@ -85,7 +85,7 @@ export const emails = {
     return send(
       to,
       `Verify your ${site.name} account`,
-      layout(`Welcome, ${esc(name)}`, `<p>Please confirm your email address to finish setting up your account and start your quote.</p>`, {
+      layout(`Welcome, ${esc(name)}`, `<p>Please confirm your email address to finish setting up your account.</p>`, {
         label: "Verify email",
         href,
       }),

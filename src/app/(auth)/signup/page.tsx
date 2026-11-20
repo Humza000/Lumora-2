@@ -11,7 +11,7 @@ export default async function SignupPage({ searchParams }: PageProps<"/signup">)
     <>
       <h1 className="font-display text-4xl font-semibold">Create your account</h1>
       <p className="mt-1 mb-6 text-sm text-ink-muted">
-        You&apos;ll need an account to get a quote. It lets you save your answers and track your project once we start.
+        Your account lets you save quotes, accept our proposals and track your project once we start.
       </p>
       <ActionForm action={signup}>
         <Honeypot />

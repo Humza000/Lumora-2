@@ -1,6 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition, type ReactNode } from "react";
+import Link from "next/link";
+import { Honeypot, ActionForm, SubmitButton, TextField } from "@/components/forms";
+import { markTabSignedIn } from "@/components/tab-session";
 import { Button, Input, Label, Textarea, cn } from "@/components/ui";
 import { formatGBP } from "@/lib/money";
 import {
@@ -13,17 +16,48 @@ import {
   featuresForType,
   formatHosting,
   hostingPrices,
+  partialDraft,
   type PriceMap,
   type QuoteDraft,
 } from "@/lib/pricing";
-import { requestQuoteChanges, saveQuoteDraft, submitQuote } from "./actions";
+import { signupAndSubmitQuote } from "@/app/(public)/quote/actions";
+import { requestQuoteChanges, saveQuoteDraft, submitQuote } from "@/app/portal/quote/actions";
 
 const STEPS = ["Project type", "Pages & features", "Hosting & care", "Your business", "Review"];
 
 const DISCLAIMER =
   "This is an indicative estimate. We'll review your requirements and confirm the final price before any work begins.";
 
+/** Where a guest's answers are kept until they create an account (or log in) on the last step. */
+const GUEST_DRAFT_KEY = "lumora:quote-draft";
+
+function readGuestDraft(): QuoteDraft | null {
+  try {
+    const raw = localStorage.getItem(GUEST_DRAFT_KEY);
+    return raw ? partialDraft(JSON.parse(raw)) : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeGuestDraft(draft: QuoteDraft | null) {
+  try {
+    if (draft) localStorage.setItem(GUEST_DRAFT_KEY, JSON.stringify(draft));
+    else localStorage.removeItem(GUEST_DRAFT_KEY);
+  } catch {
+    // Storage blocked: answers just aren't kept across reloads.
+  }
+}
+
+/** On the thanks page: the guest's answers have been sent, so forget the local copy. */
+export function ClearGuestDraft() {
+  useEffect(() => writeGuestDraft(null), []);
+  return null;
+}
+
 type Props = {
+  /** `guest`: answers are kept on the device and the last step creates the account. */
+  mode?: "guest" | "client";
   initialDraft: QuoteDraft;
   initialQuoteId: string | null;
   prices: PriceMap;
@@ -31,7 +65,8 @@ type Props = {
   changesFor?: string;
 };
 
-export function QuoteWizard({ initialDraft, initialQuoteId, prices, changesFor }: Props) {
+export function QuoteWizard({ mode = "client", initialDraft, initialQuoteId, prices, changesFor }: Props) {
+  const guest = mode === "guest";
   const [changeNote, setChangeNote] = useState("");
   const [draft, setDraft] = useState<QuoteDraft>(initialDraft);
   const [step, setStep] = useState(0);
@@ -45,6 +80,18 @@ export function QuoteWizard({ initialDraft, initialQuoteId, prices, changesFor }
   const saveQueue = useRef<Promise<void>>(Promise.resolve());
   const submitted = useRef(false);
   const untouched = useRef(true);
+
+  // Restore a guest's answers: on the guest wizard after a reload, or in the portal right after
+  // they chose "Log in" on the guest wizard's last step (then saved to their account as usual).
+  useEffect(() => {
+    if (changesFor) return;
+    const local = readGuestDraft();
+    if (!local) return;
+    // One-off read of device storage after hydration (the guest page is pre-built, so it can't be read while rendering).
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setDraft((d) => ({ ...d, ...local, features: featuresForType(local.projectType, local.features) }));
+    if (!guest) writeGuestDraft(null);
+  }, [guest, changesFor]);
 
   const save = useCallback((d: QuoteDraft) => {
     saveQueue.current = saveQueue.current.then(async () => {
@@ -67,9 +114,10 @@ export function QuoteWizard({ initialDraft, initialQuoteId, prices, changesFor }
       return;
     }
     if (changesFor) return; // editing a sent quote: only saved when they send the changes
+    if (guest) return writeGuestDraft(draft); // cheap, so no debounce: nothing is lost if they leave straight away
     const t = setTimeout(() => save(draft), 900);
     return () => clearTimeout(t);
-  }, [draft, save, changesFor]);
+  }, [draft, save, changesFor, guest]);
 
   const estimate = useMemo(() => calculateEstimate(draft, prices), [draft, prices]);
   const update = (patch: Partial<QuoteDraft>) => setDraft((d) => ({ ...d, ...patch }));
@@ -447,6 +495,7 @@ export function QuoteWizard({ initialDraft, initialQuoteId, prices, changesFor }
               ) : (
                 <p className="text-sm text-ink-muted">{DISCLAIMER}</p>
               )}
+              {guest && <GuestSignup draft={draft} />}
             </div>
           )}
 
@@ -462,13 +511,15 @@ export function QuoteWizard({ initialDraft, initialQuoteId, prices, changesFor }
             </Button>
             <span className={cn("text-xs", saveState === "error" ? "text-danger" : "text-ink-muted")} aria-live="polite">
               {saveState === "saving" && "Saving…"}
-              {saveState === "saved" && "Progress saved"}
+              {guest ? draft !== initialDraft && "Saved on this device" : saveState === "saved" && "Progress saved"}
               {saveState === "error" && "Couldn't save. Check your connection."}
             </span>
             {step < STEPS.length - 1 ? (
               <Button type="button" className="whitespace-nowrap" onClick={() => go(step + 1)}>
                 Continue →
               </Button>
+            ) : guest ? (
+              <span aria-hidden />
             ) : (
               <Button type="button" className="whitespace-nowrap" onClick={submit} disabled={submitting}>
                 {changesFor ? (submitting ? "Sending…" : "Send changes for review") : submitting ? "Submitting…" : "Submit quote request"}
@@ -505,6 +556,43 @@ export function QuoteWizard({ initialDraft, initialQuoteId, prices, changesFor }
           <p className="mt-6 text-xs text-white/50">{DISCLAIMER}</p>
         </div>
       </aside>
+    </div>
+  );
+}
+
+/** Last step of the guest wizard: create the account and send the quote in one go. */
+function GuestSignup({ draft }: { draft: QuoteDraft }) {
+  return (
+    // Creating the account signs this tab in (see components/tab-session.tsx).
+    <div onSubmit={markTabSignedIn} className="rounded-2xl border border-line bg-surface-2/60 p-5 md:p-6">
+      <h3 className="font-display text-2xl font-semibold">Create your account to send your quote</h3>
+      <p className="mt-1 mb-5 text-sm text-ink-muted">
+        You&apos;ll use it to see our proposal, accept it and follow your project once we start.
+      </p>
+      <ActionForm action={signupAndSubmitQuote}>
+        <Honeypot />
+        <input type="hidden" name="answers" value={JSON.stringify(draft)} />
+        <TextField label="Your name" name="name" autoComplete="name" required />
+        <TextField label="Email" name="email" type="email" autoComplete="email" required />
+        <TextField
+          label="Password"
+          name="password"
+          type="password"
+          autoComplete="new-password"
+          hint="At least 10 characters, including a letter and a number."
+          required
+        />
+        <SubmitButton className="w-full" pendingText="Sending your quote…">
+          Create account &amp; send quote
+        </SubmitButton>
+      </ActionForm>
+      <p className="mt-4 text-center text-sm text-ink-muted">
+        Already have an account?{" "}
+        <Link href="/login?next=%2Fportal%2Fquote" className="font-medium text-brand-light hover:underline">
+          Log in
+        </Link>{" "}
+        and your answers come with you.
+      </p>
     </div>
   );
 }

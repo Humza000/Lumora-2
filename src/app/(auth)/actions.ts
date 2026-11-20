@@ -4,6 +4,7 @@ import bcrypt from "bcryptjs";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { createSession, deleteSession, readSession } from "@/lib/session";
+import { createClientAccount } from "@/lib/accounts";
 import { emails } from "@/lib/email";
 import { consumeToken, issueToken } from "@/lib/tokens";
 import { rateLimit } from "@/lib/rate-limit";
@@ -23,26 +24,10 @@ export async function signup(_: ActionState, formData: FormData): Promise<Action
 
   const parsed = signupSchema.safeParse(formToObject(formData));
   if (!parsed.success) return fromZodError(parsed.error);
-  const { name, email, company, password } = parsed.data;
-
-  const existing = await db.user.findUnique({ where: { email } });
-  if (existing) return { error: "An account with this email already exists. Please log in instead." };
-
-  const user = await db.user.create({
-    data: {
-      name,
-      email,
-      passwordHash: await bcrypt.hash(password, 12),
-      role: "CLIENT",
-      profile: { create: { company: company || null } },
-    },
-  });
-
   const next = clientNext(formData.get("next"), "");
-  const token = await issueToken(user.id, "EMAIL_VERIFICATION");
-  const sent = await emails.verifyEmail(email, name, token, next);
-  await createSession({ userId: user.id, role: "CLIENT", verified: false });
-  redirect(checkEmailUrl(next, sent));
+  const account = await createClientAccount(parsed.data, { next });
+  if (!account) return { error: "An account with this email already exists. Please log in instead." };
+  redirect(checkEmailUrl(next, account.sent));
 }
 
 function checkEmailUrl(next: string, sent = true) {
@@ -87,7 +72,7 @@ export async function resendVerification(_: ActionState, formData: FormData): Pr
   const user = await db.user.findUnique({ where: { id: session.userId } });
   if (!user) redirect("/login");
   const next = clientNext(formData.get("next"), "");
-  if (user.emailVerified) redirect(next || "/quote");
+  if (user.emailVerified) redirect(next || "/portal");
   const token = await issueToken(user.id, "EMAIL_VERIFICATION");
   const sent = await emails.verifyEmail(user.email, user.name, token, next);
   if (!sent) return { error: "We couldn't send the email just now. Please try again in a minute." };

@@ -31,7 +31,7 @@ export async function GET() {
     `- [Portfolio](${appUrl("/portfolio")}): case studies`,
     `- [About](${appUrl("/about")}): who we are and how we work`,
     `- [Contact](${appUrl("/contact")}): email ${site.email}, Instagram @${site.instagram.handle}`,
-    `- [Get a quote](${appUrl("/quote")}): instant estimate (free account required)`,
+    `- [Get a quote](${appUrl("/quote")}): instant estimate, no account needed to start`,
     "",
     "## Services",
     ...services.map((s) => `- **${s.title}**: ${s.description} (${s.points.join("; ")})`),

@@ -113,7 +113,7 @@ export default async function PortalHome() {
       {step === "draft" && (
         <NextStep title="Finish your quote">
           <p className="text-sm text-ink-muted">Your answers are saved. Pick up where you left off and send it to us.</p>
-          <ButtonLink href="/quote" className="mt-4">
+          <ButtonLink href="/portal/quote" className="mt-4">
             Continue quote
           </ButtonLink>
         </NextStep>
@@ -145,7 +145,7 @@ export default async function PortalHome() {
       {step === "start" && (
         <NextStep title="Ready to start a project?">
           <p className="text-sm text-ink-muted">Answer a few questions and get an instant estimate. It takes about 3 minutes.</p>
-          <ButtonLink href="/quote" className="mt-4">
+          <ButtonLink href="/portal/quote" className="mt-4">
             Get a quote
           </ButtonLink>
         </NextStep>

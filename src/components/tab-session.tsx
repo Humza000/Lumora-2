@@ -62,6 +62,11 @@ export function TabSessionGuard({ children }: { children: ReactNode }) {
   return signedIn ? children : null;
 }
 
+/** Marks this tab as signed in, for forms outside the auth pages that sign someone in (the guest quote wizard). */
+export function markTabSignedIn() {
+  write(true);
+}
+
 /** On the auth pages: any submitted form (log in, sign up, reset, invite) marks this tab as signed in. */
 export function MarkTabOnSubmit() {
   useEffect(() => {

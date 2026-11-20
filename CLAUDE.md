@@ -6,7 +6,7 @@ Guidance for Claude Code (and humans) working in this repo. Product direction, r
 
 ## What this is
 
-Lumora's website and client platform: a public marketing site + portfolio, an account-gated **quote wizard**, a **client portal** (project timeline, quotes, invoices, Stripe payments) and an **admin dashboard** (quotes, clients, projects/milestones/updates, invoices, hosting & maintenance, portfolio, pricing).
+Lumora's website and client platform: a public marketing site + portfolio, a **quote wizard** (no account needed until the last step), a **client portal** (project timeline, quotes, invoices, Stripe payments) and an **admin dashboard** (quotes, clients, projects/milestones/updates, invoices, hosting & maintenance, portfolio, pricing).
 
 ## Stack (versions matter, so check before using APIs from memory)
 
@@ -45,7 +45,7 @@ Before finishing a change, run `npm run lint && npm run typecheck && npm test`. 
 src/
   proxy.ts                  optimistic auth redirects (cookie only, no DB)
   app/
-    (public)/               marketing site, portfolio, quote wizard (/quote)
+    (public)/               marketing site, portfolio, guest quote wizard (/quote)
     (auth)/                 login, signup, check-email, verify-email (route), forgot-password, reset-password, accept-invite + actions.ts
     portal/                 client portal (requireClient)
     admin/                  admin dashboard (requireAdmin); server actions in admin/_actions/*
@@ -60,14 +60,14 @@ e2e/                        Playwright journeys
 ## Conventions
 
 - **Authorization lives in the Data Access Layer** (`src/lib/dal.ts`). Every page, server action and route handler touching private data must call `requireAdmin()`, `requireClient()` or `requireVerifiedClient()`, or `getCurrentUser()` + an explicit check. `proxy.ts` and layouts are *not* security boundaries.
-- **Per-tab sign-in**: every tab must log in itself. `<TabSessionGuard>` (`src/components/tab-session.tsx`) wraps the portal, admin and `/quote` layouts and sends tabs without a sessionStorage flag to `/login` (other tabs stay signed in). Auth-page form submits set the flag; server redirects that sign someone in outside a form append `#signed-in`. `/login` and `/signup` always show their form. This is UX on top of the cookie, not a security boundary.
+- **Per-tab sign-in**: every tab must log in itself. `<TabSessionGuard>` (`src/components/tab-session.tsx`) wraps the portal and admin layouts and sends tabs without a sessionStorage flag to `/login` (other tabs stay signed in). Auth-page form submits and the guest wizard's sign-up form set the flag; server redirects that sign someone in outside a form append `#signed-in`. `/login` and `/signup` always show their form. This is UX on top of the cookie, not a security boundary.
 - **Scope client queries by owner**: `findFirst({ where: { id, clientId: user.id } })`, never `findUnique({ where: { id } })` in portal code. Clients never see `DRAFT` invoices.
 - **Server actions** return `ActionState` (`src/lib/action-state.ts`) and are used with `<ActionForm>` (`src/components/forms.tsx`), which renders `error`, `message` and per-field errors. Validate with Zod, use `formToObject` + `fromZodError`/`fieldError`. Bind ids with `action.bind(null, id)`.
 - **Money is integer pence** everywhere (DB, maths, Stripe). Convert at the edges with `poundsToPence` / `formatGBP` (`src/lib/money.ts`).
 - **Never trust client-side prices**: the quote estimate is recomputed on the server (`calculateEstimate` + `getPriceMap`).
 - **Client journey (quote → project → payment → launch → hosting)**:
-  1. The wizard submits a quote (`SUBMITTED`). The admin confirms a fixed price, hosting plan, message and project title/dates and sends it (`sendQuoteOffer` → `SENT`, client emailed).
-  2. On `/portal/quotes/[id]` the client **accepts** (choosing full payment or a 50% deposit), **requests changes** (the wizard reopens at `/quote?changes=<id>` with their answers; `requestQuoteChanges` stores the old answers in `previousAnswers`, their note in `changeRequest`, status `CHANGES_REQUESTED`; the admin sees the diff via `answerChanges` and re-sends) or **declines** (reason kept; can be re-sent). A sent quote can be withdrawn until the client replies.
+  1. **Guests** use the public wizard at `/quote` (answers kept in `localStorage`, `lumora:quote-draft`); its last step is an inline sign-up (`signupAndSubmitQuote` in `(public)/quote/actions.ts`) that creates the account and submits the quote at once, unverified (the verification email goes alongside; accepting a quote still needs a verified email). "Log in" there carries the answers into the portal wizard. **Signed-in clients** are sent by `proxy.ts` from `/quote` to the same wizard (`src/components/quote-wizard.tsx`) at `/portal/quote` (DB drafts, `?changes=<id>`; thanks page `/portal/quote/thanks`). The public `/quote` page never reads the session. The wizard submits a quote (`SUBMITTED`). The admin confirms a fixed price, hosting plan, message and project title/dates and sends it (`sendQuoteOffer` → `SENT`, client emailed).
+  2. On `/portal/quotes/[id]` the client **accepts** (choosing full payment or a 50% deposit), **requests changes** (the wizard reopens at `/portal/quote?changes=<id>` with their answers; `requestQuoteChanges` stores the old answers in `previousAnswers`, their note in `changeRequest`, status `CHANGES_REQUESTED`; the admin sees the diff via `answerChanges` and re-sends) or **declines** (reason kept; can be re-sent). A sent quote can be withdrawn until the client replies.
   3. Accepting (`acceptOffer` in `src/lib/quote-accept.ts`, one transaction guarded by a conditional update) creates the project as `AWAITING_PAYMENT` ("Waiting for payment") and a numbered `SENT` invoice for the build (never hosting). When any invoice of that project becomes `PAID` (Stripe webhook or admin "Mark as paid"), `startProjectIfPaid` (`src/lib/project-payment.ts`) moves it to `PLANNING` and posts an update.
   4. After a 50% deposit, the admin project page shows the unbilled balance with "Create & send balance invoice" (`sendBalanceInvoice`); launch stays blocked until the website price (invoices billing the quote, hosting and void ones excluded; `websiteBalance` in `src/lib/quote-offer.ts`) is fully invoiced and paid. "Mark as launched" on the admin project page (`launchProject`) completes the project and, if the accepted quote has paid hosting, creates the `HostingPlan` from it (`hostingFromQuote`, `planKey` set, renewal date today) and emails the client.
   5. In Portal → Hosting the client picks monthly or yearly and pays the first payment by card (`startPlan` → Stripe Checkout subscription), which saves the card; it then renews automatically. A launch plan with no payment yet is detected by `awaitingFirstPayment` (`src/lib/hosting.ts`); prices come from `planStartPrices` (`src/lib/hosting-start.ts`): the quoted price for the quoted interval, the price list for the other.

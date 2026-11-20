@@ -200,6 +200,22 @@ export type QuoteAnswers = z.infer<typeof quoteAnswersSchema>;
 export const quoteDraftSchema = quoteFields.partial();
 export type QuoteDraft = z.infer<typeof quoteDraftSchema>;
 
+/**
+ * Keeps every valid field of a part-filled draft (e.g. one saved on the guest's device), dropping
+ * only invalid ones, so a not-yet-entered business name doesn't throw the other answers away.
+ */
+export function partialDraft(raw: unknown): QuoteDraft | null {
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
+  const out: Record<string, unknown> = {};
+  for (const [key, field] of Object.entries(quoteDraftSchema.shape)) {
+    const value = (raw as Record<string, unknown>)[key];
+    if (value === undefined) continue;
+    const parsed = field.safeParse(value);
+    if (parsed.success) out[key] = parsed.data;
+  }
+  return out as QuoteDraft;
+}
+
 export const EMPTY_DRAFT: QuoteDraft = {
   pages: 5,
   features: [],

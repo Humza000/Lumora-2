@@ -18,7 +18,7 @@ export default async function PortalProjects() {
     <>
       <PageHeader title="Projects" />
       {projects.length === 0 ? (
-        <EmptyState title="No projects yet" action={<ButtonLink href="/quote">Get a quote</ButtonLink>} />
+        <EmptyState title="No projects yet" action={<ButtonLink href="/portal/quote">Get a quote</ButtonLink>} />
       ) : (
         <div className="grid gap-4 md:grid-cols-2">
           {projects.map((p) => (

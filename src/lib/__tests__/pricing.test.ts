@@ -7,6 +7,7 @@ import {
   formatEstimate,
   formatHosting,
   hostingPrices,
+  partialDraft,
   quoteAnswersSchema,
   summariseQuote,
 } from "../pricing";
@@ -174,5 +175,20 @@ describe("summariseQuote", () => {
 
   it("copes with empty or invalid answers", () => {
     expect(summariseQuote(null)).toEqual({ packageName: null, hosting: null, hostingPlanName: null, features: [], lines: [] });
+  });
+});
+
+describe("partialDraft", () => {
+  it("keeps valid answers of a part-filled draft and drops invalid ones", () => {
+    expect(partialDraft({ projectType: "type_business", pages: "7", businessName: "", goals: "short", hostingPlan: "nope" })).toEqual({
+      projectType: "type_business",
+      pages: 7,
+    });
+  });
+
+  it("ignores anything that isn't an object", () => {
+    expect(partialDraft(null)).toBeNull();
+    expect(partialDraft("x")).toBeNull();
+    expect(partialDraft([1])).toBeNull();
   });
 });
